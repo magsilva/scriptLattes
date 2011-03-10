@@ -1,0 +1,23 @@
+nome-do-grupo      = Grupo de Visão e Processamento de Imagens - IME - USP 
+arquivo-de-entrada = ./exemplo/vision-ime-usp-IDS.txt
+diretorio-de-saida = ./exemplo/vision-ime-usp-RESULTS-A
+email-do-admin     = jmena@vision.ime.usp.br
+itens-desde-o-ano  = 
+itens-ate-o-ano    = 
+itens-por-pagina   = 1000
+criar-paginas-jsp  = nao
+idioma             = PT
+mostrar-ids-lattes = sim
+
+mostrar-orientacoes= sim
+mostrar-bancas     = sim
+mostrar-comissoes  = sim
+mostrar-eventos    = sim
+
+mostrar-grafo-colaboracoes= sim
+mostrar-todos-os-nos      = sim
+mostrar-indicadores       = sim
+
+mostrar-mapa-de-pesquisa  = sim
+google-map-key            = ABQIAAAALXTx88XUBA-1w02lBis80BTEHToUZkKVRLypIyHkBnKhXbuctBRuwSSicgP4FlkgCvGVHHbSBa-pZg
+google-analytics-key      = UA-5266248-1

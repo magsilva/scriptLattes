@@ -1,0 +1,23 @@
+nome-do-grupo      = Computer Vision Research Group - IME - USP 
+arquivo-de-entrada = ./exemplo/vision-ime-usp-IDS.txt
+diretorio-de-saida = ./exemplo/vision-ime-usp-RESULTS-B
+email-do-admin     = jmena@vision.ime.usp.br
+itens-desde-o-ano  = 1970
+itens-ate-o-ano    = HOJE
+itens-por-pagina   = 1000
+criar-paginas-jsp  = nao
+idioma             = EN
+mostrar-ids-lattes = nao
+
+mostrar-orientacoes= nao
+mostrar-bancas     = nao
+mostrar-comissoes  = nao
+mostrar-eventos    = nao
+
+mostrar-grafo-colaboracoes= nao
+mostrar-todos-os-nos      =
+mostrar-indicadores       =
+
+mostrar-mapa-de-pesquisa  = nao
+google-map-key            = 
+google-analytics-key      = 
