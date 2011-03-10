@@ -1469,17 +1469,22 @@ sub makeCollaborationsGraph
 	
 	my $g = GraphViz->new(directed=>0, layout=>'dot', rankdir=>0, overlap=>'false', random_start=>1, nodesep=>0.05, ranksep=>0.05, center=>'true', ratio=>'compress', concentrate=>0);   # 
 
-    # configuracoes para nosso grafo:
-    # -dot- visualment elegante
-    # -circo - legal para grupos pequenos
-    # -neato - nao muito legal, (edges sempre retos e as vezes sobrepostos)
-    # -fdp - edges sobreposto!! muito ruin!!
-    # -twopi - ruim, todos os edges obrepostos!!
-
+	# configuracoes para nosso grafo:
+	# -dot- visualment elegante
+	# -circo - legal para grupos pequenos
+	# -neato - nao muito legal, (edges sempre retos e as vezes sobrepostos)
+	# -fdp - edges sobreposto!! muito ruin!!
+	# -twopi - ruim, todos os edges obrepostos!!
 	for (my $aut=0; $aut<$numberOfAuthors; $aut++)
 	{ 
 		my $cardinalityOfCollaboration = 0;
-		my $normalizedValue = ($authorIndicator[$aut]-$min)/($max-$min);
+		my $normalizedValue = 1;
+
+		if ($max != $min) {
+			$normalizedValue = ($authorIndicator[$aut]-$min)/($max-$min);
+		} else {
+			$normalizedValue = $authorIndicator[$aut] / $max
+		}
 
 		for (my $t=0; $t<$numberOfAuthors; $t++)
 		{
@@ -2271,7 +2276,6 @@ sub readParameters
 
 		if ($parA eq "mostrar-mapa-de-pesquisa")   { $pars[17] = $parB; print "\n - $parA: $parB"; }
 		if ($parA eq "google-map-key")             { $pars[18] = $parB; print "\n - $parA: $parB"; }
-		if ($parA eq "google-analytics-key")       { $pars[19] = $parB; print "\n - $parA: $parB"; }
 	}
 	close(FILENAME);
 
