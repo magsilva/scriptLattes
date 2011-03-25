@@ -1194,6 +1194,7 @@ sub getMapOfResearch
 
 		#---------------------------------------------------------------------- #
 
+		$authorAddress =~ s/"//g;
 		if( $authorLat ne "0" && $authorLng ne "0")
 		{
 			$map.="
