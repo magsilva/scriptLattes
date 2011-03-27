@@ -1711,7 +1711,7 @@ sub setProducoes
 
 	for (my $type=0; $type<$numberOfTypes; $type++)
 	{
-		if  (lc($nameOfTypes[$type]) eq lc("Artigos completos publicados em periódicos") || lc($nameOfTypes[$type]) eq lc("Trabalhos completos publicados em anais de congressos")  || lc($nameOfTypes[$type]) eq lc("Supervisões e orientações concluídas")) {
+		if  (lc($nameOfTypes[$type]) eq lc("Artigos completos publicados em periódicos") || lc($nameOfTypes[$type]) eq lc("Trabalhos completos publicados em anais de congressos")  || lc($nameOfTypes[$type]) eq lc("Tese de doutorado") || lc($nameOfTypes[$type]) eq lc("Dissertação de mestrado")) {
 			if ($authorProducoes[$type]) {
 				my @producoesByType   = @{$authorProducoes[$type]};
 				my $numberOfProducoes = @producoesByType;
