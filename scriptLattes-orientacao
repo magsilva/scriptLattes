@@ -56,7 +56,6 @@ my $googleAnalyticsKey = $pars[19]; # flag para mostrar os indicadores
 
 my @cepList;
 my @transList;
-my @authorIndicator;
 readCEPsList();
 loadTranslator();
 
@@ -88,39 +87,11 @@ open(LOG, ">$outputDir/log.txt");
 # ---------------------------------------------------------------------------- #
 print "\n\nExtraindo as publicações dos arquivos baixados:";
 my $numberOfAuthors = @authorList;
-my @totalPublications;
 
-my $numberOfPublicationsTypes;
-my @nameOfPublicationsTypes;
-
-my @totalOrientacoesEmAndamento;
 my @totalOrientacoesConcluidas;
-
 my $numberOfOrientacoesTypes;
 my @nameOfOrientacoesTypes;
-
 my @nameOfOrientacoesStatus;
-
-my $numberOfProducoesTecnicasTypes;
-my @nameOfProducoesTecnicasTypes;
-
-my $numberOfProducoesArtisticasTypes;
-my @nameOfProducoesArtisticasTypes;
-
-my @totalProducoesTecnicas;
-my @totalProducoesArtisticas;
-
-my $numberOfBancasExaminadorasTypes;
-my @nameOfBancasExaminadorasTypes;
-my @totalBancasExaminadoras;
-
-my $numberOfComissoesJulgadorasTypes;
-my @nameOfComissoesJulgadorasTypes;
-my @totalComissoesJulgadoras;
-
-my $numberOfEventosTypes;
-my @nameOfEventosTypes;
-my @totalEventos;
 
 my @curriculumHTML;
 my $numberOfItem;
@@ -146,44 +117,8 @@ foreach (my $aut=0; $aut<$numberOfAuthors; $aut++)
 
 	print STAT $authorCode . "," . $authorName;
 
-	print "\n Publicaçoes";
-	@nameOfPublicationsTypes   = @{$authorPublications->{Publication_type}};
-	$numberOfPublicationsTypes = @{$authorPublications->{Publication_type}};
- 	$authorIndicator[$aut]     = setProducoes ($aut, \@{$authorPublications->{Publication}}, \@totalPublications, \@nameOfPublicationsTypes, $numberOfPublicationsTypes, 0, "", "", $authorPeriods);
-
-	print "\n Produção técnica";
-	$numberOfProducoesTecnicasTypes = @{$authorPublications->{ProducaoTecnica_type}};
-	@nameOfProducoesTecnicasTypes   = @{$authorPublications->{ProducaoTecnica_type}};
- 	setProducoes ($aut, \@{$authorPublications->{ProducaoTecnica}}, \@totalProducoesTecnicas, \@nameOfProducoesTecnicasTypes, $numberOfProducoesTecnicasTypes, 0, "", "", $authorPeriods);
-
-	print "\n Produção artística";
-	$numberOfProducoesArtisticasTypes = @{$authorPublications->{ProducaoArtistica_type}};
-	@nameOfProducoesArtisticasTypes   = @{$authorPublications->{ProducaoArtistica_type}};
- 	setProducoes ($aut, \@{$authorPublications->{ProducaoArtistica}}, \@totalProducoesArtisticas, \@nameOfProducoesArtisticasTypes, $numberOfProducoesArtisticasTypes, 0, "", "", $authorPeriods);
-
-	print "\n Orientações em andamento";
-	@nameOfOrientacoesTypes   = @{$authorPublications->{Orientacoes_type}};
-	$numberOfOrientacoesTypes = @{$authorPublications->{Orientacoes_type}};
-	@nameOfOrientacoesStatus  = @{$authorPublications->{Orientacoes_status}};
- 	setProducoes ($aut, \@{$authorPublications->{Orientacoes_andamento}}, \@totalOrientacoesEmAndamento, \@nameOfOrientacoesTypes, $numberOfOrientacoesTypes, 1, $authorCode, $authorName, $authorPeriods);
-
 	print "\n Orientações concluídas";
  	setProducoes ($aut, \@{$authorPublications->{Orientacoes_concluidas}}, \@totalOrientacoesConcluidas, \@nameOfOrientacoesTypes, $numberOfOrientacoesTypes, 1, $authorCode, $authorName, $authorPeriods);
-
-	print "\n Bancas examinadoras";
-	$numberOfBancasExaminadorasTypes = @{$authorPublications->{BancasExaminadoras_type}};
-	@nameOfBancasExaminadorasTypes   = @{$authorPublications->{BancasExaminadoras_type}};
- 	setProducoes ($aut, \@{$authorPublications->{BancasExaminadoras}}, \@totalBancasExaminadoras, \@nameOfBancasExaminadorasTypes, $numberOfBancasExaminadorasTypes, 2, $authorCode, $authorName, $authorPeriods);
-
-	print "\n Comissoes julgadoras";
-	$numberOfComissoesJulgadorasTypes = @{$authorPublications->{ComissoesJulgadoras_type}};
-	@nameOfComissoesJulgadorasTypes   = @{$authorPublications->{ComissoesJulgadoras_type}};
- 	setProducoes ($aut, \@{$authorPublications->{ComissoesJulgadoras}}, \@totalComissoesJulgadoras, \@nameOfComissoesJulgadorasTypes, $numberOfComissoesJulgadorasTypes, 2, $authorCode, $authorName, $authorPeriods);
-
-	print "\n Eventos";
-	$numberOfEventosTypes = @{$authorPublications->{Eventos_type}};
-	@nameOfEventosTypes   = @{$authorPublications->{Eventos_type}};
- 	setProducoes ($aut, \@{$authorPublications->{Eventos}}, \@totalEventos, \@nameOfEventosTypes, $numberOfEventosTypes, 2, $authorCode, $authorName, $authorPeriods);
 
 	print STAT "\n";
 	print "\n";
@@ -206,68 +141,16 @@ foreach (my $i=0; $i<$numberOfAuthors; $i++)
 
 print "\nLog do processamento em: $outputDir/log.txt\n";
 
-print "\n\nFiltrando publicações redudantes na compilacao total: (T=total, DF=depois da filtragem, F=filtradas)";
-print LOG "\n================================================================================";
-print LOG "\n\nFiltrando publicações redudantes na compilacao total (lista de redundantes)";
-my @totalFilteredPublications;
-getFilteredList( \@totalPublications, \@totalFilteredPublications, \@nameOfPublicationsTypes, $numberOfPublicationsTypes);
-
-print "\n\nFiltrando produções técnicas redudantes na compilacao total: (T=total, DF=depois da filtragem, F=filtradas)";
-print LOG "\n================================================================================";
-print LOG "\n\nFiltrando produções técnicas redudantes na compilacao total (lista de redundantes)";
-my @totalFilteredProducoesTecnicas;
-getFilteredList( \@totalProducoesTecnicas, \@totalFilteredProducoesTecnicas, \@nameOfProducoesTecnicasTypes, $numberOfProducoesTecnicasTypes);
-
-print "\n\nFiltrando produções artísticas redudantes na compilacao total: (T=total, DF=depois da filtragem, F=filtradas)";
-print LOG "\n================================================================================";
-print LOG "\n\nFiltrando produções artísticas redudantes na compilacao total (lista de redundantes)";
-my @totalFilteredProducoesArtisticas;
-getFilteredList( \@totalProducoesArtisticas, \@totalFilteredProducoesArtisticas, \@nameOfProducoesArtisticasTypes, $numberOfProducoesArtisticasTypes);
 
 # ---------------------------------------------------------------------------- #
 # Passo 4: Ordenamos as diferentes produçoes por ano
 # ---------------------------------------------------------------------------- #
 print "\n\nOrdenando as producoes por ano:";
 
-my @publicationsByYear;
-my %allPublicationsByYear;
-my $numberOfAllPublications = sortProducoesByYear(\@totalFilteredPublications, \@publicationsByYear, \%allPublicationsByYear, $numberOfPublicationsTypes, 0);
-print "\n- $numberOfAllPublications \t: Publicações";
-
-my @producoesTecnicasByYear;
-my %allProducoesTecnicasByYear;
-my $numberOfAllProducoesTecnicas = sortProducoesByYear(\@totalFilteredProducoesTecnicas, \@producoesTecnicasByYear, \%allProducoesTecnicasByYear, $numberOfProducoesTecnicasTypes, 0);
-print "\n- $numberOfAllProducoesTecnicas \t: Produções técnicas";
-
-my @producoesArtisticasByYear;
-my %allProducoesArtisticasByYear;
-my $numberOfAllProducoesArtisticas = sortProducoesByYear(\@totalFilteredProducoesArtisticas, \@producoesArtisticasByYear, \%allProducoesArtisticasByYear, $numberOfProducoesArtisticasTypes, 0);
-print "\n- $numberOfAllProducoesArtisticas \t: Produções artísticas";
-
-my @orientacoesEmAndamentoByYear;
-my %allOrientacoesEmAndamentoByYear;
-my $numberOfAllOrientacoesEmAndamento = sortProducoesByYear(\@totalOrientacoesEmAndamento, \@orientacoesEmAndamentoByYear, \%allOrientacoesEmAndamentoByYear, $numberOfOrientacoesTypes, 1);
-print "\n- $numberOfAllOrientacoesEmAndamento \t: Orientações em andamento";
-
 my @orientacoesConcluidasByYear;
 my %allOrientacoesConcluidasByYear;
 my $numberOfAllOrientacoesConcluidas = sortProducoesByYear(\@totalOrientacoesConcluidas, \@orientacoesConcluidasByYear, \%allOrientacoesConcluidasByYear, $numberOfOrientacoesTypes, 1);
 print "\n- $numberOfAllOrientacoesConcluidas \t: Orientações concluídas";
-
-my @bancasExaminadorasByYear;
-my %allBancasExaminadorasByYear;
-my $numberOfAllBancasExaminadoras = sortProducoesByYear(\@totalBancasExaminadoras, \@bancasExaminadorasByYear, \%allBancasExaminadorasByYear, $numberOfBancasExaminadorasTypes, 0);
-print "\n- $numberOfAllBancasExaminadoras \t: Bancas examinadoras";
-
-my @comissoesJulgadorasByYear;
-my %allComissoesJulgadorasByYear;
-my $numberOfAllComissoesJulgadoras = sortProducoesByYear(\@totalComissoesJulgadoras, \@comissoesJulgadorasByYear, \%allComissoesJulgadorasByYear, $numberOfComissoesJulgadorasTypes, 0);
-print "\n- $numberOfAllComissoesJulgadoras \t: Comissões julgadoras";
-
-my @eventosByYear;
-my %allEventosByYear;
-my $numberOfAllEventos = sortProducoesByYear(\@totalEventos, \@eventosByYear, \%allEventosByYear, $numberOfEventosTypes, 0);
-print "\n- $numberOfAllEventos \t: Eventos";
 
 
 # ---------------------------------------------------------------------------- #
@@ -277,50 +160,12 @@ print "\n\nCriando os graficos estatísticos e grafo de colaborações.";
 my $graphMap;
 makeCollaborationsGraph(\@netCollaborations, \@authorList);
 
-makeStatisticsBarsByType(\@publicationsByYear, $numberOfPublicationsTypes, "P", translate("Número de publicações"));
-makeStatisticsBars(\%allPublicationsByYear, "$outputDir/P.png", translate("Total de publicações"));
-
-if ($numberOfAllProducoesTecnicas>0)
-{
-	makeStatisticsBarsByType(\@producoesTecnicasByYear, $numberOfProducoesTecnicasTypes, "PT", translate("Número de produções técnicas"));
-	makeStatisticsBars(\%allProducoesTecnicasByYear, "$outputDir/PT.png", translate("Total de produções técnicas"));
-}
-
-if ($numberOfAllProducoesArtisticas>0)
-{
-	makeStatisticsBarsByType(\@producoesArtisticasByYear, $numberOfProducoesArtisticasTypes, "PA", translate("Número de produções artísticas"));
-	makeStatisticsBars(\%allProducoesArtisticasByYear, "$outputDir/PA.png", translate("Total de produções artísticas"));
-}
-
-if ($numberOfAllOrientacoesEmAndamento>0)
-{
-	makeStatisticsBarsByType(\@orientacoesEmAndamentoByYear, $numberOfOrientacoesTypes, "OA", translate("Número de orientações em andamento"));
-	makeStatisticsBars(\%allOrientacoesEmAndamentoByYear, "$outputDir/OA.png", translate("Total de orientações em andamento"));
-}
-
 if ($numberOfAllOrientacoesConcluidas>0)
 {
 	makeStatisticsBarsByType(\@orientacoesConcluidasByYear, $numberOfOrientacoesTypes, "OC", translate("Número de orientações concluídas"));
 	makeStatisticsBars(\%allOrientacoesConcluidasByYear, "$outputDir/OC.png", translate("Total de orientações concluídas"));
 }
 
-if ($numberOfAllBancasExaminadoras>0)
-{
-	makeStatisticsBarsByType(\@bancasExaminadorasByYear, $numberOfBancasExaminadorasTypes, "BE", translate("Número de bancas examinadoras"));
-	makeStatisticsBars(\%allBancasExaminadorasByYear, "$outputDir/BE.png", translate("Total de bancas examinadoras"));
-}
-
-if ($numberOfAllComissoesJulgadoras>0)
-{
-	makeStatisticsBarsByType(\@comissoesJulgadorasByYear, $numberOfComissoesJulgadorasTypes, "CJ", translate("Número de comissões julgadoras"));
-	makeStatisticsBars(\%allComissoesJulgadorasByYear, "$outputDir/CJ.png", translate("Total de comissões julgadoras"));
-}
-
-if ($numberOfAllEventos>0)
-{
-	makeStatisticsBarsByType(\@eventosByYear, $numberOfEventosTypes, "Ev", translate("Número de eventos"));
-	makeStatisticsBars(\%allEventosByYear, "$outputDir/Ev.png", translate("Total de eventos"));
-}
 
 # ---------------------------------------------------------------------------- #
 # Passo 6: Criação das páginas web
@@ -466,24 +311,11 @@ my $allInfoByType;
 print INDEXHTML "</head> <body onload=\"initialize()\" onunload=\"GUnload()\">
 <div id=\"header\">
 <center> <h2>$groupName</h2> [ 
-<a href=list.$extension>".translate('Membros')."</a> | 
-<a href=#publicacoes>".translate('Publicações')."</a> | 
-<a href=#producoesTecnicas>".translate('Produções técnicas')."</a> | 
-<a href=#producoesArtisticas>".translate('Produções artísticas')."</a>";
+<a href=list.$extension>".translate('Membros')."</a>";
 
 	if ($flagOrientacoes=~"s")
 	{ 
 		print INDEXHTML " | <a href=#orientacoes>".translate('Orientações')."</a>"; 
-	}
-
-	if ($flagBancas=~"s" or $flagComissoes=~"s")      
-	{ 
-		print INDEXHTML " | <a href=#bancas>".translate('Bancas')."</a>"; 
-	}
-
-	if ($flagEventos=~"s")     
-	{ 
-		print INDEXHTML " | <a href=#eventos>".translate('Eventos')."</a>"; 
 	}
 
 	if ($flagGrafo=~"s")       
@@ -583,60 +415,12 @@ close(AUTHORSLIST);
 # (b) Publicações
 open(SERIES,">$outputDir/series.dat");
 
-print INDEXHTML "<h3 id=\"publicacoes\">".translate("Publicações")."</h3><ul>";
-makeHTMLOfProducoes(\@totalFilteredPublications, \@publicationsByYear, \@nameOfPublicationsTypes, $numberOfPublicationsTypes, "P", 0);
-makeHTMLItemOfProducoes(\%allPublicationsByYear, translate("Total de publicações"), $numberOfAllPublications, "", "P");
-print INDEXHTML "</ul>";
-
-# ---------------------------------------------------------------------------- #
-# (c) Produções técnicas
-	print INDEXHTML "<h3 id=\"producoesTecnicas\">".translate("Produções técnicas")."</h3><ul>";
-	if ($numberOfAllProducoesTecnicas>0)
-	{
-		makeHTMLOfProducoes(\@totalFilteredProducoesTecnicas, \@producoesTecnicasByYear, \@nameOfProducoesTecnicasTypes, $numberOfProducoesTecnicasTypes, "PT", 0);
-		makeHTMLItemOfProducoes(\%allProducoesTecnicasByYear, translate("Total de produções técnicas"), $numberOfAllProducoesTecnicas, "", "PT");
-	}
-	else 
-	{ 
-		print INDEXHTML $noItems; 
-	}
-	print INDEXHTML "</ul>";
-
-# ---------------------------------------------------------------------------- #
-# (d) Produções artísticas
-	print INDEXHTML "<h3 id=\"producoesArtisticas\">".translate("Produções artísticas")."</h3><ul>";
-	if ($numberOfAllProducoesArtisticas>0)
-	{
-		makeHTMLOfProducoes(\@totalFilteredProducoesArtisticas, \@producoesArtisticasByYear, \@nameOfProducoesArtisticasTypes, $numberOfProducoesArtisticasTypes, "PA", 0);
-		makeHTMLItemOfProducoes(\%allProducoesArtisticasByYear, translate("Total de produções artísticas"), $numberOfAllProducoesArtisticas, "", "PA");
-	}
-	else 
-	{ 
-		print INDEXHTML $noItems; 
-	}
-	print INDEXHTML "</ul>";
-
 # ---------------------------------------------------------------------------- #
 # (e) Orientações
 if ($flagOrientacoes=~"s")
 {
 	print INDEXHTML "<h3 id=\"orientacoes\">".translate("Orientações")."</h3><ul>";
 	my $orientacaoTitle;
-
-	# (e.1) Em andamento
-	$orientacaoTitle = $nameOfOrientacoesStatus[0];
-	$orientacaoTitle =~ s/\_/ /g;
-	print INDEXHTML "<li>".translate($orientacaoTitle)."</li><ul>";
-	if ($numberOfAllOrientacoesEmAndamento>0)
-	{
-		makeHTMLOfProducoes(\@totalOrientacoesEmAndamento, \@orientacoesEmAndamentoByYear, \@nameOfOrientacoesTypes, $numberOfOrientacoesTypes, "OA", 1);
-		makeHTMLItemOfProducoes(\%allOrientacoesEmAndamentoByYear, translate("Total de orientações em andamento"), $numberOfAllOrientacoesEmAndamento, "", "OA");
-	}
-	else 
-	{ 
-		print INDEXHTML $noItems; 
-	}
-	print INDEXHTML "</ul>";
 
 	# (e.2) Concluídas
 	$orientacaoTitle = $nameOfOrientacoesStatus[1];
@@ -654,57 +438,6 @@ if ($flagOrientacoes=~"s")
 	print INDEXHTML "</ul>";
 
 	# (e.3) fecha <ul> das orientações
-	print INDEXHTML "</ul>";
-}
-
-# ---------------------------------------------------------------------------- #
-# (f) Bancas examinadoras
-if ($flagBancas=~"s")
-{
-	print INDEXHTML "<h3 id=\"bancas\">".translate("Participação em bancas examinadoras")."</h3><ul>";
-	if ($numberOfAllBancasExaminadoras>0)
-	{
-		makeHTMLOfProducoes(\@totalBancasExaminadoras, \@bancasExaminadorasByYear, \@nameOfBancasExaminadorasTypes, $numberOfBancasExaminadorasTypes, "BE", 0);
-		makeHTMLItemOfProducoes(\%allBancasExaminadorasByYear, translate("Total de bancas examinadoras"), $numberOfAllBancasExaminadoras, "", "BE");
-	}
-	else 
-	{ 
-		print INDEXHTML $noItems; 
-	}
-	print INDEXHTML "</ul>";
-}
-
-# ---------------------------------------------------------------------------- #
-# (g) Comissoes julgadoras
-if ($flagComissoes=~"s")
-{
-	print INDEXHTML "<h3 id=\"bancas\">".translate("Participação em comissões julgadoras")."</h3><ul>";
-	if ($numberOfAllComissoesJulgadoras>0)
-	{
-		makeHTMLOfProducoes(\@totalComissoesJulgadoras, \@comissoesJulgadorasByYear, \@nameOfComissoesJulgadorasTypes, $numberOfComissoesJulgadorasTypes, "CJ", 0);
-		makeHTMLItemOfProducoes(\%allComissoesJulgadorasByYear, translate("Total de comissoes julgadoras"), $numberOfAllComissoesJulgadoras, "", "CJ");
-	}
-	else 
-	{ 
-		print INDEXHTML $noItems; 
-	}
-	print INDEXHTML "</ul>";
-}
-
-# ---------------------------------------------------------------------------- #
-# (h) Eventos
-if ($flagEventos=~"s")
-{
-	print INDEXHTML "<h3 id=\"eventos\">".translate("Eventos")."</h3><ul>";
-	if ($numberOfAllEventos>0)
-	{
-		makeHTMLOfProducoes(\@totalEventos, \@eventosByYear, \@nameOfEventosTypes, $numberOfEventosTypes, "Ev", 0);
-		makeHTMLItemOfProducoes(\%allEventosByYear, translate("Total de eventos"), $numberOfAllEventos, "", "Ev");
-	}
-	else 
-	{ 
-		print INDEXHTML $noItems; 
-	}
 	print INDEXHTML "</ul>";
 }
 
@@ -1406,10 +1139,6 @@ sub makeCollaborationsGraph
 	my @netCollaborations = @$netCollaborationsRef;
 	my @authorList = @$authorListRef;
 	my $numberOfAuthors = @authorList;
-	my $min;
-	my $max;
-
-	($min, $max) = getMinMax(@authorIndicator);
 	
 	use GraphViz;
 	#my $g = GraphViz->new(directed=>0, layout=>'neato', rankdir=>0, random_start=>0, nodesep=>0.05, ranksep=>0.05, center=>'true', no_overlap=>'true', ratio=>'compress', width=>6.5, concentrate=>1, epsilon=>0);
@@ -1432,12 +1161,6 @@ sub makeCollaborationsGraph
 	{ 
 		my $cardinalityOfCollaboration = 0;
 		my $normalizedValue = 1;
-
-		if ($max != $min) {
-			$normalizedValue = ($authorIndicator[$aut]-$min)/($max-$min);
-		} else {
-			$normalizedValue = $authorIndicator[$aut] / $max
-		}
 
 		for (my $t=0; $t<$numberOfAuthors; $t++)
 		{
@@ -1470,7 +1193,7 @@ sub makeCollaborationsGraph
 				my $backColor;
 				($foreColor, $backColor) = getColors($normalizedValue);
 
-				$g->add_node($aut, label=>"$authorName (".$authorIndicator[$aut]."/$cardinalityOfCollaboration)", style=>'filled', fontcolor=>$foreColor, fillcolor=>$backColor, URL=>$urlCV, fontsize=>9, shape=>'box', width=>0.10, height=>0.10);
+				$g->add_node($aut, label=>"$authorName", style=>'filled', fontcolor=>$foreColor, fillcolor=>$backColor, URL=>$urlCV, fontsize=>9, shape=>'box', width=>0.10, height=>0.10);
 			}
 			else
 			{
@@ -1711,67 +1434,58 @@ sub setProducoes
 
 	for (my $type=0; $type<$numberOfTypes; $type++)
 	{
-		if  (lc($nameOfTypes[$type]) eq lc("Artigos completos publicados em periódicos") || lc($nameOfTypes[$type]) eq lc("Trabalhos completos publicados em anais de congressos")  || lc($nameOfTypes[$type]) eq lc("Supervisões e orientações concluídas")) {
-			if ($authorProducoes[$type]) {
-				my @producoesByType   = @{$authorProducoes[$type]};
-				my $numberOfProducoes = @producoesByType;
-				my $numberOfValidProducoes = 0;
-
-				addTitleOfProducoes($aut, $nameOfTypes[$type], $numberOfProducoes);
-
-				for (my $p=0; $p<$numberOfProducoes; $p++)
-				{
-					my $item = trimBlanks($producoesByType[$p]);
-					my $year = scalar(getYearOnPublication($item)); #$producoesByType[$p] =~ s/^\s*//;
+		if ($authorProducoes[$type]) {
+			my @producoesByType   = @{$authorProducoes[$type]};
+			my $numberOfProducoes = @producoesByType;
+			my $numberOfValidProducoes = 0;
+			addTitleOfProducoes($aut, $nameOfTypes[$type], $numberOfProducoes);
+			for (my $p=0; $p<$numberOfProducoes; $p++)
+			{
+				my $item = trimBlanks($producoesByType[$p]);
+				my $year = scalar(getYearOnPublication($item)); #$producoesByType[$p] =~ s/^\s*//;
 			
-					if (isValidItem($year, \@listOfPeriods))	
+				if (isValidItem($year, \@listOfPeriods))	
+				{
+					if ($flag==0 || $flag==2)
 					{
-						if ($flag==0 || $flag==2)
+						if ($flag==2)
 						{
-							if ($flag==2)
-							{
-								$item .= "<br><i>".translate("Membro").": <a href=CV$aut.$extension>$authorName</a>.</i>";
-							}
-
-							push @{$$totalProducoesRef[$type][0]}, $aut;             # [0] = número inteiro associado ao autor
-							push @{$$totalProducoesRef[$type][1]}, getTitle($item);  # [1] = título da producao (se possível)
-							push @{$$totalProducoesRef[$type][2]}, $item;            # [2] = referencia
+							$item .= "<br><i>".translate("Membro").": <a href=CV$aut.$extension>$authorName</a>.</i>";
 						}
-
-						if ($flag==1) # para o caso das orientacoes
-						{
-							if ( $item=~m/\(Co-Orientador\)\./i || $item=~m/Co-Orientador\:.*/i )
-							{
-								$item =~ s/\(Co-Orientador\)\./ /gi;
-								$item =~ s/Co-Orientador\:.*/ /gi;
-								$item .= "<br><i>Co-".translate("Orientador").": <a href=CV$aut.$extension>$authorName</a>.</i>";
-							}
-							else
-							{
-								$item =~ s/\(Orientador\)\./ /gi;
-								$item =~ s/Orientador\:.*/ /gi;
-								$item .= "<br><i>".translate("Orientador").": <a href=CV$aut.$extension>$authorName</a>.</i>";
-							}
-							push @{$$totalProducoesRef[$type]}, $item;
-						}
-	
-						$numberOfValidProducoes++;
-						addValidItem($aut, $item);
+						push @{$$totalProducoesRef[$type][0]}, $aut;             # [0] = número inteiro associado ao autor
+						push @{$$totalProducoesRef[$type][1]}, getTitle($item);  # [1] = título da producao (se possível)
+						push @{$$totalProducoesRef[$type][2]}, $item;            # [2] = referencia
 					}
-					else
+					if ($flag==1) # para o caso das orientacoes
 					{
-						addInvalidItem($aut, $item);
+						if ( $item=~m/\(Co-Orientador\)\./i || $item=~m/Co-Orientador\:.*/i )
+						{
+							$item =~ s/\(Co-Orientador\)\./ /gi;
+							$item =~ s/Co-Orientador\:.*/ /gi;
+							$item .= "<br><i>Co-".translate("Orientador").": <a href=CV$aut.$extension>$authorName</a>.</i>";
+						}
+						else
+						{
+							$item =~ s/\(Orientador\)\./ /gi;
+							$item =~ s/Orientador\:.*/ /gi;
+							$item .= "<br><i>".translate("Orientador").": <a href=CV$aut.$extension>$authorName</a>.</i>";
+						}
+						push @{$$totalProducoesRef[$type]}, $item;
 					}
+
+					$numberOfValidProducoes++;
+					addValidItem($aut, $item);
 				}
-
-				print "\n $numberOfValidProducoes/$numberOfProducoes \t :".$nameOfTypes[$type];
-				print STAT "," . $numberOfValidProducoes;
-				addEndOfTitleOfProducoes($aut);
-
-				$totalOfProducoes += $numberOfValidProducoes;
-			} else {
-				print STAT ",0";
+				else
+				{
+					addInvalidItem($aut, $item);
+				}
 			}
+			print "\n $numberOfValidProducoes/$numberOfProducoes \t :".$nameOfTypes[$type];
+			print STAT "," . $numberOfValidProducoes;
+			addEndOfTitleOfProducoes($aut);
+
+			$totalOfProducoes += $numberOfValidProducoes;
 		}
 	}
 	

@@ -72,21 +72,21 @@ sub start()
    # Variáveis para busca
    if ( $tag eq 'html' ) 
    { 
-     $self->{Address} = "";
-     $self->{Name} = "";
+         $self->{Address} = "";
+         $self->{Name} = "";
 	 $self->{PhotoID} = "";
 	 $self->{Updated} = "";
 		
 	 # lower cases!
-     @{$self->{Publication_type}} = (
+         @{$self->{Publication_type}} = (
 	   "Artigos completos publicados em periódicos",
 	   "Livros publicados\/organizados ou edições",
 	   "Capítulos de livros publicados",
-       "Textos em jornais de notícias\/revistas",
+           "Textos em jornais de notícias\/revistas",
 	   "Trabalhos completos publicados em anais de congressos",
 	   "Resumos expandidos publicados em anais de congressos",
 	   "Resumos publicados em anais de congressos",
-       "Artigos aceitos para publicação",
+           "Artigos aceitos para publicação",
 	   "Apresentações de trabalho",
 	   "Demais tipos de produção bibliográfica",
        );
@@ -100,7 +100,7 @@ sub start()
 	   "Supervisão de pós-doutorado",
 	   "Tese de doutorado",
 	   "Dissertação de mestrado",
-       "Monografia de conclusão de curso de aperfeiçoamento\/especialização",
+           "Monografia de conclusão de curso de aperfeiçoamento\/especialização",
 	   "Trabalho de conclusão de curso de graduação",
 	   "Iniciação científica",
 	   "Orientações de outra natureza",
@@ -110,7 +110,7 @@ sub start()
 	   "Softwares com registro de patente",
 	   "Softwares sem registro de patente",
 	   "Produtos tecnológicos",
-       "Processos ou técnicas",
+           "Processos ou técnicas",
 	   "Trabalhos técnicos",
 	   "Demais tipos de produção técnica",
 	   );
@@ -124,7 +124,7 @@ sub start()
 	   "Teses de doutorado",
 	   "Qualificações de doutorado",
 	   "Dissertações",
-       "Trabalhos de conclusão de curso de graduação",
+           "Trabalhos de conclusão de curso de graduação",
 	   );
 	 
 	@{$self->{ComissoesJulgadoras_type}} = (
@@ -132,7 +132,7 @@ sub start()
 	   "Concurso público",
 	   "Livre docência",
 	   "Avaliação de cursos",
-       "Outras participações",
+           "Outras participações",
 	   );
 	
 	@{$self->{Eventos_type}} = (
@@ -173,7 +173,7 @@ sub start()
    { 
      #$self->{Field}  = '<td>'; 
      $self->{Field}  = ''; 
-	 $infield++;
+     $infield++;
    }
    if ( $tag eq 'td' && $start_address ) 
    { 
@@ -268,11 +268,11 @@ sub text()
 		{
 			# my $MAX = @{$self->{Publication_type}};
 			my $MAX = 10;
-	    	for (my $i=0; $i<$MAX; $i++)
-		    { 
+			for (my $i=0; $i<$MAX; $i++)
+	 		{ 
 				if (lc($internal_text) eq lc($self->{Publication_type}[$i]))   
   		   		{ 
-	    			$table_type      = $i; 
+	    				$table_type      = $i; 
 	  			  	$start_session   = 1; 
 				  	$validated_table = 0;
 			   	} 
@@ -280,7 +280,7 @@ sub text()
 		}	
 	
 		# -------------------------------------------------------------- # 
-    	# Seleção do tipo de status
+	    	# Seleção do tipo de status
 		if ($self->{Orientacoes_status})
 		{
 		    for (my $i=0; $i<2; $i++)
@@ -294,16 +294,16 @@ sub text()
 		}
 
 		# -------------------------------------------------------------- # 
-	    # Seleção do tipo de orientacao
+		# Seleção do tipo de orientacao
 		if ($self->{Orientacoes_type} && $start_session)
 		{
 			# $MAX = @{$self->{Orientacoes_type}};
 			my $MAX = 7;
-	    	for (my $i=0; $i<$MAX; $i++)
-		    {
+		    	for (my $i=0; $i<$MAX; $i++)
+			{
 				if (lc($internal_text) eq lc($self->{Orientacoes_type}[$i]) && $start_session>=2)
   		   		{ 
-	    			$table_type      = $i; 
+		    			$table_type      = $i; 
 		   		} 
 			}
 		}
@@ -314,11 +314,11 @@ sub text()
 		{
 			# my $MAX = @{$self->{ProducaoTecnica_type}};
 			my $MAX = 6;
-    		for (my $i=0; $i<$MAX; $i++)
-	    	{ 
+	    		for (my $i=0; $i<$MAX; $i++)
+		    	{ 
 				if (lc($internal_text) eq lc($self->{ProducaoTecnica_type}[$i]))   
   	   			{ 
-	    			$table_type      = $i; 
+ 		    			$table_type      = $i; 
 	  		  		$start_session   = 4; 
 				  	$validated_table = 0;
 			   	} 
@@ -331,11 +331,11 @@ sub text()
 		{
 			# my $MAX = @{$self->{ProducaoArtistica_type}};
 			my $MAX = 1;
-	    	for (my $i=0; $i<$MAX; $i++)
-		    { 
+	    		for (my $i=0; $i<$MAX; $i++)
+			{ 
 				if (lc($internal_text) eq lc($self->{ProducaoArtistica_type}[$i]))   
   	   			{ 
-		    		$table_type      = $i; 
+			    		$table_type      = $i; 
 		  		  	$start_session   = 5; 
 				  	$validated_table = 0;
 			   	} 
@@ -348,11 +348,11 @@ sub text()
 		if ($self->{BancasExaminadoras_type})
 		{
 			my $MAX = 4;
-    		for (my $i=0; $i<$MAX; $i++)
-	    	{ 
+	    		for (my $i=0; $i<$MAX; $i++)
+		    	{ 
 				if (lc($internal_text) eq lc($self->{BancasExaminadoras_type}[$i]))   
   	   			{ 
-	    			$table_type      = $i;
+	    				$table_type      = $i;
 	  		  		$start_session   = 6;
 				  	$validated_table = 0;
 			   	} 
@@ -364,11 +364,11 @@ sub text()
 		if ($self->{ComissoesJulgadoras_type})
 		{
 			my $MAX = 5;
-    		for (my $i=0; $i<$MAX; $i++)
-	    	{ 
+	    		for (my $i=0; $i<$MAX; $i++)
+		    	{ 
 				if (lc($internal_text) eq lc($self->{ComissoesJulgadoras_type}[$i]))
   	   			{ 
-	    			$table_type      = $i;
+	    				$table_type      = $i;
 	  		  		$start_session   = 7;
 				  	$validated_table = 0;
 			   	} 
@@ -380,11 +380,11 @@ sub text()
 		if ($self->{Eventos_type})
 		{
 			my $MAX = 2;
-    		for (my $i=0; $i<$MAX; $i++)
-	    	{ 
+    			for (my $i=0; $i<$MAX; $i++)
+	    		{ 
 				if (lc($internal_text) eq lc($self->{Eventos_type}[$i]))
   	   			{
-	    			$table_type      = $i;
+	    				$table_type      = $i;
 	  		  		$start_session   = 8;
 				  	$validated_table = 0;
 			   	} 
@@ -423,11 +423,11 @@ sub text()
  	# -#-#-#-#-#-#-#---------------------------------------------------------------------------
 	# -------------------------------------------------------------- # 
 	# Casos especiais de parada:
-    # Acho que não existe alguma outra forma para parar a busca
-  ##### if ( $internal_text=~"Bancas" || $internal_text=~"Eventos" || $internal_text=~"Demais trabalhos" || $internal_text=~"Outras informações relevantes" || $internal_text=~"Atuação profissional" || $internal_text=~"Conselhos, Comissões e Consultoria" || $internal_text=~m/ensino.*nível:/i)
-    if ( $internal_text=~"Bancas" || $internal_text=~"Demais trabalhos" || $internal_text=~"Outras informações relevantes" || $internal_text=~"Atuação profissional" || $internal_text=~"Conselhos, Comissões e Consultoria" || $internal_text=~m/ensino.*nível:/i)
-    { 
-    	$start_session   = 0; 
+	# Acho que não existe alguma outra forma para parar a busca
+	##### if ( $internal_text=~"Bancas" || $internal_text=~"Eventos" || $internal_text=~"Demais trabalhos" || $internal_text=~"Outras informações relevantes" || $internal_text=~"Atuação profissional" || $internal_text=~"Conselhos, Comissões e Consultoria" || $internal_text=~m/ensino.*nível:/i)
+	if ( $internal_text=~"Bancas" || $internal_text=~"Demais trabalhos" || $internal_text=~"Outras informações relevantes" || $internal_text=~"Atuação profissional" || $internal_text=~"Conselhos, Comissões e Consultoria" || $internal_text=~m/ensino.*nível:/i)
+	{ 
+    		$start_session   = 0; 
 		$validated_table = 0; 
 	}
 
@@ -523,7 +523,7 @@ sub end()
    # Fim de uma linha
    if($tag eq 'tr' && $validated_table ) 
    { 
-     $inrecord--; 
+	 $inrecord--; 
 	 #$self->{Table} .= $self->{Row} . '</tr>'; 
 	 $self->{Table} .= $self->{Row}; 
    }
