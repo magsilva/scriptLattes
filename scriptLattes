@@ -144,7 +144,8 @@ foreach (my $aut=0; $aut<$numberOfAuthors; $aut++)
 	${$authorList[$aut]}[8] = getURLPhoto($authorPublications->{PhotoID});
 
 
-	print STAT $authorCode . "," . $authorName;
+	print STAT $authorCode . "," . $authorName . "," . ${$authorList[$aut]}[3];
+
 
 	print "\n Publicaçoes";
 	@nameOfPublicationsTypes   = @{$authorPublications->{Publication_type}};
