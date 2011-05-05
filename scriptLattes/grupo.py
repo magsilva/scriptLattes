@@ -157,7 +157,7 @@ class Grupo:
 			self.salvarMatrizTXT(self.matrizDeAdjacencia, prefix+"matrizDeAdjacencia.txt")
 			self.salvarMatrizTXT(self.matrizDeFrequencia, prefix+"matrizDeFrequencia.txt")
 			self.salvarMatrizTXT(self.matrizDeFrequenciaNormalizada, prefix+"matrizDeFrequenciaNormalizada.txt")
-			self.salvarMatrizXML(self.matrizDeAdjacencia, prefix+"matrizDeAdjacencia.xml")
+			# self.salvarMatrizXML(self.matrizDeAdjacencia, prefix+"matrizDeAdjacencia.xml")
 	
 			# (2) Salvamos as listas de nomes e rótulos (para análise posterior com outras ferramentas)
 			self.salvarListaTXT(self.nomes, prefix+"listaDeNomes.txt")

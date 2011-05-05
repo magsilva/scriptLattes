@@ -131,10 +131,20 @@ class Membro:
 	def carregarDadosCVLattes(self):
 		if not self.idLattes=='':
 			try:
-				req = urllib2.Request(self.url)
-				arquivoH = urllib2.urlopen(req) # baixamos os arquivos HTML
-				cvLattesHTML = arquivoH.read()
-				arquivoH.close()
+				cacheDirName = '/home/magsilva/.scriptLattes/cache/'
+				cachedFileName = cacheDirName + self.idLattes
+				if os.path.exists(cachedFileName):
+					cachedFile = open(cachedFileName, 'r')
+					cvLattesHTML = cachedFile.read()
+					cachedFile.close()
+				else:
+					req = urllib2.Request(self.url)
+					response = urllib2.urlopen(req) # baixamos os arquivos HTML
+					cvLattesHTML = response.read()
+					cachedFile = open(cachedFileName, 'w')
+					cachedFile.write(cvLattesHTML)
+					cachedFile.close()
+					response.close()
 
 			except urllib2.URLError, e:
 				print '[ERRO] Nao é possível obter o CV Lattes: ', self.url
