@@ -28,6 +28,7 @@ use Date::Format;
 use Date::Language;
 use JSON;
 use Unicode::Normalize;
+use utf8;
 
 my @pars= readParameters($ARGV[0]); # Lemos os parâmetros indicados no arquivo de configuração dado como entrada na execução do scriptLattes
 my $groupName          = $pars[0];  # Nome do grupo de pesquisa / titulo global para todas as paginas
@@ -82,6 +83,8 @@ my @authorList = readAuthorList($authorListFileName);
 getLattesFiles(\@authorList, $outputDir);
 
 open(LOG, ">$outputDir/log.txt");
+binmode(LOG, ":utf8");
+
 
 # ---------------------------------------------------------------------------- #
 # Passo 2: Leitura das produçoes de todos os autores
@@ -126,6 +129,7 @@ my @curriculumHTML;
 my $numberOfItem;
 
 open(STAT, ">$outputDir/publications.csv");
+binmode(STAT, ":utf8");
 foreach (my $aut=0; $aut<$numberOfAuthors; $aut++)
 {
 	my $authorCode    = ${$authorList[$aut]}[0];
