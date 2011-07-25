@@ -2,6 +2,7 @@
 # encoding: utf-8
 # filename: membro.py
 
+import urllib
 import urllib2
 import re
 import sets
@@ -97,6 +98,7 @@ class Membro:
 		self.periodo = periodo
 		self.rotulo = rotulo
 		self.url = 'http://lattes.cnpq.br/'+identificador
+		self.userAgent = 'Mozilla/4.0 (compatible; MSIE 5.5; Windows NT)'
 		self.itemsDesdeOAno = itemsDesdeOAno
 		self.itemsAteOAno = itemsAteOAno
 		self.criarListaDePeriodos(self.periodo)
@@ -138,7 +140,10 @@ class Membro:
 					cvLattesHTML = cachedFile.read()
 					cachedFile.close()
 				else:
-					req = urllib2.Request(self.url)
+					headers = { 'User-Agent' : self.userAgent }
+					params = {}
+					data = urllib.urlencode(params)
+					req = urllib2.Request(self.url, data, headers)
 					response = urllib2.urlopen(req) # baixamos os arquivos HTML
 					cvLattesHTML = response.read()
 					cachedFile = open(cachedFileName, 'w')
