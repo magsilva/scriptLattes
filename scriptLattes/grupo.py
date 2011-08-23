@@ -5,6 +5,8 @@
 import fileinput
 import sets
 import operator
+import cookielib
+import urllib2
 
 from membro import *
 from compiladorDeListas import *
@@ -112,8 +114,27 @@ class Grupo:
 
 
 	def carregarDadosCVLattes(self):
+		cookieUTMA = cookielib.Cookie(name="__utma", value="140185953.1754088786.1298641982.1301171440.1302204919.5", domain='.cnpq.br', path='/', version=0, port=None, port_specified=False, domain_specified=False, domain_initial_dot=False, path_specified=True, secure=False, expires=None, discard=True, comment=None, comment_url=None, rest={'HttpOnly': None}, rfc2109=False)
+		cookieUTMZ = cookielib.Cookie(name="__utmz", value="140185953.1298641982.1.1.utmccn=(referral)|utmcsr=lmpl.cnpq.br|utmcct=/|utmcmd=referral", domain='.cnpq.br', path='/', version=0, port=None, port_specified=False, domain_specified=False, domain_initial_dot=False, path_specified=True, secure=False, expires=None, discard=True, comment=None, comment_url=None, rest={'HttpOnly': None}, rfc2109=False )
+		cookieJSESSIONID = cookielib.Cookie(name="JSESSIONID", value="D3227F6AD5D158AE7666E4E37C26D876.node6", domain='buscatextual.cnpq.br', path='/', version=0, port=None, port_specified=False, domain_specified=False, domain_initial_dot=False, path_specified=True, secure=False, expires=None, discard=True, comment=None, comment_url=None, rest={'HttpOnly': None}, rfc2109=False)
+		cookieSImagem = cookielib.Cookie(name="simagem", value="47", domain='buscatextual.cnpq.br', path='/buscatextual/', version=0, port=None, port_specified=False, domain_specified=False, domain_initial_dot=False, path_specified=True, secure=False, expires=None, discard=True, comment=None, comment_url=None, rest={'HttpOnly': None}, rfc2109=False)
+
+		cj = cookielib.LWPCookieJar()
+		cj.set_cookie(cookieUTMA)
+		cj.set_cookie(cookieUTMZ)
+		cj.set_cookie(cookieJSESSIONID)
+		cj.set_cookie(cookieSImagem)
+		# cj = cookielib.MozillaCookieJar()
+		opener = urllib2.build_opener(urllib2.HTTPCookieProcessor(cj))
+		urllib2.install_opener(opener)
+		headers = { 'User-Agent' : 'Mozilla/4.0 (compatible; MSIE 5.5; Windows NT)' }
+		params = {}
+		data = urllib.urlencode(params)
+		req = urllib2.Request('http://buscatextual.cnpq.br/buscatextual/busca.do', data, headers)
+		response = opener.open(req)
+		# baixamos os arquivos HTML
 		for membro in self.listaDeMembros:
-			membro.carregarDadosCVLattes()
+			membro.carregarDadosCVLattes(opener)
 			membro.filtrarItemsPorPeriodo()
 			print membro
 

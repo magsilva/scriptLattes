@@ -216,7 +216,7 @@ class GeradorDePaginasWeb:
 
 		if self.grupo.obterParametro('grafo-mostrar_grafo_de_colaboracoes'):
 			s+='</ul> <h3 id="grafo">Grafo de colaborações</h3> <ul>'.decode("utf8")
-			s+='<a href="grafoDeColaboracoes'+self.extensaoPagina+'"><img src="grafoDeColaboracoesSemPesos-t.png" border=1> </a>'
+			s+='<a href="grafoDeColaboracoes'+self.extensaoPagina+'"><img src="grafoDeColaboracoesSemPesos.svg" border=1> </a>'
 
 
 		s+='</ul>'
@@ -489,11 +489,11 @@ class GeradorDePaginasWeb:
 		s+='\
         <ul> \
         <li><b>Grafo de colabora&ccedil;&otilde;es sem pesos</b><br> \
-            <img src=grafoDeColaboracoesSemPesos.png border=1 ISMAP USEMAP="#grafo1"> <br><p> \
+            <img src=grafoDeColaboracoesSemPesos.svg border=1 ISMAP USEMAP="#grafo1"> <br><p> \
         <li><b>Grafo de colabora&ccedil;&otilde;es com pesos</b><br> \
-            <img src=grafoDeColaboracoesComPesos.png border=1 ISMAP USEMAP="#grafo2"> <br><p> \
+            <img src=grafoDeColaboracoesComPesos.svg border=1 ISMAP USEMAP="#grafo2"> <br><p> \
         <li><b>Grafo de colabora&ccedil;&otilde;es com pesos normalizados</b><br> \
-            <img src=grafoDeColaboracoesNormalizado.png border=1 ISMAP USEMAP="#grafo3"> \
+            <img src=grafoDeColaboracoesNormalizado.svg border=1 ISMAP USEMAP="#grafo3"> \
         </ul>'.decode("utf8")
 	
 		cmapx1 = self.grupo.grafosDeColaboracoes.grafoDeCoAutoriaSemPesosCMAPX

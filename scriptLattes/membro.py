@@ -97,8 +97,8 @@ class Membro:
 		self.nomeInicial = nome
 		self.periodo = periodo
 		self.rotulo = rotulo
-		self.url = 'http://lattes.cnpq.br/'+identificador
 		self.userAgent = 'Mozilla/4.0 (compatible; MSIE 5.5; Windows NT)'
+		self.url = 'http://lattes.cnpq.br/'+identificador
 		self.itemsDesdeOAno = itemsDesdeOAno
 		self.itemsAteOAno = itemsAteOAno
 		self.criarListaDePeriodos(self.periodo)
@@ -130,7 +130,7 @@ class Membro:
 					print "[AVISO IMPORTANTE] CV Lattes: "+self.idLattes+". Membro: "+self.nomeInicial.encode('utf8')+"\n"
 		
 
-	def carregarDadosCVLattes(self):
+	def carregarDadosCVLattes(self, opener):
 		if not self.idLattes=='':
 			try:
 				cacheDirName = '/home/magsilva/.scriptLattes/cache/'
@@ -144,7 +144,7 @@ class Membro:
 					params = {}
 					data = urllib.urlencode(params)
 					req = urllib2.Request(self.url, data, headers)
-					response = urllib2.urlopen(req) # baixamos os arquivos HTML
+					response = opener.open(req) # baixamos os arquivos HTML
 					cvLattesHTML = response.read()
 					cachedFile = open(cachedFileName, 'w')
 					cachedFile.write(cvLattesHTML)

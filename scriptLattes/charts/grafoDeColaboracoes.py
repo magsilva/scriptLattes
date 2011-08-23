@@ -42,19 +42,19 @@ class GrafoDeColaboracoes:
 					['#000000','#FFFFFF'] ]
 		
 		self.grafoDeCoAutoriaSemPesos = self.criarGrafoDeCoAutoriaSemPesos()
-		self.grafoDeCoAutoriaSemPesos.draw(path=diretorioDeSaida+'/grafoDeColaboracoesSemPesos.png', format='png')
+		self.grafoDeCoAutoriaSemPesos.draw(path=diretorioDeSaida+'/grafoDeColaboracoesSemPesos.svg', format='svg')
 		self.grafoDeCoAutoriaSemPesos.draw(path=diretorioDeSaida+'/grafoDeColaboracoesSemPesos.dot', format='dot')
 		self.grafoDeCoAutoriaSemPesosCMAPX = self.grafoDeCoAutoriaSemPesos.draw(format='cmapx')
 #		print self.grafoDeCoAutoriaSemPesosCMAPX
 
 		self.grafoDeCoAutoriaComPesos = self.criarGrafoDeCoAutoriaComPesos()
-		self.grafoDeCoAutoriaComPesos.draw(path=diretorioDeSaida+'/grafoDeColaboracoesComPesos.png', format='png')
+		self.grafoDeCoAutoriaComPesos.draw(path=diretorioDeSaida+'/grafoDeColaboracoesComPesos.svg', format='svg')
 		self.grafoDeCoAutoriaComPesos.draw(path=diretorioDeSaida+'/grafoDeColaboracoesComPesos.dot', format='dot')
 		self.grafoDeCoAutoriaComPesosCMAPX = self.grafoDeCoAutoriaComPesos.draw(format='cmapx')
 #		print self.grafoDeCoAutoriaSemPesosCMAPX
 
 		self.grafoDeCoAutoriaNormalizado = self.criarGrafoDeCoAutoriaNormalizada()
-		self.grafoDeCoAutoriaNormalizado.draw(path=diretorioDeSaida+'/grafoDeColaboracoesNormalizado.png', format='png')
+		self.grafoDeCoAutoriaNormalizado.draw(path=diretorioDeSaida+'/grafoDeColaboracoesNormalizado.svg', format='svg')
 		self.grafoDeCoAutoriaNormalizado.draw(path=diretorioDeSaida+'/grafoDeColaboracoesNormalizado.dot', format='dot')
 		self.grafoDeCoAutoriaNormalizadoCMAPX = self.grafoDeCoAutoriaNormalizado.draw(format='cmapx')
 #		print self.grafoDeCoAutoriaNormalizadoCMAPX
@@ -67,9 +67,9 @@ class GrafoDeColaboracoes:
 
 
 		# Criamos um thumbnail do grafo sem pesos
-		im = Image.open(diretorioDeSaida+'/grafoDeColaboracoesSemPesos.png')
-		im.thumbnail((400,400))
-		im.save(diretorioDeSaida+'/grafoDeColaboracoesSemPesos-t.png')
+#		im = Image.open(diretorioDeSaida+'/grafoDeColaboracoesSemPesos.png')
+#		im.thumbnail((400,400))
+#		im.save(diretorioDeSaida+'/grafoDeColaboracoesSemPesos-t.png')
 
 
 	def criarGrafoDeCoAutoriaSemPesos(self):
