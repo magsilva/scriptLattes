@@ -1,12 +1,35 @@
 #!/usr/bin/python
 # encoding: utf-8
 # filename: grupo.py
+#
+#  scriptLattes V8
+#  Copyright 2005-2011: Jesús P. Mena-Chalco e Roberto M. Cesar-Jr.
+#  http://scriptlattes.sourceforge.net/
+#
+#
+#  Este programa é um software livre; você pode redistribui-lo e/ou 
+#  modifica-lo dentro dos termos da Licença Pública Geral GNU como 
+#  publicada pela Fundação do Software Livre (FSF); na versão 2 da 
+#  Licença, ou (na sua opnião) qualquer versão.
+#
+#  Este programa é distribuido na esperança que possa ser util, 
+#  mas SEM NENHUMA GARANTIA; sem uma garantia implicita de ADEQUAÇÂO a qualquer
+#  MERCADO ou APLICAÇÃO EM PARTICULAR. Veja a
+#  Licença Pública Geral GNU para maiores detalhes.
+#
+#  Você deve ter recebido uma cópia da Licença Pública Geral GNU
+#  junto com este programa, se não, escreva para a Fundação do Software
+#  Livre(FSF) Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+#
 
+import os
 import fileinput
 import sets
 import operator
 import cookielib
 import urllib2
+import logging
+
 
 from membro import *
 from compiladorDeListas import *
@@ -127,16 +150,19 @@ class Grupo:
 		# cj = cookielib.MozillaCookieJar()
 		opener = urllib2.build_opener(urllib2.HTTPCookieProcessor(cj))
 		urllib2.install_opener(opener)
-		headers = { 'User-Agent' : 'Mozilla/4.0 (compatible; MSIE 5.5; Windows NT)' }
-		params = {}
-		data = urllib.urlencode(params)
-		req = urllib2.Request('http://buscatextual.cnpq.br/buscatextual/busca.do', data, headers)
-		response = opener.open(req)
+		
 		# baixamos os arquivos HTML
+		dir = self.obterParametro('global-diretorio_de_saida')
+		file = open(os.path.join(dir, 'members.csv'), 'w')
 		for membro in self.listaDeMembros:
+			print "Loading data from user ", membro.idLattes
 			membro.carregarDadosCVLattes(opener)
+			membro.dumpToFile(file)
 			membro.filtrarItemsPorPeriodo()
-			print membro
+			logging.info(membro)
+			file.flush()
+			os.fsync(file.fileno())
+		file.close()
 
 	def gerarMapaDeGeolocalizacao(self):
 		if self.obterParametro('mapa-mostrar_mapa_de_geolocalizacao'):
@@ -314,10 +340,8 @@ class Grupo:
 
 	def imprimirMatrizesDeFrequencia(self):
 		self.compilador.imprimirMatrizesDeFrequencia()
-		print "\n[VETOR DE CO-AUTORIA]"
-		print self.vetorDeCoAutoria
-		print "\n[MATRIZ DE FREQUENCIA NORMALIZADA]"
-		print self.matrizDeFrequenciaNormalizada
+		logging.debug("Co-authoring vector" + self.vetorDeCoAutoria)
+		logging.debug("Normalized frequency matric" + self.matrizDeFrequenciaNormalizada)
 
 	def numeroDeMembros(self):
 		return len(self.listaDeMembros)
@@ -327,17 +351,15 @@ class Grupo:
 
 	def imprimirListaDeParametros(self):
 		for par in self.listaDeParametros:# .keys():
-			print "[PARAMETRO] ",par[0]," = ",par[1]
-		print
+			print "Parameter ", par[0], " = ", par[1]
 
 	def imprimirListaDeMembros(self):
 		for membro in self.listaDeMembros:
 			print membro
-		print
 
 	def imprimirListaDeRotulos(self):
 		for rotulo in self.listaDeRotulos:
-			print "[ROTULO] ", rotulo
+			print "Label: ", rotulo
 
 	def atualizarParametro(self, parametro, valor):
 		parametro = parametro.strip().lower()
@@ -347,7 +369,7 @@ class Grupo:
 			if parametro==self.listaDeParametros[i][0]:
 				self.listaDeParametros[i][1] = valor
 				return
-		print "[AVISO IMPORTANTE] Nome de parametro desconhecido: "+parametro
+		logging.error("Invalid parameter" + parametro)
 
 	def obterParametro(self, parametro):
 		for i in range(0,len(self.listaDeParametros)):

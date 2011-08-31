@@ -33,11 +33,17 @@ sys.path.append('scriptLattes/producoesTecnicas/')
 sys.path.append('scriptLattes/producoesArtisticas/')
 sys.path.append('scriptLattes/producoesUnitarias/')
 sys.path.append('scriptLattes/orientacoes/')
+sys.path.append('scriptLattes/eventos/')
 sys.path.append('scriptLattes/charts/')
 
 from grupo import *
 
+
 if __name__ == "__main__":
+	
+	reload(sys)
+	sys.setdefaultencoding("utf-8")
+
 	arquivoConfiguracao = sys.argv[1]
 
 	novoGrupo = Grupo(arquivoConfiguracao)
@@ -63,7 +69,8 @@ if __name__ == "__main__":
 
 		# finalizando o processo
 		print '\n[AVISO] scriptLattes executado!'
-		print '[AVISO] sorria, seu CV Lattes pode estar sendo compilado :-)'
+		#print '[AVISO] sorria, seu CV Lattes pode estar sendo compilado :-)'
+		print '[AVISO] Quem vê \'lattes\', não vê coração! :-D'
 		print '[AVISO] Visite a página: http://scriptlattes.sourceforge.net\n'
 
 # ---------------------------------------------------------------------------- #

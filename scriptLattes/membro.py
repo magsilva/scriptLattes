@@ -1,12 +1,34 @@
 #!/usr/bin/python
 # encoding: utf-8
 # filename: membro.py
+#
+#  scriptLattes V8
+#  Copyright 2005-2011: Jesús P. Mena-Chalco e Roberto M. Cesar-Jr.
+#  http://scriptlattes.sourceforge.net/
+#
+#
+#  Este programa é um software livre; você pode redistribui-lo e/ou 
+#  modifica-lo dentro dos termos da Licença Pública Geral GNU como 
+#  publicada pela Fundação do Software Livre (FSF); na versão 2 da 
+#  Licença, ou (na sua opnião) qualquer versão.
+#
+#  Este programa é distribuido na esperança que possa ser util, 
+#  mas SEM NENHUMA GARANTIA; sem uma garantia implicita de ADEQUAÇÂO a qualquer
+#  MERCADO ou APLICAÇÃO EM PARTICULAR. Veja a
+#  Licença Pública Geral GNU para maiores detalhes.
+#
+#  Você deve ter recebido uma cópia da Licença Pública Geral GNU
+#  junto com este programa, se não, escreva para a Fundação do Software
+#  Livre(FSF) Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+#
 
 import urllib
 import urllib2
 import re
 import sets
 import datetime
+import time
+import os
 
 from parserLattes import *
 from parserLattesXML import *
@@ -89,6 +111,10 @@ class Membro:
 	listaOCIniciacaoCientifica = []
 	listaOCOutroTipoDeOrientacao = []
 
+	# Eventos
+	listaParticipacaoEmEvento = []
+	listaOrganizacaoDeEvento = []
+
 
 
 	def __init__(self, idMembro, identificador, nome, periodo, rotulo, itemsDesdeOAno, itemsAteOAno, xml=''):
@@ -132,34 +158,39 @@ class Membro:
 
 	def carregarDadosCVLattes(self, opener):
 		if not self.idLattes=='':
-			try:
-				cacheDirName = '/home/magsilva/.scriptLattes/cache/'
-				cachedFileName = cacheDirName + self.idLattes
-				if os.path.exists(cachedFileName):
-					cachedFile = open(cachedFileName, 'r')
-					cvLattesHTML = cachedFile.read()
-					cachedFile.close()
-				else:
+			cacheDirName = os.path.expanduser(os.path.join("~", ".scriptLattes", "cache"))
+			cachedFileName = cacheDirName + self.idLattes
+			if os.path.exists(cachedFileName):
+				cachedFile = open(cachedFileName, 'r')
+				cvLattesHTML = cachedFile.read()
+			else:
+				try:
 					headers = { 'User-Agent' : self.userAgent }
 					params = {}
 					data = urllib.urlencode(params)
 					req = urllib2.Request(self.url, data, headers)
-					response = opener.open(req) # baixamos os arquivos HTML
+					response = opener.open(req) # Download CV Lattes or captcha
 					cvLattesHTML = response.read()
+					kCode = re.findall(u'name="id" value="(.*)" id=', cvLattesHTML)
+					if len(kCode) > 0: # Download CV Lattes using alternative Lattes CV identifier
+						alternativeUrl ='http://buscatextual.cnpq.br/buscatextual/visualizacv.do?metodo=apresentar&palavra=10&id=' + kCode[-1]
+						time.sleep(1)
+						req = urllib2.Request(alternativeUrl, data, headers)
+						response = urllib2.urlopen(req)
+						cvLattesHTML = response.read()
 					cachedFile = open(cachedFileName, 'w')
 					cachedFile.write(cvLattesHTML)
 					cachedFile.close()
 					response.close()
-
-			except urllib2.URLError, e:
-				print '[ERRO] Nao é possível obter o CV Lattes: ', self.url
-				print '[ERRO] Código de erro: ', e.code
+				except urllib2.URLError, e:
+					print '[ERRO] Nao é possível obter o CV Lattes: ', self.url
+					print '[ERRO] Código de erro: ', e.code
+				time.sleep(10)
 
 			extended_chars= u''.join(unichr(c) for c in xrange(127, 65536, 1)) # srange(r"[\0x80-\0x7FF]")
 			special_chars = ' -'''
-			cvLattesHTML  = cvLattesHTML.decode('ascii','replace')+extended_chars+special_chars
+			cvLattesHTML  = cvLattesHTML.decode('ascii','replace') + extended_chars + special_chars
 			parser        = ParserLattes(self.idMembro, cvLattesHTML)
-
 		else:
 			arquivoX = open(self.xml)
 			cvLattesXML = arquivoX.read()
@@ -167,7 +198,7 @@ class Membro:
 
 			extended_chars= u''.join(unichr(c) for c in xrange(127, 65536, 1)) # srange(r"[\0x80-\0x7FF]")
 			special_chars = ' -'''
-			cvLattesXML   = cvLattesXML.decode('iso-8859-1','replace')+extended_chars+special_chars
+			cvLattesXML   = cvLattesXML.decode('iso-8859-1','replace') + extended_chars + special_chars
 			parser        = ParserLattesXML(self.idMembro, cvLattesXML)
 
 			self.idLattes = parser.idLattes
@@ -233,8 +264,42 @@ class Membro:
 		self.listaOCTCC                       = parser.listaOCTCC
 		self.listaOCIniciacaoCientifica       = parser.listaOCIniciacaoCientifica
 		self.listaOCOutroTipoDeOrientacao     = parser.listaOCOutroTipoDeOrientacao
+
+		# Eventos
+		self.listaParticipacaoEmEvento        = parser.listaParticipacaoEmEvento
+		self.listaOrganizacaoDeEvento         = parser.listaOrganizacaoDeEvento
+
 		# -----------------------------------------------------------------------------------------
 
+	def dumpToFile(self, file):
+		file.write(str(self.idLattes))
+		file.write(",")
+		file.write(self.nomeCompleto)
+		file.write(",")
+		file.write(str(len(self.listaArtigoEmPeriodico)))
+		file.write(",")
+		file.write(str(len(self.listaTrabalhoCompletoEmCongresso)))
+		file.write(",")
+		file.write(str(len(self.listaLivroPublicado)))
+		file.write(",")
+		file.write(str(len(self.listaCapituloDeLivroPublicado)))
+		file.write(",")
+		file.write(str(len(self.listaOCSupervisaoDePosDoutorado)))
+		file.write(",")
+		file.write(str(len(self.listaOCTeseDeDoutorado)))
+		file.write(",")
+		file.write(str(len(self.listaOCDissertacaoDeMestrado)))
+		file.write(",")
+		file.write(str(len(self.listaOCMonografiaDeEspecializacao)))
+		file.write(",")
+		file.write(str(len(self.listaOCTCC)))
+		file.write(",")
+		file.write(str(len(self.listaSoftwareComPatente)))
+		file.write(",")
+		file.write(str(len(self.listaSoftwareSemPatente)))
+		file.write(",")
+		file.write(str(len(self.listaProdutoTecnologico)))
+		file.write("\n")
 
 	def filtrarItemsPorPeriodo(self):
 		self.listaArtigoEmPeriodico                = self.filtrarItems(self.listaArtigoEmPeriodico)
@@ -275,6 +340,9 @@ class Membro:
 
 		self.listaPremioOuTitulo    = self.filtrarItems(self.listaPremioOuTitulo)
 		self.listaProjetoDePesquisa = self.filtrarItems(self.listaProjetoDePesquisa)
+
+		self.listaParticipacaoEmEvento = self.filtrarItems(self.listaParticipacaoEmEvento)
+		self.listaOrganizacaoDeEvento  = self.filtrarItems(self.listaOrganizacaoDeEvento)
 
 
 	def filtrarItems(self, lista):
@@ -484,6 +552,8 @@ class Membro:
 			s += "\n  . Orientações de outra natureza             : " + str(len(self.listaOCOutroTipoDeOrientacao))
 			s += "\n- Projetos de pesquisa                        : " + str(len(self.listaProjetoDePesquisa))
 			s += "\n- Prêmios e títulos                           : " + str(len(self.listaPremioOuTitulo))
+			s += "\n- Participação em eventos                     : " + str(len(self.listaParticipacaoEmEvento))
+			s += "\n- Organização de eventos                      : " + str(len(self.listaOrganizacaoDeEvento))
 
 		return s
 

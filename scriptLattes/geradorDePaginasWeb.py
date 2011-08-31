@@ -1,6 +1,27 @@
 #!/usr/bin/python
 # encoding: utf-8
 # filename: geradorDePaginasWeb
+#
+#  scriptLattes V8
+#  Copyright 2005-2011: Jesús P. Mena-Chalco e Roberto M. Cesar-Jr.
+#  http://scriptlattes.sourceforge.net/
+#
+#
+#  Este programa é um software livre; você pode redistribui-lo e/ou 
+#  modifica-lo dentro dos termos da Licença Pública Geral GNU como 
+#  publicada pela Fundação do Software Livre (FSF); na versão 2 da 
+#  Licença, ou (na sua opnião) qualquer versão.
+#
+#  Este programa é distribuido na esperança que possa ser util, 
+#  mas SEM NENHUMA GARANTIA; sem uma garantia implicita de ADEQUAÇÂO a qualquer
+#  MERCADO ou APLICAÇÃO EM PARTICULAR. Veja a
+#  Licença Pública Geral GNU para maiores detalhes.
+#
+#  Você deve ter recebido uma cópia da Licença Pública Geral GNU
+#  junto com este programa, se não, escreva para a Fundação do Software
+#  Livre(FSF) Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+#
+
 
 import datetime
 import re
@@ -15,7 +36,7 @@ class GeradorDePaginasWeb:
 
 	def __init__(self, grupo):
 		self.grupo = grupo
-		self.version = 'V8.01'
+		self.version = 'V8.02'
 		self.dir = self.grupo.obterParametro('global-diretorio_de_saida')
 		
 		if self.grupo.obterParametro('global-criar_paginas_jsp'):
@@ -47,6 +68,12 @@ class GeradorDePaginasWeb:
 		if self.grupo.obterParametro('relatorio-incluir_premio'):
 			self.gerarPaginasDePremios()
 
+		if self.grupo.obterParametro('relatorio-incluir_participacao_em_evento'):
+			self.gerarPaginasDeParticipacaoEmEventos()
+		
+		if self.grupo.obterParametro('relatorio-incluir_organizacao_de_evento'):
+			self.gerarPaginasDeOrganizacaoDeEventos()
+		
 		if self.grupo.obterParametro('grafo-mostrar_grafo_de_colaboracoes'):
 			self.gerarPaginaDeGrafosDeColaboracoes()
 		
@@ -65,7 +92,7 @@ class GeradorDePaginasWeb:
            <title>'+nomeGrupo+'</title> \
            <meta name="Generator" content="scriptLattes"> \
            <link rel="stylesheet" href="scriptLattes.css" type="text/css">  \
-           <meta http-equiv="Content-Type" content="text/html; charset=utf8">  \
+           <meta http-equiv="Content-Type" content="text/html; charset=utf-8">  \
            <script src="http://maps.google.com/maps?file=api&amp;v=2.x&amp;sensor=false&amp;key='+self.grupo.obterParametro('mapa-google_map_key').decode("utf8")+'" type="text/javascript"></script>'
 		if self.grupo.obterParametro('mapa-mostrar_mapa_de_geolocalizacao'):
 			s+= self.grupo.mapaDeGeolocalizacao.mapa #.encode("utf8")
@@ -87,6 +114,9 @@ class GeradorDePaginasWeb:
 
 		if self.grupo.obterParametro('relatorio-incluir_premio'):
 			s+='| <a href=#premios>Prêmios</a> '.decode("utf8")
+
+		if self.grupo.obterParametro('relatorio-incluir_participacao_em_evento') or self.grupo.obterParametro('relatorio-incluir_organizacao_de_evento'):
+			s+='| <a href=#eventos>Eventos</a> '.decode("utf8")
 
 		if self.grupo.obterParametro('grafo-mostrar_grafo_de_colaboracoes'):
 			s+='| <a href=#grafo>Grafo de colaborações</a> '.decode("utf8")
@@ -214,9 +244,28 @@ class GeradorDePaginasWeb:
 			s+='</ul>'
 
 
+		if self.grupo.obterParametro('relatorio-incluir_participacao_em_evento'):
+			s+='</ul> <h3 id="eventos">Participação em eventos</h3> <ul>'.decode("utf8")
+			if self.nEp>0:
+				s+= '<li> <a href="Ep-0'+self.extensaoPagina+'">Total de participação em eventos</a> '.decode("utf8")+'('+str(self.nEp)+')'
+			else:
+				s+= '<i>Nenhum item achado nos currículos Lattes</i>'.decode("utf8")
+			s+='</ul>'
+
+		
+		if self.grupo.obterParametro('relatorio-incluir_organizacao_de_evento'):
+			s+='</ul> <h3 id="eventos">Organização de eventos</h3> <ul>'.decode("utf8")
+			if self.nEo>0:
+				s+= '<li> <a href="Eo-0'+self.extensaoPagina+'">Total de organização de eventos</a> '.decode("utf8")+'('+str(self.nEo)+')'
+			else:
+				s+= '<i>Nenhum item achado nos currículos Lattes</i>'.decode("utf8")
+			s+='</ul>'
+
+
+
 		if self.grupo.obterParametro('grafo-mostrar_grafo_de_colaboracoes'):
 			s+='</ul> <h3 id="grafo">Grafo de colaborações</h3> <ul>'.decode("utf8")
-			s+='<a href="grafoDeColaboracoes'+self.extensaoPagina+'"><img src="grafoDeColaboracoesSemPesos.svg" border=1> </a>'
+			s+='<a href="grafoDeColaboracoes'+self.extensaoPagina+'"><img src="grafoDeColaboracoesSemPesos-t.png" border=1> </a>'
 
 
 		s+='</ul>'
@@ -373,6 +422,14 @@ class GeradorDePaginasWeb:
 	def gerarPaginasDePremios(self):
 		self.nPm = 0
 		self.nPm = self.gerarPaginaDeProducoes(self.grupo.compilador.listaCompletaPremioOuTitulo, "Total de prêmios e títulos", "Pm")
+
+	def gerarPaginasDeParticipacaoEmEventos(self):
+		self.nEp = 0
+		self.nEp = self.gerarPaginaDeProducoes(self.grupo.compilador.listaCompletaParticipacaoEmEvento, "Total de participação em eventos", "Ep")
+	
+	def gerarPaginasDeOrganizacaoDeEventos(self):
+		self.nEo = 0
+		self.nEo = self.gerarPaginaDeProducoes(self.grupo.compilador.listaCompletaOrganizacaoDeEvento, "Total de organização de eventos", "Eo")
 
 
 	def gerarPaginaDeProducoes(self, listaCompleta, tituloPagina, prefixo, ris=False):

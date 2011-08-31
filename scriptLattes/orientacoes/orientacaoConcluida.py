@@ -1,6 +1,27 @@
 #!/usr/bin/python
 # encoding: utf-8
 # filename: orientacaoConcluida.py
+#
+#  scriptLattes V8
+#  Copyright 2005-2011: Jesús P. Mena-Chalco e Roberto M. Cesar-Jr.
+#  http://scriptlattes.sourceforge.net/
+#
+#
+#  Este programa é um software livre; você pode redistribui-lo e/ou 
+#  modifica-lo dentro dos termos da Licença Pública Geral GNU como 
+#  publicada pela Fundação do Software Livre (FSF); na versão 2 da 
+#  Licença, ou (na sua opnião) qualquer versão.
+#
+#  Este programa é distribuido na esperança que possa ser util, 
+#  mas SEM NENHUMA GARANTIA; sem uma garantia implicita de ADEQUAÇÂO a qualquer
+#  MERCADO ou APLICAÇÃO EM PARTICULAR. Veja a
+#  Licença Pública Geral GNU para maiores detalhes.
+#
+#  Você deve ter recebido uma cópia da Licença Pública Geral GNU
+#  junto com este programa, se não, escreva para a Fundação do Software
+#  Livre(FSF) Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+#
+
 
 from scriptLattes import *  
 from geradorDePaginasWeb import *
@@ -19,62 +40,70 @@ class OrientacaoConcluida:
 	tipoDeOrientacao = None
 	chave = None
 
-
-	def __init__(self, idMembro, partesDoItem, idOrientando):
-		# partesDoItem[0]: Numero (NAO USADO)
-		# partesDoItem[1]: Descricao
+	def __init__(self, idMembro, partesDoItem='', idOrientando=''):
 		self.idMembro = set([])
 		self.idMembro.add(idMembro)
 		
-		self.item = partesDoItem[1]
-		self.idOrientando = str(idOrientando)
+		if not partesDoItem=='':
+			# partesDoItem[0]: Numero (NAO USADO)
+			# partesDoItem[1]: Descricao
+			self.item = partesDoItem[1]
+			self.idOrientando = str(idOrientando)
 
-
-		# Dividir o item na suas partes constituintes 
-		partes = self.item.partition(". Orientador: ")
-		if not partes[1]=='': 
-			self.tipoDeOrientacao = 'Orientador'
-			partes = partes[0]
-		else:
-			partes = self.item.partition(". Co-Orientador: ")
-			if not partes[1]=='':
-				self.tipoDeOrientacao = 'Co-orientador'
+	
+			# Dividir o item na suas partes constituintes 
+			partes = self.item.partition(". Orientador: ")
+			if not partes[1]=='': 
+				self.tipoDeOrientacao = 'Orientador'
 				partes = partes[0]
 			else:
-				self.tipoDeOrientacao = 'Supervisor'
-				partes = partes[0].rpartition('. ')
+				partes = self.item.partition(". Co-Orientador: ")
+				if not partes[1]=='':
+					self.tipoDeOrientacao = 'Co-orientador'
+					partes = partes[0]
+				else:
+					self.tipoDeOrientacao = 'Supervisor'
+					partes = partes[0].rpartition('. ')
+					partes = partes[0]
+	
+			partes1 =  partes.rpartition(". ")
+			partes = partes1[2].rpartition(", ")
+			if not partes[1]=='':
+				self.instituicao = partes[0]
+				self.agenciaDeFomento = partes[2]
+			else:
+				self.instituicao = partes[2]
+				self.agenciaDeFomento = ''
+			
+			partes = partes1[0]
+			aux = re.findall(u'((?:19|20)\d\d)\\b', partes)
+			if len(aux)>0:
+				self.ano = aux[0] #.strip().rstrip(".").rstrip(",")
+	
+				aux = re.findall(u'(.*). (?:19|20)\d\d\\b', partes)
+				partes = aux[0]
+			else:
+				self.ano = ''
+				partes = partes.rpartition('. ')
 				partes = partes[0]
-
-		partes1 =  partes.rpartition(". ")
-		partes = partes1[2].rpartition(", ")
-		if not partes[1]=='':
-			self.instituicao = partes[0]
-			self.agenciaDeFomento = partes[2]
-		else:
-			self.instituicao = partes[2]
-			self.agenciaDeFomento = ''
-		
-		partes = partes1[0]
-		aux = re.findall(u'((?:19|20)\d\d)\\b', partes)
-		if len(aux)>0:
-			self.ano = aux[0] #.strip().rstrip(".").rstrip(",")
-
-			aux = re.findall(u'(.*). (?:19|20)\d\d\\b', partes)
-			partes = aux[0]
-		else:
-			self.ano = ''
+			
 			partes = partes.rpartition('. ')
-			partes = partes[0]
-		
-		partes = partes.rpartition('. ')
-		if not partes[1]=='':
-			self.nome = partes[0].strip(".").strip(",")
-			self.tituloDoTrabalho = partes[2]
+			if not partes[1]=='':
+				self.nome = partes[0].strip(".").strip(",")
+				self.tituloDoTrabalho = partes[2]
+			else:
+				self.nome = partes[2].strip(".").strip(",")
+				self.tituloDoTrabalho = ''
+			
+			self.chave = self.nome # chave de comparação entre os objetos
+
 		else:
-			self.nome = partes[2].strip(".").strip(",")
+			self.nome = ''
 			self.tituloDoTrabalho = ''
-		
-		self.chave = self.nome # chave de comparação entre os objetos
+			self.ano = ''
+			self.instituicao = ''
+			self.agenciaDeFomento = ''
+			self.tipoDeOrientacao = ''
 
 
 	def compararCom(self, objeto):

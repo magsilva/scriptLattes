@@ -49,6 +49,14 @@ URL DO PROJETO
 =========================================================================================
 LOG
 
+Sun Jul  3 12:01:50 BRT 2011
+-- Foi corrigido o procedimento para baixar CVs Lattes.
+
+Qua Mai  4 16:38:51 BRT 2011
+-- Foi considerado, mediante novos parâmetros, os seguintes relatórios adicionais:
+   - Participação em eventos.
+   - Organização de eventos.
+
 Seg Abr 11 07:40:23 BRT 2011
 -- O scriptLattes foi re-programado inteiramente em Python. Foram acrescentadas novas
   características como a criação de novos grafos de colaboração, relatórios de projetos de pesquisa,

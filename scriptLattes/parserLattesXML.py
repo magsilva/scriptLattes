@@ -1,6 +1,27 @@
 #!/usr/bin/python
 # encoding: utf-8
 # filename: parserLattesXML.py
+#
+#  scriptLattes V8
+#  Copyright 2005-2011: Jesús P. Mena-Chalco e Roberto M. Cesar-Jr.
+#  http://scriptlattes.sourceforge.net/
+#
+#
+#  Este programa é um software livre; você pode redistribui-lo e/ou 
+#  modifica-lo dentro dos termos da Licença Pública Geral GNU como 
+#  publicada pela Fundação do Software Livre (FSF); na versão 2 da 
+#  Licença, ou (na sua opnião) qualquer versão.
+#
+#  Este programa é distribuido na esperança que possa ser util, 
+#  mas SEM NENHUMA GARANTIA; sem uma garantia implicita de ADEQUAÇÂO a qualquer
+#  MERCADO ou APLICAÇÃO EM PARTICULAR. Veja a
+#  Licença Pública Geral GNU para maiores detalhes.
+#
+#  Você deve ter recebido uma cópia da Licença Pública Geral GNU
+#  junto com este programa, se não, escreva para a Fundação do Software
+#  Livre(FSF) Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+#
+
 
 # ---------------------------------------------------------------------------- #
 # Classe para leitura de CVs Lattes em formato XML. Sim, nosso scriptLattes
@@ -120,8 +141,11 @@ class ParserLattesXML(HTMLParser):
 	achouOutroTipoDeProducaoTecnica = None
 
 	achouProducaoArtistica = None
-
 	achouTrabalhoEmEvento = None
+
+	achouOCDissertacaoDeMestrado = None
+	achouOCSupervisaoDePosDoutorado = None
+	achouOCTeseDeDoutorado = None
 
 
 	# ------------------------------------------------------------------------ #
@@ -311,6 +335,36 @@ class ParserLattesXML(HTMLParser):
 			self.titulo   = '' 
 			self.ano      = '' 
 			self.natureza = '' 
+
+
+		# ----------------------------------------------------------------------
+		# ----------------------------------------------------------------------
+		if tag=='orientacoes-concluidas-para-pos-doutorado':
+			self.achouOCSupervisaoDePosDoutorado = 1
+			self.nome = ''
+			self.tituloDoTrabalho = ''
+			self.ano = ''
+			self.instituicao = ''
+			self.agenciaDeFomento = ''
+			self.tipoDeOrientacao = ''
+
+		if tag=='orientacoes-concluidas-para-doutorado':
+			self.achouOCTeseDeDoutorado = 1
+			self.nome = ''
+			self.tituloDoTrabalho = ''
+			self.ano = ''
+			self.instituicao = ''
+			self.agenciaDeFomento = ''
+			self.tipoDeOrientacao = ''
+
+		if tag=='orientacoes-concluidas-para-mestrado':
+			self.achouOCDissertacaoDeMestrado = 1
+			self.nome = ''
+			self.tituloDoTrabalho = ''
+			self.ano = ''
+			self.instituicao = ''
+			self.agenciaDeFomento = ''
+			self.tipoDeOrientacao = ''
 
 
 		# ----------------------------------------------------------------------
@@ -581,6 +635,67 @@ class ParserLattesXML(HTMLParser):
 						self.editora = value
 
 
+		# ----------------------------------------------------------------------
+		# ----------------------------------------------------------------------
+		# ----------------------------------------------------------------------
+		if self.achouOCSupervisaoDePosDoutorado:
+			if tag=='dados-basicos-de-orientacoes-concluidas-para-pos-doutorado':
+				for name, value in attributes:
+					if name=='titulo':
+						self.tituloDoTrabalho = value
+					if name=='ano':
+						self.ano = value
+					if name=='natureza':
+						self.tipoDeOrientacao = value.capitalize()
+			if tag=='detalhamento-de-orientacoes-concluidas-para-pos-doutorado':
+				for name, value in attributes:
+					if name=='nome-do-orientado':
+						self.nome = value
+					if name=='nome-da-instituicao':
+						self.instituicao = value
+					if name=='nome-da-agencia':
+						self.agenciaDeFomento = value
+
+		# ----------------------------------------------------------------------
+		if self.achouOCTeseDeDoutorado:
+			if tag=='dados-basicos-de-orientacoes-concluidas-para-doutorado':
+				for name, value in attributes:
+					if name=='titulo':
+						self.tituloDoTrabalho = value
+					if name=='ano':
+						self.ano = value
+					if name=='natureza':
+						self.tipoDeOrientacao = value.capitalize()
+			if tag=='detalhamento-de-orientacoes-concluidas-para-doutorado':
+				for name, value in attributes:
+					if name=='nome-do-orientado':
+						self.nome = value
+					if name=='nome-da-instituicao':
+						self.instituicao = value
+					if name=='nome-da-agencia':
+						self.agenciaDeFomento = value
+
+		# ----------------------------------------------------------------------
+		if self.achouOCDissertacaoDeMestrado:
+			if tag=='dados-basicos-de-orientacoes-concluidas-para-mestrado':
+				for name, value in attributes:
+					if name=='titulo':
+						self.tituloDoTrabalho = value
+					if name=='ano':
+						self.ano = value
+					if name=='natureza':
+						self.tipoDeOrientacao = value.capitalize()
+			if tag=='detalhamento-de-orientacoes-concluidas-para-mestrado':
+				for name, value in attributes:
+					if name=='nome-do-orientado':
+						self.nome = value
+					if name=='nome-da-instituicao':
+						self.instituicao = value
+					if name=='nome-da-agencia':
+						self.agenciaDeFomento = value
+
+
+
 	def handle_endtag(self, tag):
 		# ----------------------------------------------------------------------
 		if tag=='artigo-publicado':
@@ -769,6 +884,47 @@ class ParserLattesXML(HTMLParser):
 			pub.natureza= self.editora+'. ('+self.natureza+')'
 			pub.chave   = self.autores
 			self.listaOutroTipoDeProducaoBibliografica.append(pub)
+
+		# ----------------------------------------------------------------------
+		if tag=='orientacoes-concluidas-para-pos-doutorado':
+			self.achouOCSupervisaoDePosDoutorado = 0
+
+			ori = OrientacaoConcluida(self.idMembro)
+			ori.nome = self.nome
+			ori.tituloDoTrabalho = self.tituloDoTrabalho
+			ori.ano = self.ano
+			ori.instituicao = self.instituicao
+			ori.agenciaDeFomento = self.agenciaDeFomento
+			ori.tipoDeOrientacao = self.tipoDeOrientacao
+			ori.chave = self.nome
+			self.listaOCSupervisaoDePosDoutorado.append(ori)
+
+		if tag=='orientacoes-concluidas-para-doutorado':
+			self.achouOCTeseDeDoutorado = 0
+
+			ori = OrientacaoConcluida(self.idMembro)
+			ori.nome = self.nome
+			ori.tituloDoTrabalho = self.tituloDoTrabalho
+			ori.ano = self.ano
+			ori.instituicao = self.instituicao
+			ori.agenciaDeFomento = self.agenciaDeFomento
+			ori.tipoDeOrientacao = self.tipoDeOrientacao
+			ori.chave = self.nome
+			self.listaOCTeseDeDoutorado.append(ori)
+
+		if tag=='orientacoes-concluidas-para-mestrado':
+			self.achouOCDissertacaoDeMestrado = 0
+
+			ori = OrientacaoConcluida(self.idMembro)
+			ori.nome = self.nome
+			ori.tituloDoTrabalho = self.tituloDoTrabalho
+			ori.ano = self.ano
+			ori.instituicao = self.instituicao
+			ori.agenciaDeFomento = self.agenciaDeFomento
+			ori.tipoDeOrientacao = self.tipoDeOrientacao
+			ori.chave = self.nome
+			self.listaOCDissertacaoDeMestrado.append(ori)
+
 
 
 	# ------------------------------------------------------------------------ #

@@ -1,6 +1,27 @@
 #!/usr/bin/python
 # encoding: utf-8
 # filename: compiladorDeListas.py
+#
+#  scriptLattes V8
+#  Copyright 2005-2011: Jesús P. Mena-Chalco e Roberto M. Cesar-Jr.
+#  http://scriptlattes.sourceforge.net/
+#
+#
+#  Este programa é um software livre; você pode redistribui-lo e/ou 
+#  modifica-lo dentro dos termos da Licença Pública Geral GNU como 
+#  publicada pela Fundação do Software Livre (FSF); na versão 2 da 
+#  Licença, ou (na sua opnião) qualquer versão.
+#
+#  Este programa é distribuido na esperança que possa ser util, 
+#  mas SEM NENHUMA GARANTIA; sem uma garantia implicita de ADEQUAÇÂO a qualquer
+#  MERCADO ou APLICAÇÃO EM PARTICULAR. Veja a
+#  Licença Pública Geral GNU para maiores detalhes.
+#
+#  Você deve ter recebido uma cópia da Licença Pública Geral GNU
+#  junto com este programa, se não, escreva para a Fundação do Software
+#  Livre(FSF) Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+#
+
 
 import operator
 import numpy
@@ -73,6 +94,9 @@ class CompiladorDeListas:
 		self.listaCompletaPremioOuTitulo = {}
 		self.listaCompletaProjetoDePesquisa = {}
 
+		self.listaCompletaParticipacaoEmEvento = {}
+		self.listaCompletaOrganizacaoDeEvento = {}
+
 
 		# compilamos as producoes de todos os membros (separados por tipos)
 		for membro in grupo.listaDeMembros:
@@ -115,6 +139,9 @@ class CompiladorDeListas:
 			self.listaCompletaPremioOuTitulo              = self.compilarLista(membro.listaPremioOuTitulo, self.listaCompletaPremioOuTitulo)
 			# self.listaCompletaProjetoDePesquisa           = self.compilarListaDeProjetos(membro.listaProjetoDePesquisa, self.listaCompletaProjetoDePesquisa)
 			self.listaCompletaProjetoDePesquisa           = self.compilarLista(membro.listaProjetoDePesquisa, self.listaCompletaProjetoDePesquisa)
+
+			self.listaCompletaParticipacaoEmEvento        = self.compilarLista(membro.listaParticipacaoEmEvento, self.listaCompletaParticipacaoEmEvento)
+			self.listaCompletaOrganizacaoDeEvento         = self.compilarLista(membro.listaOrganizacaoDeEvento, self.listaCompletaOrganizacaoDeEvento)
 
 		# ---------------------------------------------------------------------------
 		# compilamos as producoes de todos os tipos
@@ -494,6 +521,8 @@ class CompiladorDeListas:
 		print "\n[LISTA COMPILADA DE PREMIOS]"
 		self.imprimirListaPremios(self.listaCompletaPremioOuTitulo)
 
+		print "\n[LISTA COMPILADA DE PARTICIPACAO EM EVENTOS] ..."
+		print "\n[LISTA COMPILADA DE ORGANIZACAO DE EVENTOS] ..."
 
 
 	def imprimirListaProducoes(self, listaCompleta):

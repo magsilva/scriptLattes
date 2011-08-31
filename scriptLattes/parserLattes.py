@@ -1,6 +1,27 @@
 #!/usr/bin/python
 # encoding: utf-8
 # filename: parserLattes.py
+#
+#  scriptLattes V8
+#  Copyright 2005-2011: Jesús P. Mena-Chalco e Roberto M. Cesar-Jr.
+#  http://scriptlattes.sourceforge.net/
+#
+#
+#  Este programa é um software livre; você pode redistribui-lo e/ou 
+#  modifica-lo dentro dos termos da Licença Pública Geral GNU como 
+#  publicada pela Fundação do Software Livre (FSF); na versão 2 da 
+#  Licença, ou (na sua opnião) qualquer versão.
+#
+#  Este programa é distribuido na esperança que possa ser util, 
+#  mas SEM NENHUMA GARANTIA; sem uma garantia implicita de ADEQUAÇÂO a qualquer
+#  MERCADO ou APLICAÇÃO EM PARTICULAR. Veja a
+#  Licença Pública Geral GNU para maiores detalhes.
+#
+#  Você deve ter recebido uma cópia da Licença Pública Geral GNU
+#  junto com este programa, se não, escreva para a Fundação do Software
+#  Livre(FSF) Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+#
+
 
 import HTMLParser
 import re
@@ -37,6 +58,9 @@ from producaoArtistica import *
 from orientacaoEmAndamento import *
 from orientacaoConcluida import *
 
+from organizacaoDeEvento import *
+from participacaoEmEvento import *
+
 
 class ParserLattes(HTMLParser):
 	item = None
@@ -62,6 +86,8 @@ class ParserLattes(HTMLParser):
 	salvarIdioma = None
 	salvarPremioOuTitulo = None
 	salvarItem = None
+	salvarParticipacaoEmEvento = None
+	salvarOrganizacaoDeEvento = None
 
 	achouGrupo = None
 	achouEnderecoProfissional = None
@@ -101,6 +127,9 @@ class ParserLattes(HTMLParser):
 	achouTCC = None
 	achouIniciacaoCientifica = None
 	achouOutroTipoDeOrientacao = None
+
+	achouParticipacaoEmEvento = None
+	achouOrganizacaoDeEvento = None
 
 	procurarCabecalho = None
 	partesDoItem = []
@@ -149,6 +178,9 @@ class ParserLattes(HTMLParser):
 	listaOCIniciacaoCientifica = []
 	listaOCOutroTipoDeOrientacao = []
 
+	# Eventos
+	listaParticipacaoEmEvento = []
+	listaOrganizacaoDeEvento = []
 
 	# auxiliares
 	doi = ''
@@ -162,6 +194,7 @@ class ParserLattes(HTMLParser):
 
 		# inicializacao obrigatoria
 		self.idMembro = idMembro
+		self.sexo = 'Masculino'
 
 		self.item = ''
 		self.listaIDLattesColaboradores = []
@@ -205,6 +238,10 @@ class ParserLattes(HTMLParser):
 		self.listaOCTCC = []
 		self.listaOCIniciacaoCientifica = []
 		self.listaOCOutroTipoDeOrientacao = []
+
+		self.listaParticipacaoEmEvento = []
+		self.listaOrganizacaoDeEvento = []
+
 
 		# inicializacao para evitar a busca exaustiva de algumas palavras-chave
 		self.salvarAtualizacaoCV = 1 
@@ -292,6 +329,17 @@ class ParserLattes(HTMLParser):
 					self.item = ''
 					return
 
+				if self.achouParticipacaoEmEvento and not self.salvarParticipacaoEmEvento:
+					self.salvarParticipacaoEmEvento = 1
+					self.partesDoItem = []
+					self.item = ''
+					return
+
+				if self.achouOrganizacaoDeEvento and not self.salvarOrganizacaoDeEvento:
+					self.salvarOrganizacaoDeEvento = 1
+					self.partesDoItem = []
+					self.item = ''
+					return
 
 				if not self.salvarItem and self.achouGrupo:
 					#if self.achouArtigoEmPeriodico or self.achouLivroPublicado or self.achouCapituloDeLivroPublicado or self.achouTextoEmJornalDeNoticia or self.achouTrabalhoCompletoEmCongresso or self.achouResumoExpandidoEmCongresso or self.achouResumoEmCongresso or self.achouArtigoAceito or self.achouApresentacaoDeTrabalho or self.achouOutroTipoDeProducaoBibliografica or \
@@ -344,7 +392,7 @@ class ParserLattes(HTMLParser):
 					return
 
 
-			if self.salvarFormacaoAcademica or self.salvarProjetoDePesquisa or self.salvarAreaDeAtuacao or self.salvarIdioma or self.salvarPremioOuTitulo or self.salvarItem:
+			if self.salvarFormacaoAcademica or self.salvarProjetoDePesquisa or self.salvarAreaDeAtuacao or self.salvarIdioma or self.salvarPremioOuTitulo or self.salvarParticipacaoEmEvento or self.salvarOrganizacaoDeEvento or self.salvarItem:
 				self.item = ''
 
 			if self.achouEnderecoProfissional:
@@ -412,6 +460,12 @@ class ParserLattes(HTMLParser):
 			self.salvarPremioOuTitulo = 0 # Desativamos a Lista 5: premios e titulos
 			self.achouPremioOuTitulo = 0
 
+			self.salvarParticipacaoEmEvento = 0
+			self.achouParticipacaoEmEvento = 0
+
+			self.salvarOrganizacaoDeEvento = 0
+			self.achouOrganizacaoDeEvento = 0
+
 			self.salvarItem = 0 # Desativamos as listas das producoes em C,T&A
 			self.achouGrupo = 0
 
@@ -450,8 +504,17 @@ class ParserLattes(HTMLParser):
 				self.salvarProjetoDePesquisa = 0
 				return
 
-			if self.salvarItem:
+			if self.salvarParticipacaoEmEvento:
+				self.listaParticipacaoEmEvento.append(ParticipacaoEmEvento(self.idMembro, self.partesDoItem))
+				self.salvarParticipacaoEmEvento = 0
+				return
 
+			if self.salvarOrganizacaoDeEvento:
+				self.listaOrganizacaoDeEvento.append(OrganizacaoDeEvento(self.idMembro, self.partesDoItem))
+				self.salvarOrganizacaoDeEvento = 0
+				return
+
+			if self.salvarItem:
 				# Produção bibliográfica
 				if self.achouArtigoEmPeriodico:
  					iessimoItem = ArtigoEmPeriodico(self.idMembro, self.partesDoItem, self.doi, self.relevante)
@@ -699,7 +762,7 @@ class ParserLattes(HTMLParser):
 				self.achouNomeEmCitacoes = 0
 				return
 
-			if self.salvarFormacaoAcademica or self.salvarProjetoDePesquisa or self.salvarAreaDeAtuacao or self.salvarIdioma or self.salvarPremioOuTitulo or self.salvarItem:
+			if self.salvarFormacaoAcademica or self.salvarProjetoDePesquisa or self.salvarAreaDeAtuacao or self.salvarIdioma or self.salvarPremioOuTitulo or self.salvarParticipacaoEmEvento or self.salvarOrganizacaoDeEvento or self.salvarItem:
 				self.partesDoItem.append(stripBlanks(self.item)) # acrescentamos cada celula da linha numa lista!
 				return
 
@@ -864,6 +927,16 @@ class ParserLattes(HTMLParser):
 		if u'Supervisões e orientações concluídas'==dado:
 			self.achouOrientacoesEmAndamento = 0
 			self.achouOrientacoesConcluidas = 1
+			return
+
+		if u'Participação em eventos'==dado:
+			self.achouParticipacaoEmEvento  = 1
+			self.achouOrganizacaoDeEvento = 0
+			return
+
+		if u'Organização de eventos'==dado:
+			self.achouParticipacaoEmEvento  = 0
+			self.achouOrganizacaoDeEvento = 1
 			return
 
 # ---------------------------------------------------------------------------- #

@@ -1,6 +1,6 @@
 #!/usr/bin/python
 # encoding: utf-8
-# filename: producaoArtistica.py
+# filename: participacaoEmEvento.py
 #
 #  scriptLattes V8
 #  Copyright 2005-2011: Jesús P. Mena-Chalco e Roberto M. Cesar-Jr.
@@ -22,61 +22,48 @@
 #  Livre(FSF) Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #
 
+
 from scriptLattes import *  
 from geradorDePaginasWeb import *
 import re
 
-class ProducaoArtistica:
+class ParticipacaoEmEvento:
 	item = None # dado bruto
-	idMembro = None
-	idLattes = None
+	idMembro = []
 
-	relevante = None
-	autores = None
-	titulo = None
 	ano = None
 	chave = None
 
-
-	def __init__(self, idMembro, partesDoItem, relevante):
-		# partesDoItem[0]: Numero (NAO USADO)
-		# partesDoItem[1]: Descricao
+	def __init__(self, idMembro, partesDoItem=''):
 		self.idMembro = set([])
 		self.idMembro.add(idMembro)
 
-		self.relevante = relevante
-		self.item = partesDoItem[1]
+		if not partesDoItem=='':
+			# partesDoItem[0]: Numero (NAO USADO)
+			# partesDoItem[1]: Descricao
+			self.item = partesDoItem[1]
 
-		# Dividir o item na suas partes constituintes
-		partes = self.item.partition(" . ")
-		self.autores = partes[0].strip()
-		partes = partes[2]
+			partes = self.item
+			aux = re.findall(u'\. ((?:19|20)\d\d)\\b', partes)
+			if len(aux)>0:
+				self.ano = aux[0] 
+			else:
+				self.ano = ''
+			
+			self.chave = self.item # chave de comparação entre os objetos
 
-
-		partes = partes.partition(". ")
-		self.titulo = partes[0].strip().rstrip(".").rstrip(",")
-		partes = partes[2]
-
-		aux = re.findall(u'((?:19|20)\d\d)\\b', partes)
-		if len(aux)>0:
-			self.ano = aux[-1].strip().rstrip(".").rstrip(",")
 		else:
 			self.ano = ''
 
-		self.chave = self.autores # chave de comparação entre os objetos
-
 
 	def compararCom(self, objeto):
-		if self.idMembro.isdisjoint(objeto.idMembro) and compararCadeias(self.titulo, objeto.titulo):
+		if self.idMembro.isdisjoint(objeto.idMembro) and compararCadeias(self.item, objeto.item):
 			# Os IDs dos membros são agrupados. 
 			# Essa parte é importante para a criação do GRAFO de colaborações
 			self.idMembro.update(objeto.idMembro)
 
-			if len(self.autores)<len(objeto.autores):
-				self.autores = objeto.autores
-
-			if len(self.titulo)<len(objeto.titulo):
-				self.titulo = objeto.titulo
+			if len(self.item)<len(objeto.item):
+				self.item = objeto.item
 
 			return self
 		else: # nao similares
@@ -84,21 +71,14 @@ class ProducaoArtistica:
 
 
 	def html(self, listaDeMembros):
-		s = self.autores + '. <b>' + self.titulo + '</b>. '
-		s+= str(self.ano) + '.'  if str(self.ano).isdigit() else '.'
+		s = self.item
 
- 		s+= menuHTMLdeBuscaPA(self.titulo)
 		return s
-
-
 
 	# ------------------------------------------------------------------------ #
 	def __str__(self):
-		s  = "\n[PRODUCAO ARTISTICA] \n"
+		s  = "\n[PARTICIPACAO EM EVENTO] \n"
 		s += "+ID-MEMBRO   : " + str(self.idMembro) + "\n"
-		s += "+RELEVANTE   : " + str(self.relevante) + "\n"
-		s += "+AUTORES     : " + self.autores.encode('utf8','replace') + "\n"
-		s += "+TITULO      : " + self.titulo.encode('utf8','replace') + "\n"
-		s += "+ANO         : " + str(self.ano) + "\n"
-#		s += "+item        : @@" + self.item.encode('utf8','replace') + "@@\n"
+		s += "+item         : @@" + self.item.encode('utf8','replace') + "@@\n"
+
 		return s
