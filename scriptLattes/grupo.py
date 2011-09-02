@@ -340,8 +340,8 @@ class Grupo:
 
 	def imprimirMatrizesDeFrequencia(self):
 		self.compilador.imprimirMatrizesDeFrequencia()
-		logging.debug("Co-authoring vector" + self.vetorDeCoAutoria)
-		logging.debug("Normalized frequency matric" + self.matrizDeFrequenciaNormalizada)
+		logging.debug("Co-authoring vector" + str(self.vetorDeCoAutoria))
+		logging.debug("Normalized frequency matric" + str(self.matrizDeFrequenciaNormalizada))
 
 	def numeroDeMembros(self):
 		return len(self.listaDeMembros)
