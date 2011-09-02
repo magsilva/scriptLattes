@@ -154,6 +154,7 @@ class Grupo:
 		# baixamos os arquivos HTML
 		dir = self.obterParametro('global-diretorio_de_saida')
 		file = open(os.path.join(dir, 'members.csv'), 'w')
+		file.write("Lattes, Nome, Artigos em Periódicos, Artigos em eventos, Livros, Capítulos de livros, Supervisões de pós-doutorado, Orientações de doutorado, Orientações de mestrado, Orientações de especialização, Orientações de trabalho de final de curso, Software, Outros produtos tecnológicos\n")
 		for membro in self.listaDeMembros:
 			print "Loading data from user ", membro.idLattes
 			membro.carregarDadosCVLattes(opener)
