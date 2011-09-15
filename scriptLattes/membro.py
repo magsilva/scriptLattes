@@ -159,8 +159,13 @@ class Membro:
 	def carregarDadosCVLattes(self, opener):
 		if not self.idLattes=='':
 			cacheDirName = os.path.expanduser(os.path.join("~", ".scriptLattes", "cache"))
-			cachedFileName = cacheDirName + self.idLattes
+			cachedFileName = os.path.join(cacheDirName, self.idLattes)
 			if os.path.exists(cachedFileName):
+				if os.path.getsize(cachedFileName) < 1000:
+					print "\t", "Invalid data"
+					os.remove(cachedFileName)
+			if os.path.exists(cachedFileName):
+				print "\t", cachedFileName
 				cachedFile = open(cachedFileName, 'r')
 				cvLattesHTML = cachedFile.read()
 			else:
@@ -169,12 +174,14 @@ class Membro:
 					params = {}
 					data = urllib.urlencode(params)
 					req = urllib2.Request(self.url, data, headers)
+					print "\t", self.url
 					response = opener.open(req) # Download CV Lattes or captcha
 					cvLattesHTML = response.read()
 					kCode = re.findall(u'name="id" value="(.*)" id=', cvLattesHTML)
 					if len(kCode) > 0: # Download CV Lattes using alternative Lattes CV identifier
 						alternativeUrl ='http://buscatextual.cnpq.br/buscatextual/visualizacv.do?metodo=apresentar&palavra=10&id=' + kCode[-1]
 						time.sleep(1)
+						print "\t", alternativeUrl
 						req = urllib2.Request(alternativeUrl, data, headers)
 						response = urllib2.urlopen(req)
 						cvLattesHTML = response.read()
@@ -186,6 +193,12 @@ class Membro:
 					print '[ERRO] Nao é possível obter o CV Lattes: ', self.url
 					print '[ERRO] Código de erro: ', e.code
 				time.sleep(10)
+
+			if os.path.exists(cachedFileName):
+				if os.path.getsize(cachedFileName) < 1000:
+					print "\t", "Invalid data"
+					os.remove(cachedFileName)
+
 
 			extended_chars= u''.join(unichr(c) for c in xrange(127, 65536, 1)) # srange(r"[\0x80-\0x7FF]")
 			special_chars = ' -'''
