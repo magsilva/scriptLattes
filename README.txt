@@ -49,6 +49,9 @@ URL DO PROJETO
 =========================================================================================
 LOG
 
+Sat Oct 15 23:32:21 BRT 2011
+-- Foi melhorado o procedimento para baixar CVs da Plataforma Lattes.
+
 Sun Jul  3 12:01:50 BRT 2011
 -- Foi corrigido o procedimento para baixar CVs Lattes.
 

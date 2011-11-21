@@ -205,7 +205,7 @@ class Grupo:
 			self.salvarMatrizTXT(self.matrizDeAdjacencia, prefix+"matrizDeAdjacencia.txt")
 			self.salvarMatrizTXT(self.matrizDeFrequencia, prefix+"matrizDeFrequencia.txt")
 			self.salvarMatrizTXT(self.matrizDeFrequenciaNormalizada, prefix+"matrizDeFrequenciaNormalizada.txt")
-			# self.salvarMatrizXML(self.matrizDeAdjacencia, prefix+"matrizDeAdjacencia.xml")
+			self.salvarMatrizXML(self.matrizDeAdjacencia, prefix+"matrizDeAdjacencia.xml")
 	
 			# (2) Salvamos as listas de nomes e rótulos (para análise posterior com outras ferramentas)
 			self.salvarListaTXT(self.nomes, prefix+"listaDeNomes.txt")
@@ -326,6 +326,11 @@ class Grupo:
 		gBarra.criarGrafico(self.compilador.listaCompletaPA, 'PA', 'Numero de producoes artisticas')
 		gBarra.criarGrafico(self.compilador.listaCompletaOA, 'OA', 'Numero de orientacoes em andamento')
 		gBarra.criarGrafico(self.compilador.listaCompletaOC, 'OC', 'Numero de orientacoes concluidas')
+		
+		gBarra.criarGrafico(self.compilador.listaCompletaParticipacaoEmEvento, 'Ep', 'Numero de Eventos')
+		gBarra.criarGrafico(self.compilador.listaCompletaOrganizacaoDeEvento, 'Eo', 'Numero de Eventos')
+
+
 
 	def gerarGrafosDeColaboracoes(self):
 		if self.obterParametro('grafo-mostrar_grafo_de_colaboracoes'):
@@ -352,15 +357,17 @@ class Grupo:
 
 	def imprimirListaDeParametros(self):
 		for par in self.listaDeParametros:# .keys():
-			print "Parameter ", par[0], " = ", par[1]
+			print "[PARAMETRO] ",par[0]," = ",par[1]
+		print
 
 	def imprimirListaDeMembros(self):
 		for membro in self.listaDeMembros:
 			print membro
+		print
 
 	def imprimirListaDeRotulos(self):
 		for rotulo in self.listaDeRotulos:
-			print "Label: ", rotulo
+			print "[ROTULO] ", rotulo
 
 	def atualizarParametro(self, parametro, valor):
 		parametro = parametro.strip().lower()
@@ -438,6 +445,8 @@ class Grupo:
 
 		self.listaDeParametros.append(['relatorio-incluir_projeto', 'sim'])
 		self.listaDeParametros.append(['relatorio-incluir_premio', 'sim'])
+		self.listaDeParametros.append(['relatorio-incluir_participacao_em_evento', 'sim'])
+		self.listaDeParametros.append(['relatorio-incluir_organizacao_de_evento', 'sim'])
 
 		self.listaDeParametros.append(['grafo-mostrar_grafo_de_colaboracoes', 'sim'])
 		self.listaDeParametros.append(['grafo-mostrar_todos_os_nos_do_grafo', 'sim'])

@@ -22,13 +22,13 @@
 #  Livre(FSF) Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #
 
-import urllib
 import urllib2
 import re
 import sets
 import datetime
 import time
 import os
+import logging
 
 from parserLattes import *
 from parserLattesXML import *
@@ -117,14 +117,13 @@ class Membro:
 
 
 
-	def __init__(self, idMembro, identificador, nome, periodo, rotulo, itemsDesdeOAno, itemsAteOAno, xml=''):
+	def __init__(self, idMembro, identificador, nome, periodo, rotulo, itemsDesdeOAno, itemsAteOAno, xml = ''):
 		self.idMembro = idMembro
 		self.idLattes = identificador
 		self.nomeInicial = nome
 		self.periodo = periodo
 		self.rotulo = rotulo
-		self.userAgent = 'Mozilla/4.0 (compatible; MSIE 5.5; Windows NT)'
-		self.url = 'http://lattes.cnpq.br/'+identificador
+		self.url = 'http://lattes.cnpq.br/' + identificador
 		self.itemsDesdeOAno = itemsDesdeOAno
 		self.itemsAteOAno = itemsAteOAno
 		self.criarListaDePeriodos(self.periodo)
@@ -152,58 +151,78 @@ class Membro:
 				if ano1.isdigit() and ano2.isdigit():
 					self.listaPeriodo.append([int(ano1), int(ano2)])
 				else:
-					print "\n[AVISO IMPORTANTE] Periodo nao válido: "+lista[i]+". (periodo desconsiderado na lista)"
-					print "[AVISO IMPORTANTE] CV Lattes: "+self.idLattes+". Membro: "+self.nomeInicial.encode('utf8')+"\n"
+					logging.error('Invalid period %s for CV %s, skipping it' % (lista[i], self.idLattes))
 		
 
 	def carregarDadosCVLattes(self, opener):
-		if not self.idLattes=='':
+		# Load from HTML file
+		if not self.idLattes == '':
 			cacheDirName = os.path.expanduser(os.path.join("~", ".scriptLattes", "cache"))
 			cachedFileName = os.path.join(cacheDirName, self.idLattes)
+			
+			# Check if cached file (if any) is valid
 			if os.path.exists(cachedFileName):
 				if os.path.getsize(cachedFileName) < 1000:
-					print "\t", "Invalid data"
+					logging.info('Invalid CV Lattes found for %s, deleting cached file' % self.idLattes)
 					os.remove(cachedFileName)
+				else:
+					if os.path.getmtime(cachedFileName) < (time.time() - 365 * 24 * 60 * 60):
+						logging.info('Cached file for CV Lattes %s is too old, deleting it' % self.idLattes)
+						os.remove(cachedFileName)
+						
+			# Check if the curriculum is valid
 			if os.path.exists(cachedFileName):
-				print "\t", cachedFileName
+				logging.info('Found good CV Lattes for %s in the cache, skipping download' % self.idLattes)
 				cachedFile = open(cachedFileName, 'r')
 				cvLattesHTML = cachedFile.read()
 			else:
+				# Download CV Lattes
 				try:
-					headers = { 'User-Agent' : self.userAgent }
-					params = {}
-					data = urllib.urlencode(params)
-					req = urllib2.Request(self.url, data, headers)
-					print "\t", self.url
-					response = opener.open(req) # Download CV Lattes or captcha
+					headers = {
+						'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64; rv:2.0) Gecko/20100101 Firefox/4.0',
+						'Accept-Language': 'en-us,en;q=0.5',
+						'Accept-Encoding': 'deflate',
+						'Keep-Alive': '115',
+						'Connection': 'keep-alive',
+						'Cache-Control': 'max-age=0',
+						'Cookie': 'style=standard; __utma=140185953.294397416.1313390179.1313390179.1317145115.2; __utmz=140185953.1317145115.2.2.utmccn=(referral)|utmcsr=emailinstitucional.cnpq.br|utmcct=/ei/emailInstitucional.do|utmcmd=referral; JSESSIONID=1B98ABF9642E01597AABA0F7A8807FD1.node2',
+					}
+					logging.info('Downloading CV Lattes for %s' % self.idLattes)
+					req = urllib2.Request(self.url, None, headers) # Young folks by P,B&J!
+					response = urllib2.urlopen(req)
 					cvLattesHTML = response.read()
-					kCode = re.findall(u'name="id" value="(.*)" id=', cvLattesHTML)
-					if len(kCode) > 0: # Download CV Lattes using alternative Lattes CV identifier
-						alternativeUrl ='http://buscatextual.cnpq.br/buscatextual/visualizacv.do?metodo=apresentar&palavra=10&id=' + kCode[-1]
-						time.sleep(1)
-						print "\t", alternativeUrl
-						req = urllib2.Request(alternativeUrl, data, headers)
+					response.close()
+					
+					# If downloaded file is invalid, try to download using alternative method
+					alternativeLattesId = re.findall(u'name="id" value="(.*)" id=', cvLattesHTML)
+					if len(alternativeLattesId) > 0:
+						logging.info('Downloading CV Lattes for %s using alternative method' % self.idLattes)
+						alternativeUrl ='http://buscatextual.cnpq.br/buscatextual/visualizacv.do?metodo=apresentar&palavra=10&id=' + alternativeLattesId[-1]
+						req = urllib2.Request(alternativeUrl, None, headers)
 						response = urllib2.urlopen(req)
 						cvLattesHTML = response.read()
+
 					cachedFile = open(cachedFileName, 'w')
 					cachedFile.write(cvLattesHTML)
 					cachedFile.close()
-					response.close()
+					
 				except urllib2.URLError, e:
-					print '[ERRO] Nao é possível obter o CV Lattes: ', self.url
-					print '[ERRO] Código de erro: ', e.code
-				time.sleep(10)
+					logging.error('Cannot download data for %(id)s (%(url)s) due to %(errorid)d' % {'id' : self.idLattes, 'url' : self.url, 'errorid' : e.code})
+
+				
 
 			if os.path.exists(cachedFileName):
 				if os.path.getsize(cachedFileName) < 1000:
-					print "\t", "Invalid data"
+					logging.info('Invalid CV Lattes found for %s, deleting cached file' % self.idLattes)
 					os.remove(cachedFileName)
+					pass
 
 
 			extended_chars= u''.join(unichr(c) for c in xrange(127, 65536, 1)) # srange(r"[\0x80-\0x7FF]")
 			special_chars = ' -'''
 			cvLattesHTML  = cvLattesHTML.decode('ascii','replace') + extended_chars + special_chars
 			parser        = ParserLattes(self.idMembro, cvLattesHTML)
+		# Load from XML file
 		else:
 			arquivoX = open(self.xml)
 			cvLattesXML = arquivoX.read()
@@ -441,7 +460,7 @@ class Membro:
 			s += "\n"
 			for formacao in self.listaFormacaoAcademica:
 				s += formacao.__str__()
-  	
+	
 			s += "\n"
 			for projeto in self.listaProjetoDePesquisa:
 				s += projeto.__str__()
