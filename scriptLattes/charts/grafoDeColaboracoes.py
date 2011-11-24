@@ -74,10 +74,10 @@ class GrafoDeColaboracoes:
 		self.grafoDeCoAutoriaComPesosCMAPX = self.grafoDeCoAutoriaComPesos.draw(format='cmapx')
 #		print self.grafoDeCoAutoriaSemPesosCMAPX
 
-		self.grafoDeCoAutoriaNormalizado = self.criarGrafoDeCoAutoriaNormalizada()
-		self.grafoDeCoAutoriaNormalizado.draw(path=diretorioDeSaida+'/grafoDeColaboracoesNormalizado.svg', format='svg')
-		self.grafoDeCoAutoriaNormalizado.draw(path=diretorioDeSaida+'/grafoDeColaboracoesNormalizado.dot', format='dot')
-		self.grafoDeCoAutoriaNormalizadoCMAPX = self.grafoDeCoAutoriaNormalizado.draw(format='cmapx')
+#		self.grafoDeCoAutoriaNormalizado = self.criarGrafoDeCoAutoriaNormalizada()
+#		self.grafoDeCoAutoriaNormalizado.draw(path=diretorioDeSaida+'/grafoDeColaboracoesNormalizado.svg', format='svg')
+#		self.grafoDeCoAutoriaNormalizado.draw(path=diretorioDeSaida+'/grafoDeColaboracoesNormalizado.dot', format='dot')
+#		self.grafoDeCoAutoriaNormalizadoCMAPX = self.grafoDeCoAutoriaNormalizado.draw(format='cmapx')
 #		print self.grafoDeCoAutoriaNormalizadoCMAPX
 
 #		self.grafoDeCoAutoriaCompleta = self.criarGrafoDeCoAutoriaCompleta()

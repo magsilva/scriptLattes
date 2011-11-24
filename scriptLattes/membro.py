@@ -40,6 +40,9 @@ class Membro:
 	idMembro = None
 	rotulo = ''
 
+	logging.basicConfig()
+	logger = logging.getLogger('scriptLattes')
+
 	nomeInicial = ''
 	nomeCompleto = ''
 	sexo = ''
@@ -117,6 +120,7 @@ class Membro:
 
 
 
+
 	def __init__(self, idMembro, identificador, nome, periodo, rotulo, itemsDesdeOAno, itemsAteOAno, xml = ''):
 		self.idMembro = idMembro
 		self.idLattes = identificador
@@ -128,6 +132,7 @@ class Membro:
 		self.itemsAteOAno = itemsAteOAno
 		self.criarListaDePeriodos(self.periodo)
 		self.xml = xml
+		self.logger.setLevel(logging.INFO)
 
 
 	def criarListaDePeriodos(self, periodoDoMembro):
@@ -151,10 +156,10 @@ class Membro:
 				if ano1.isdigit() and ano2.isdigit():
 					self.listaPeriodo.append([int(ano1), int(ano2)])
 				else:
-					logging.error('Invalid period %s for CV %s, skipping it' % (lista[i], self.idLattes))
+					self.logger.error('Invalid period %s for CV %s, skipping it' % (lista[i], self.idLattes))
 		
 
-	def carregarDadosCVLattes(self, opener):
+	def carregarDadosCVLattes(self):
 		# Load from HTML file
 		if not self.idLattes == '':
 			cacheDirName = os.path.expanduser(os.path.join("~", ".scriptLattes", "cache"))
@@ -163,16 +168,16 @@ class Membro:
 			# Check if cached file (if any) is valid
 			if os.path.exists(cachedFileName):
 				if os.path.getsize(cachedFileName) < 1000:
-					logging.info('Invalid CV Lattes found for %s, deleting cached file' % self.idLattes)
+					self.logger.info('Invalid CV Lattes found for %s, deleting cached file' % self.idLattes)
 					os.remove(cachedFileName)
 				else:
 					if os.path.getmtime(cachedFileName) < (time.time() - 365 * 24 * 60 * 60):
-						logging.info('Cached file for CV Lattes %s is too old, deleting it' % self.idLattes)
+						self.logger.info('Cached file for CV Lattes %s is too old, deleting it' % self.idLattes)
 						os.remove(cachedFileName)
 						
 			# Check if the curriculum is valid
 			if os.path.exists(cachedFileName):
-				logging.info('Found good CV Lattes for %s in the cache, skipping download' % self.idLattes)
+				self.logger.info('Found good CV Lattes for %s in the cache, skipping download' % self.idLattes)
 				cachedFile = open(cachedFileName, 'r')
 				cvLattesHTML = cachedFile.read()
 			else:
@@ -187,7 +192,7 @@ class Membro:
 						'Cache-Control': 'max-age=0',
 						'Cookie': 'style=standard; __utma=140185953.294397416.1313390179.1313390179.1317145115.2; __utmz=140185953.1317145115.2.2.utmccn=(referral)|utmcsr=emailinstitucional.cnpq.br|utmcct=/ei/emailInstitucional.do|utmcmd=referral; JSESSIONID=1B98ABF9642E01597AABA0F7A8807FD1.node2',
 					}
-					logging.info('Downloading CV Lattes for %s' % self.idLattes)
+					self.logger.info('Downloading CV Lattes for %s' % self.idLattes)
 					req = urllib2.Request(self.url, None, headers) # Young folks by P,B&J!
 					response = urllib2.urlopen(req)
 					cvLattesHTML = response.read()
@@ -196,7 +201,7 @@ class Membro:
 					# If downloaded file is invalid, try to download using alternative method
 					alternativeLattesId = re.findall(u'name="id" value="(.*)" id=', cvLattesHTML)
 					if len(alternativeLattesId) > 0:
-						logging.info('Downloading CV Lattes for %s using alternative method' % self.idLattes)
+						self.logger.info('Downloading CV Lattes for %s using alternative method' % self.idLattes)
 						alternativeUrl ='http://buscatextual.cnpq.br/buscatextual/visualizacv.do?metodo=apresentar&palavra=10&id=' + alternativeLattesId[-1]
 						req = urllib2.Request(alternativeUrl, None, headers)
 						response = urllib2.urlopen(req)
@@ -207,13 +212,13 @@ class Membro:
 					cachedFile.close()
 					
 				except urllib2.URLError, e:
-					logging.error('Cannot download data for %(id)s (%(url)s) due to %(errorid)d' % {'id' : self.idLattes, 'url' : self.url, 'errorid' : e.code})
+					self.logger.error('Cannot download data for %(id)s (%(url)s) due to %(errorid)d' % {'id' : self.idLattes, 'url' : self.url, 'errorid' : e.code})
 
 				
 
 			if os.path.exists(cachedFileName):
 				if os.path.getsize(cachedFileName) < 1000:
-					logging.info('Invalid CV Lattes found for %s, deleting cached file' % self.idLattes)
+					self.logger.info('Invalid CV Lattes found for %s, deleting cached file' % self.idLattes)
 					os.remove(cachedFileName)
 					pass
 

@@ -555,10 +555,10 @@ class GeradorDePaginasWeb:
 	
 		cmapx1 = self.grupo.grafosDeColaboracoes.grafoDeCoAutoriaSemPesosCMAPX
 		cmapx2 = self.grupo.grafosDeColaboracoes.grafoDeCoAutoriaComPesosCMAPX
-		cmapx3 = self.grupo.grafosDeColaboracoes.grafoDeCoAutoriaNormalizadoCMAPX
+		# cmapx3 = self.grupo.grafosDeColaboracoes.grafoDeCoAutoriaNormalizadoCMAPX
 		s+='<map id="grafo1" name="grafo1">'+cmapx1.decode("utf8")+'\n</map>\n'
 		s+='<map id="grafo2" name="grafo2">'+cmapx2.decode("utf8")+'\n</map>\n'
-		s+='<map id="grafo3" name="grafo3">'+cmapx3.decode("utf8")+'\n</map>\n'
+		# s+='<map id="grafo3" name="grafo3">'+cmapx3.decode("utf8")+'\n</map>\n'
 
 		if self.grupo.obterParametro('grafo-incluir_grau_de_colaboracao'):
 			s+='<br><p><h3>Grau de colaboração</h3> \

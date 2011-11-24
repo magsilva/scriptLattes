@@ -77,7 +77,13 @@ class Grupo:
 	nomes = None
 	rotulos = None
 
+	logging.basicConfig()
+	logger = logging.getLogger('scriptLattes')
+
+
 	def __init__(self, arquivo):
+		self.logger.setLevel(logging.INFO)
+
 		self.arquivoConfiguracao = arquivo
 		self.carregarParametrosPadrao()
 	
@@ -137,30 +143,14 @@ class Grupo:
 
 
 	def carregarDadosCVLattes(self):
-		cookieUTMA = cookielib.Cookie(name="__utma", value="140185953.1754088786.1298641982.1301171440.1302204919.5", domain='.cnpq.br', path='/', version=0, port=None, port_specified=False, domain_specified=False, domain_initial_dot=False, path_specified=True, secure=False, expires=None, discard=True, comment=None, comment_url=None, rest={'HttpOnly': None}, rfc2109=False)
-		cookieUTMZ = cookielib.Cookie(name="__utmz", value="140185953.1298641982.1.1.utmccn=(referral)|utmcsr=lmpl.cnpq.br|utmcct=/|utmcmd=referral", domain='.cnpq.br', path='/', version=0, port=None, port_specified=False, domain_specified=False, domain_initial_dot=False, path_specified=True, secure=False, expires=None, discard=True, comment=None, comment_url=None, rest={'HttpOnly': None}, rfc2109=False )
-		cookieJSESSIONID = cookielib.Cookie(name="JSESSIONID", value="D3227F6AD5D158AE7666E4E37C26D876.node6", domain='buscatextual.cnpq.br', path='/', version=0, port=None, port_specified=False, domain_specified=False, domain_initial_dot=False, path_specified=True, secure=False, expires=None, discard=True, comment=None, comment_url=None, rest={'HttpOnly': None}, rfc2109=False)
-		cookieSImagem = cookielib.Cookie(name="simagem", value="47", domain='buscatextual.cnpq.br', path='/buscatextual/', version=0, port=None, port_specified=False, domain_specified=False, domain_initial_dot=False, path_specified=True, secure=False, expires=None, discard=True, comment=None, comment_url=None, rest={'HttpOnly': None}, rfc2109=False)
-
-		cj = cookielib.LWPCookieJar()
-		cj.set_cookie(cookieUTMA)
-		cj.set_cookie(cookieUTMZ)
-		cj.set_cookie(cookieJSESSIONID)
-		cj.set_cookie(cookieSImagem)
-		# cj = cookielib.MozillaCookieJar()
-		opener = urllib2.build_opener(urllib2.HTTPCookieProcessor(cj))
-		urllib2.install_opener(opener)
-		
-		# baixamos os arquivos HTML
 		dir = self.obterParametro('global-diretorio_de_saida')
 		file = open(os.path.join(dir, 'members.csv'), 'w')
 		file.write("Lattes, Nome, Artigos em Periódicos, Artigos em eventos, Livros, Capítulos de livros, Supervisões de pós-doutorado, Orientações de doutorado, Orientações de mestrado, Orientações de especialização, Orientações de trabalho de final de curso, Software, Outros produtos tecnológicos\n")
 		for membro in self.listaDeMembros:
-			print "Loading data from user ", membro.idLattes
-			membro.carregarDadosCVLattes(opener)
+			self.logger.info('Loading data for CV Lattes %s' % membro.idLattes)
+			membro.carregarDadosCVLattes()
 			membro.dumpToFile(file)
 			membro.filtrarItemsPorPeriodo()
-			logging.info(membro)
 			file.flush()
 			os.fsync(file.fileno())
 		file.close()
@@ -346,8 +336,8 @@ class Grupo:
 
 	def imprimirMatrizesDeFrequencia(self):
 		self.compilador.imprimirMatrizesDeFrequencia()
-		logging.debug("Co-authoring vector" + str(self.vetorDeCoAutoria))
-		logging.debug("Normalized frequency matric" + str(self.matrizDeFrequenciaNormalizada))
+		self.logger.debug("Co-authoring vector" + str(self.vetorDeCoAutoria))
+		self.logger.debug("Normalized frequency matric" + str(self.matrizDeFrequenciaNormalizada))
 
 	def numeroDeMembros(self):
 		return len(self.listaDeMembros)
@@ -377,7 +367,7 @@ class Grupo:
 			if parametro==self.listaDeParametros[i][0]:
 				self.listaDeParametros[i][1] = valor
 				return
-		logging.error("Invalid parameter" + parametro)
+		self.logger.error("Invalid parameter" + parametro)
 
 	def obterParametro(self, parametro):
 		for i in range(0,len(self.listaDeParametros)):
