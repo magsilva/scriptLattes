@@ -163,6 +163,8 @@ class Membro:
 		# Load from HTML file
 		if not self.idLattes == '':
 			cacheDirName = os.path.expanduser(os.path.join("~", ".scriptLattes", "cache"))
+			if not os.path.exists(cacheDirName):
+				os.makedirs(cacheDirName)
 			cachedFileName = os.path.join(cacheDirName, self.idLattes)
 			
 			# Check if cached file (if any) is valid
