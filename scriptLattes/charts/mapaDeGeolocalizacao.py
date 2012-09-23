@@ -3,16 +3,16 @@
 # filename: mapaDeGeolocalizacao.py
 #
 #  scriptLattes V8
-#  Copyright 2005-2011: Jesús P. Mena-Chalco e Roberto M. Cesar-Jr.
+#  Copyright 2005-2012: Jesús P. Mena-Chalco e Roberto M. Cesar-Jr.
 #  http://scriptlattes.sourceforge.net/
 #
 #
 #  Este programa é um software livre; você pode redistribui-lo e/ou 
 #  modifica-lo dentro dos termos da Licença Pública Geral GNU como 
 #  publicada pela Fundação do Software Livre (FSF); na versão 2 da 
-#  Licença, ou (na sua opnião) qualquer versão.
+#  Licença, ou (na sua opinião) qualquer versão.
 #
-#  Este programa é distribuido na esperança que possa ser util, 
+#  Este programa é distribuído na esperança que possa ser util, 
 #  mas SEM NENHUMA GARANTIA; sem uma garantia implicita de ADEQUAÇÂO a qualquer
 #  MERCADO ou APLICAÇÃO EM PARTICULAR. Veja a
 #  Licença Pública Geral GNU para maiores detalhes.
@@ -36,86 +36,56 @@ class MapaDeGeolocalizacao:
 
 
 	def gerarMapa(self):
-		self.mapa = '<script src="http://maps.google.com/maps?file=api&amp;v=2.x&amp;sensor=false&amp;key='+self.grupo.obterParametro('mapa-google_map_key')+'" type="text/javascript"></script> \n'
+		self.mapa = '<script type="text/javascript" src="https://maps.google.com/maps/api/js?sensor=false"></script> \n'
 		self.mapa+= '<script type="text/javascript"> \n\
-        function initialize() { \n\
-          if (GBrowserIsCompatible()) { \n\
-             var map = new GMap2(document.getElementById("map_canvas")); \n\
-             map.setCenter(new GLatLng(0,0), 2); \n\
-             map.setUIToDefault(); \n\
-             \n\
-             var baseIcon0 = new GIcon(G_DEFAULT_ICON);  \n\
-             baseIcon0.image = "lattesPoint0.png"; \n\
-             markerOptions0 = { icon:baseIcon0 }; \n\
-             \n\
-             var tinyIcon1 = new GIcon(); \n\
-             tinyIcon1.image = "lattesPoint1.png"; \n\
-             tinyIcon1.shadow = "lattesPoint_shadow.png"; \n\
-             tinyIcon1.iconSize = new GSize(12, 20); \n\
-             tinyIcon1.shadowSize = new GSize(22, 20); \n\
-             tinyIcon1.iconAnchor = new GPoint(6, 20); \n\
-             tinyIcon1.infoWindowAnchor = new GPoint(5, 1); \n\
-             markerOptions1 = { icon:tinyIcon1 }; \n\
-             \n\
-             var tinyIcon2 = new GIcon(); \n\
-             tinyIcon2.image = "lattesPoint2.png"; \n\
-             tinyIcon2.shadow = "lattesPoint_shadow.png"; \n\
-             tinyIcon2.iconSize = new GSize(12, 20); \n\
-             tinyIcon2.shadowSize = new GSize(22, 20); \n\
-             tinyIcon2.iconAnchor = new GPoint(6, 20); \n\
-             tinyIcon2.infoWindowAnchor = new GPoint(5, 1); \n\
-             markerOptions2 = { icon:tinyIcon2 }; \n\
-             \n\
-             var tinyIcon3 = new GIcon(); \n\
-             tinyIcon3.image = "lattesPoint3.png"; \n\
-             tinyIcon3.shadow = "lattesPoint_shadow.png"; \n\
-             tinyIcon3.iconSize = new GSize(12, 20); \n\
-             tinyIcon3.shadowSize = new GSize(22, 20); \n\
-             tinyIcon3.iconAnchor = new GPoint(6, 20); \n\
-             tinyIcon3.infoWindowAnchor = new GPoint(5, 1); \n\
-             markerOptions3 = { icon:tinyIcon3 }; \n\
-             \n\
-             function createMarker0(point, name, address, cvlattes, photo) { \n\
-                var marker = new GMarker(point, markerOptions0); \n\
-                GEvent.addListener(marker, "click", function() { \n\
-                marker.openInfoWindowHtml(" <table> <tr bgcolor=#006400><td><font color=#ffffff><b>scriptLattes</b>: "+name+"</font></td></tr> <tr><td> <table><tr><td valign=top> <img src="+photo+" width=100px> </td><td> <font size=-2>"+address+"<br><p><a href="+cvlattes+" target=_blank>"+cvlattes+"</a></font></td></tr> </table>  </td></tr> </table>"); \n\
-                }); \n\
-               return marker; \n\
-             }; \n\
-             \n\
-             function createMarker1(point, name, address, advisors, cvlattes, photo) { \n\
-                var marker = new GMarker(point, markerOptions1); \n\
-                GEvent.addListener(marker, "click", function() { \n\
-                marker.openInfoWindowHtml(" <table> <tr bgcolor=#990808><td><font color=#ffffff><b>scriptLattes</b>: "+name+"</font></td></tr> <tr><td> <table><tr><td valign=top> <img src="+photo+" width=100px> </td><td> <font size=-2>"+address+"<br><b>"+advisors+"</b> <br><p><a href="+cvlattes+" target=_blank>"+cvlattes+"</a></font></td></tr> </table>  </td></tr> </table>"); \n\
-                });\n\
-                return marker; \n\
-             };\n\
-             function createMarker2(point, name, address, advisors, cvlattes, photo) { \n\
-                var marker = new GMarker(point, markerOptions2); \n\
-                GEvent.addListener(marker, "click", function() { \n\
-                marker.openInfoWindowHtml(" <table> <tr bgcolor=#333399><td><font color=#ffffff><b>scriptLattes</b>: "+name+"</font></td></tr> <tr><td> <table><tr><td valign=top> <img src="+photo+" width=100px> </td><td> <font size=-2>"+address+"<br><b>"+advisors+"</b> <br><p><a href="+cvlattes+" target=_blank>"+cvlattes+"</a></font></td></tr> </table>  </td></tr> </table>"); \n\
-                });\n\
-                return marker; \n\
-             };\n\
-             function createMarker3(point, name, address, advisors, cvlattes, photo) { \n\
-                var marker = new GMarker(point, markerOptions3); \n\
-                GEvent.addListener(marker, "click", function() { \n\
-                marker.openInfoWindowHtml(" <table> <tr bgcolor=#eced0c><td><font color=#000000><b>scriptLattes</b>: "+name+"</font></td></tr> <tr><td> <table><tr><td valign=top> <img src="+photo+" width=100px> </td><td> <font size=-2>"+address+"<br><b>"+advisors+"</b> <br><p><a href="+cvlattes+" target=_blank>"+cvlattes+"</a></font></td></tr> </table>  </td></tr> </table>"); \n\
-                });\n\
-                return marker; \n\
-             };\n'
-
-		cvsProcessados = set([])
-
-
-		if self.grupo.obterParametro('mapa-incluir_membros_do_grupo'):
-			for membro in self.grupo.listaDeMembros:
-				cvsProcessados.add(membro.idLattes)
-
-				membro.obterCoordenadasDeGeolocalizacao()
-				if not membro.enderecoProfissionalLat=='0' and not membro.enderecoProfissionalLon=='0':
-					self.mapa += '\nvar point0 = new GLatLng('+membro.enderecoProfissionalLat+'+0.001*Math.random(), '+membro.enderecoProfissionalLon+'+0.001*Math.random());'
-					self.mapa += '\nmap.addOverlay(createMarker0(point0,"'+membro.nomeCompleto+'","'+membro.enderecoProfissional+'","'+membro.url+'","'+membro.foto+'"));'
+  function setMarker0(map, latx, lngx, name, address, cvlattes, photo) { \n\
+    var image = new google.maps.MarkerImage("lattesPoint0.png"); \n\
+    var contentString = "<table> <tr bgcolor=#006400><td><font color=#ffffff>"+name+"</font></td></tr> <tr><td> <table><tr><td valign=top> <img src="+photo+" width=90px> </td><td> <font size=-2>"+address+"<br><p><a href="+cvlattes+" target=_blank>"+cvlattes+"</a></font></td></tr> </table>  </td></tr> </table> "; \n\
+    var infowindow = new google.maps.InfoWindow({ content: contentString, maxWidth: 400, maxHeight: 400 }); \n\
+    var myLatLng = new google.maps.LatLng(latx, lngx); \n\
+    var marker = new google.maps.Marker({ position: myLatLng, map: map, icon: image }); \n\
+    google.maps.event.addListener(marker, "click", function() { infowindow.open(map, marker); }); \n\
+ } \n\
+ function setMarker1(map, latx, lngx, name, address, advisors, cvlattes, photo) { \n\
+   var image = new google.maps.MarkerImage("lattesPoint1.png"); \n\
+   var contentString = " <table> <tr bgcolor=#990808><td><font color=#ffffff>"+name+"</font></td></tr> <tr><td> <table><tr><td valign=top> <img src="+photo+" width=100px> </td><td> <font size=-2>"+address+"<br><b>"+advisors+"</b> <br><p><a href="+cvlattes+" target=_blank>"+cvlattes+"</a></font></td></tr> </table>  </td></tr> </table>"; \n\
+   var infowindow = new google.maps.InfoWindow({ content: contentString, maxWidth: 400, maxHeight: 400 }); \n\
+   var myLatLng = new google.maps.LatLng(latx, lngx); \n\
+   var marker = new google.maps.Marker({ position: myLatLng, map: map, icon: image }); \n\
+   google.maps.event.addListener(marker, "click", function() { infowindow.open(map, marker); }); \n\
+ } \n\
+ function setMarker2(map, latx, lngx, name, address, advisors, cvlattes, photo) { \n\
+   var image = new google.maps.MarkerImage("lattesPoint2.png"); \n\
+   var contentString =" <table> <tr bgcolor=#333399><td><font color=#ffffff>"+name+"</font></td></tr> <tr><td> <table><tr><td valign=top> <img src="+photo+" width=100px> </td><td> <font size=-2>"+address+"<br><b>"+advisors+"</b> <br><p><a href="+cvlattes+" target=_blank>"+cvlattes+"</a></font></td></tr> </table>  </td></tr> </table>"; \n\
+   var infowindow = new google.maps.InfoWindow({ content: contentString, maxWidth: 400, maxHeight: 400 }); \n\
+   var myLatLng = new google.maps.LatLng(latx, lngx); \n\
+   var marker = new google.maps.Marker({ position: myLatLng, map: map, icon: image }); \n\
+   google.maps.event.addListener(marker, "click", function() { infowindow.open(map, marker); }); \n\
+ } \n\
+ function setMarker3(map, latx, lngx, name, address, advisors, cvlattes, photo) { \n\
+   var image = new google.maps.MarkerImage("lattesPoint3.png"); \n\
+   var contentString = " <table> <tr bgcolor=#eced0c><td><font color=#000000>"+name+"</font></td></tr> <tr><td> <table><tr><td valign=top> <img src="+photo+" width=100px> </td><td> <font size=-2>"+address+"<br><b>"+advisors+"</b> <br><p><a href="+cvlattes+" target=_blank>"+cvlattes+"</a></font></td></tr> </table>  </td></tr> </table>"; \n\
+   var infowindow = new google.maps.InfoWindow({ content: contentString, maxWidth: 400, maxHeight: 400 }); \n\
+   var myLatLng = new google.maps.LatLng(latx, lngx); \n\
+   var marker = new google.maps.Marker({ position: myLatLng, map: map, icon: image }); \n\
+   google.maps.event.addListener(marker, "click", function() { infowindow.open(map, marker); }); \n\
+ } \n\
+ function initialize() {  \n\
+   var latlng = new google.maps.LatLng(0,0);  \n\
+   var options = { zoom: 2, center: latlng, mapTypeId: google.maps.MapTypeId.ROADMAP }; \n\
+   var map = new google.maps.Map(document.getElementById("map_canvas"), options); \n\
+ \n'
+      
+         	cvsProcessados = set([])
+      
+      
+         	if self.grupo.obterParametro('mapa-incluir_membros_do_grupo'):
+         		for membro in self.grupo.listaDeMembros:
+         			cvsProcessados.add(membro.idLattes)
+      
+         			membro.obterCoordenadasDeGeolocalizacao()
+         			if not membro.enderecoProfissionalLat=='0' and not membro.enderecoProfissionalLon=='0':
+         				self.mapa += '\n    setMarker0(map, '+membro.enderecoProfissionalLat+'+0.001*Math.random(), '+membro.enderecoProfissionalLon+'+0.001*Math.random(), "'+membro.nomeCompleto+'", "'+membro.enderecoProfissional+'", "'+membro.url+'", "'+membro.foto+'");'
 
 
 		if self.grupo.obterParametro('mapa-incluir_alunos_de_pos_doutorado'):
@@ -125,13 +95,12 @@ class MapaDeGeolocalizacao:
 					idOrientando = aluno.idOrientando
 
 					if len(idOrientando)==16 and cvsProcessados.isdisjoint([idOrientando]):
-						membro = Membro('', idOrientando, '', '', '', '', '')
+						print "\n-Processando o CV do ex-posdoc: "+idOrientando+" "+membro.nomeCompleto.encode('utf8')
+						membro = Membro('', idOrientando, '', '', '', '', '', self.grupo.diretorioCache)
 						membro.carregarDadosCVLattes()
 						membro.obterCoordenadasDeGeolocalizacao()
 						if not membro.enderecoProfissionalLat=='0' and not membro.enderecoProfissionalLon=='0':
-							self.mapa += '\nvar point0 = new GLatLng('+membro.enderecoProfissionalLat+'+0.001*Math.random(), '+membro.enderecoProfissionalLon+'+0.001*Math.random());'
-							self.mapa += '\nmap.addOverlay(createMarker1(point0,"'+membro.nomeCompleto+'","'+membro.enderecoProfissional+'","'+self.obterNomesDosOrientadores(aluno, self.grupo.listaDeMembros)+'","'+membro.url+'","'+membro.foto+'"));'
-						print "-Processando o CV do ex-posdoc: "+idOrientando+" "+membro.nomeCompleto.encode('utf8')
+							self.mapa += '\n    setMarker1(map, '+membro.enderecoProfissionalLat+'+0.001*Math.random(), '+membro.enderecoProfissionalLon+'+0.001*Math.random(), "'+membro.nomeCompleto+'","'+membro.enderecoProfissional+'","'+self.obterNomesDosOrientadores(aluno, self.grupo.listaDeMembros)+'","'+membro.url+'","'+membro.foto+'");'
 						cvsProcessados.add(idOrientando)
 
 
@@ -142,13 +111,12 @@ class MapaDeGeolocalizacao:
 					idOrientando = aluno.idOrientando
 
 					if len(idOrientando)==16 and cvsProcessados.isdisjoint([idOrientando]):
-						membro = Membro('', idOrientando, '', '', '', '', '')
+						print "\n-Processando o CV do ex-aluno de doutorado: "+idOrientando+" "+membro.nomeCompleto.encode('utf8')
+						membro = Membro('', idOrientando, '', '', '', '', '', self.grupo.diretorioCache)
 						membro.carregarDadosCVLattes()
 						membro.obterCoordenadasDeGeolocalizacao()
 						if not membro.enderecoProfissionalLat=='0' and not membro.enderecoProfissionalLon=='0':
-							self.mapa += '\nvar point0 = new GLatLng('+membro.enderecoProfissionalLat+'+0.001*Math.random(), '+membro.enderecoProfissionalLon+'+0.001*Math.random());'
-							self.mapa += '\nmap.addOverlay(createMarker2(point0,"'+membro.nomeCompleto+'","'+membro.enderecoProfissional+'","'+self.obterNomesDosOrientadores(aluno, self.grupo.listaDeMembros)+'","'+membro.url+'","'+membro.foto+'"));'
-						print "-Processando o CV do ex-aluno de doutorado: "+idOrientando+" "+membro.nomeCompleto.encode('utf8')
+							self.mapa += '\n    setMarker2(map, '+membro.enderecoProfissionalLat+'+0.001*Math.random(), '+membro.enderecoProfissionalLon+'+0.001*Math.random(), "'+membro.nomeCompleto+'","'+membro.enderecoProfissional+'","'+self.obterNomesDosOrientadores(aluno, self.grupo.listaDeMembros)+'","'+membro.url+'","'+membro.foto+'");'
 						cvsProcessados.add(idOrientando)
 
 
@@ -159,20 +127,18 @@ class MapaDeGeolocalizacao:
 					idOrientando = aluno.idOrientando
 
 					if len(idOrientando)==16 and cvsProcessados.isdisjoint([idOrientando]):
-						membro = Membro('', idOrientando, '', '', '', '', '')
+						print "\n-Processando o CV do ex-aluno de mestrado: "+idOrientando+" "+membro.nomeCompleto.encode('utf8')
+						membro = Membro('', idOrientando, '', '', '', '', '', self.grupo.diretorioCache)
 						membro.carregarDadosCVLattes()
 						membro.obterCoordenadasDeGeolocalizacao()
 						if not membro.enderecoProfissionalLat=='0' and not membro.enderecoProfissionalLon=='0':
-							self.mapa += '\nvar point0 = new GLatLng('+membro.enderecoProfissionalLat+'+0.001*Math.random(), '+membro.enderecoProfissionalLon+'+0.001*Math.random());'
-							self.mapa += '\nmap.addOverlay(createMarker3(point0,"'+membro.nomeCompleto+'","'+membro.enderecoProfissional+'","'+self.obterNomesDosOrientadores(aluno, self.grupo.listaDeMembros)+'","'+membro.url+'","'+membro.foto+'"));'
-						print "-Processando o CV do ex-aluno de mestrado: "+idOrientando+" "+membro.nomeCompleto.encode('utf8')
+							self.mapa += '\n    setMarker3(map, '+membro.enderecoProfissionalLat+'+0.001*Math.random(), '+membro.enderecoProfissionalLon+'+0.001*Math.random(), "'+membro.nomeCompleto+'","'+membro.enderecoProfissional+'","'+self.obterNomesDosOrientadores(aluno, self.grupo.listaDeMembros)+'","'+membro.url+'","'+membro.foto+'");'
 						cvsProcessados.add(idOrientando)
 
 
 		self.mapa+= '\
-              } \n\
-            } \n\
-           </script>\n'
+  } \n\
+</script>\n'
 
 
 		#print "--------------------------------------------------------------------"

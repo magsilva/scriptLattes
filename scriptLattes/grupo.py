@@ -3,16 +3,16 @@
 # filename: grupo.py
 #
 #  scriptLattes V8
-#  Copyright 2005-2011: Jesús P. Mena-Chalco e Roberto M. Cesar-Jr.
+#  Copyright 2005-2012: Jesús P. Mena-Chalco e Roberto M. Cesar-Jr.
 #  http://scriptlattes.sourceforge.net/
 #
 #
 #  Este programa é um software livre; você pode redistribui-lo e/ou 
 #  modifica-lo dentro dos termos da Licença Pública Geral GNU como 
 #  publicada pela Fundação do Software Livre (FSF); na versão 2 da 
-#  Licença, ou (na sua opnião) qualquer versão.
+#  Licença, ou (na sua opinião) qualquer versão.
 #
-#  Este programa é distribuido na esperança que possa ser util, 
+#  Este programa é distribuído na esperança que possa ser util, 
 #  mas SEM NENHUMA GARANTIA; sem uma garantia implicita de ADEQUAÇÂO a qualquer
 #  MERCADO ou APLICAÇÃO EM PARTICULAR. Veja a
 #  Licença Pública Geral GNU para maiores detalhes.
@@ -22,14 +22,11 @@
 #  Livre(FSF) Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #
 
-import os
+
 import fileinput
 import sets
 import operator
-import cookielib
-import urllib2
-import logging
-
+import os
 
 from membro import *
 from compiladorDeListas import *
@@ -38,15 +35,19 @@ from graficoDeBarras import *
 from mapaDeGeolocalizacao import *
 from geradorDePaginasWeb import *
 from authorRank import *
+from analisadorDePublicacoes import *
 	
 class Grupo:
 	compilador = None
 	listaDeParametros = []
 	listaDeMembros = []
 	listaDeRotulos = []
+	listaDePublicacoesEinternacionalizacao = []
+
 	arquivoConfiguracao = None
 	itemsDesdeOAno = None
 	itemsAteOAno = None
+	diretorioCache = None
 
 	matrizArtigoEmPeriodico = None
 	matrizLivroPublicado = None
@@ -77,13 +78,7 @@ class Grupo:
 	nomes = None
 	rotulos = None
 
-	logging.basicConfig()
-	logger = logging.getLogger('scriptLattes')
-
-
 	def __init__(self, arquivo):
-		self.logger.setLevel(logging.INFO)
-
 		self.arquivoConfiguracao = arquivo
 		self.carregarParametrosPadrao()
 	
@@ -112,6 +107,13 @@ class Grupo:
 		self.itemsDesdeOAno = int(ano1)
 		self.itemsAteOAno = int(ano2)
 
+		self.diretorioCache = self.obterParametro('global-diretorio_de_armazenamento_de_cvs')
+		if self.diretorioCache == '':
+			cacheDirName = os.path.expanduser(os.path.join("~", ".scriptLattes", "cache"))
+
+		if not os.path.exists(self.diretorioCache):
+                                os.makedirs(cacheDirName)
+
 		# carregamos a lista de membros
 		idSequencial = 0
 		for linha in fileinput.input(self.obterParametro('global-arquivo_de_entrada')):
@@ -129,10 +131,11 @@ class Grupo:
 				rotulo        = rotulo.capitalize() 
 
 				# atribuicao dos valores iniciais para cada membro
-				if 'xml' in identificador.lower():
-					self.listaDeMembros.append(Membro(idSequencial, '', nome, periodo, rotulo, self.itemsDesdeOAno, self.itemsAteOAno, xml=identificador))
-				else:
-					self.listaDeMembros.append(Membro(idSequencial, identificador, nome, periodo, rotulo, self.itemsDesdeOAno, self.itemsAteOAno))
+				###if 'xml' in identificador.lower():
+				###### self.listaDeMembros.append(Membro(idSequencial, '', nome, periodo, rotulo, self.itemsDesdeOAno, self.itemsAteOAno, xml=identificador))
+				###	self.listaDeMembros.append(Membro(idSequencial, identificador, nome, periodo, rotulo, self.itemsDesdeOAno, self.itemsAteOAno, diretorioCache))
+				###else:
+				self.listaDeMembros.append(Membro(idSequencial, identificador, nome, periodo, rotulo, self.itemsDesdeOAno, self.itemsAteOAno, self.diretorioCache))
 
 				self.listaDeRotulos.append(rotulo)
 				idSequencial+=1
@@ -143,17 +146,10 @@ class Grupo:
 
 
 	def carregarDadosCVLattes(self):
-		dir = self.obterParametro('global-diretorio_de_saida')
-		file = open(os.path.join(dir, 'members.csv'), 'w')
-		file.write("Lattes, Nome, Artigos em Periódicos, Artigos em eventos, Livros, Capítulos de livros, Supervisões de pós-doutorado, Orientações de doutorado, Orientações de mestrado, Orientações de especialização, Orientações de trabalho de final de curso, Software, Outros produtos tecnológicos\n")
 		for membro in self.listaDeMembros:
-			self.logger.info('Loading data for CV Lattes %s' % membro.idLattes)
 			membro.carregarDadosCVLattes()
-			membro.dumpToFile(file)
 			membro.filtrarItemsPorPeriodo()
-			file.flush()
-			os.fsync(file.fileno())
-		file.close()
+			print membro
 
 	def gerarMapaDeGeolocalizacao(self):
 		if self.obterParametro('mapa-mostrar_mapa_de_geolocalizacao'):
@@ -166,40 +162,41 @@ class Grupo:
 	def compilarListasDeItems(self):
 		self.compilador = CompiladorDeListas(self) # compilamos todo e criamos 'listasCompletas'
 
-		if self.obterParametro('grafo-mostrar_grafo_de_colaboracoes'):
-			self.compilador.criarMatrizesDeColaboracao()
-			[self.matrizDeAdjacencia, self.matrizDeFrequencia] = self.compilador.uniaoDeMatrizesDeColaboracao()
-			self.vetorDeCoAutoria = self.matrizDeFrequencia.sum(1) # suma das linhas = num. de items feitos em co-autoria (parceria) com outro membro do grupo
+		# Grafos de coautoria 
+		self.compilador.criarMatrizesDeColaboracao()
 
-			self.matrizDeFrequenciaNormalizada = numpy.zeros((self.numeroDeMembros(), self.numeroDeMembros()), dtype=numpy.float32)
+		[self.matrizDeAdjacencia, self.matrizDeFrequencia] = self.compilador.uniaoDeMatrizesDeColaboracao()
+		self.vetorDeCoAutoria = self.matrizDeFrequencia.sum(axis=1) # suma das linhas = num. de items feitos em co-autoria (parceria) com outro membro do grupo
+		self.matrizDeFrequenciaNormalizada = self.matrizDeFrequencia.copy()
 
-			for i in range(0, self.numeroDeMembros()):
-				if not self.vetorDeCoAutoria[i]==0:
-					self.matrizDeFrequenciaNormalizada[i] = self.matrizDeFrequencia[i]/self.vetorDeCoAutoria[i]
+		for i in range(0, self.numeroDeMembros()):
+			if not self.vetorDeCoAutoria[i]==0:
+				self.matrizDeFrequenciaNormalizada[i,:] /= float(self.vetorDeCoAutoria[i])
 
-			# AuthorRank
-			authorRank = AuthorRank(self.matrizDeFrequenciaNormalizada, 100)
-			self.vectorRank = authorRank.vectorRank
+		# AuthorRank
+		authorRank = AuthorRank(self.matrizDeFrequenciaNormalizada, 100)
+		self.vectorRank = authorRank.vectorRank
 
-			# Lista de nomes e Rotulos
-			self.nomes = list([]) 
-			self.rotulos = list([]) 
+		# Salvamos alguns dados para análise posterior (com outras ferramentas)
+		prefix = self.obterParametro('global-prefixo')+'-' if not self.obterParametro('global-prefixo')=='' else ''
 
-			for membro in self.listaDeMembros:
-				self.nomes.append(membro.nomeCompleto)
-				self.rotulos.append(membro.rotulo)
-
-			prefix = self.obterParametro('global-prefixo')+'-' if not self.obterParametro('global-prefixo')=='' else ''
-
-			# (1) Salvamos as matrizes (para análise posterior com outras ferramentas)
-			self.salvarMatrizTXT(self.matrizDeAdjacencia, prefix+"matrizDeAdjacencia.txt")
-			self.salvarMatrizTXT(self.matrizDeFrequencia, prefix+"matrizDeFrequencia.txt")
-			self.salvarMatrizTXT(self.matrizDeFrequenciaNormalizada, prefix+"matrizDeFrequenciaNormalizada.txt")
-			self.salvarMatrizXML(self.matrizDeAdjacencia, prefix+"matrizDeAdjacencia.xml")
+		# (1) matrizes 
+		self.salvarMatrizTXT(self.matrizDeAdjacencia, prefix+"matrizDeAdjacencia.txt")
+		self.salvarMatrizTXT(self.matrizDeFrequencia, prefix+"matrizDeFrequencia.txt")
+		self.salvarMatrizTXT(self.matrizDeFrequenciaNormalizada, prefix+"matrizDeFrequenciaNormalizada.txt")
+		self.salvarMatrizXML(self.matrizDeAdjacencia, prefix+"matrizDeAdjacencia.xml")
 	
-			# (2) Salvamos as listas de nomes e rótulos (para análise posterior com outras ferramentas)
-			self.salvarListaTXT(self.nomes, prefix+"listaDeNomes.txt")
-			self.salvarListaTXT(self.rotulos, prefix+"listaDeRotulos.txt")
+		# (2) listas de nomes e rótulos
+		self.nomes = list([]) 
+		self.rotulos = list([]) 
+		for membro in self.listaDeMembros:
+			self.nomes.append(membro.nomeCompleto)
+			self.rotulos.append(membro.rotulo)
+		self.salvarListaTXT(self.nomes, prefix+"listaDeNomes.txt")
+		self.salvarListaTXT(self.rotulos, prefix+"listaDeRotulos.txt")
+
+		# (3) medidas de authorRanks 
+		self.salvarListaTXT(self.vectorRank, prefix+"authorRank.txt")
 
 
 	def salvarListaTXT(self, lista, nomeArquivo):
@@ -207,18 +204,23 @@ class Grupo:
 		arquivo = open(dir+"/"+nomeArquivo, 'w')
 
 		for i in range(0,len(lista)):
-			arquivo.write(lista[i].encode("utf8")+'\n')
+			elemento = lista[i]
+			if type(elemento)==type(unicode()):
+				elemento = elemento.encode("utf8")
+			else:
+				elemento = str(elemento)
+			arquivo.write(elemento+'\n')
 		arquivo.close()
 
 
 	def salvarMatrizTXT(self, matriz, nomeArquivo):
 		dir = self.obterParametro('global-diretorio_de_saida')
 		arquivo = open(dir+"/"+nomeArquivo, 'w')
-		N = len(matriz)
+		N = matriz.shape[0]
 
 		for i in range(0,N):
 			for j in range(0,N):
-				arquivo.write(str(matriz[i][j])+' ')
+				arquivo.write(str(matriz[i , j])+' ')
 			arquivo.write('\n')
 		arquivo.close()
 
@@ -252,13 +254,13 @@ class Grupo:
                 \n<data key="pubs">'+str(int(self.vetorDeCoAutoria[i]))+'</data> \
                 \n</node>'
 
-		N = len(matriz)
+		N = matriz.shape[0]
 		for i in range(0,N):
 			for j in range(0,N):
-				if matriz[i][j]>0:
+				if matriz[i,j]>0:
 					s+='\n<!-- edges --> \
                         \n<edge source="'+str(i)+'" target="'+str(j)+'"> \
-                        \n<data key="amount">'+str(matriz[i][j])+'</data> \
+                        \n<data key="amount">'+str(matriz[i,j])+'</data> \
                         \n</edge>'
  
 		s+='\n</graph>\
@@ -267,7 +269,32 @@ class Grupo:
 		arquivo.write(s.encode('utf8'))
 		arquivo.close()
 
+	def salvarVetorDeProducoes(self, vetor, nomeArquivo):
+		dir = self.obterParametro('global-diretorio_de_saida')
+		arquivo = open(dir+"/"+nomeArquivo, 'w')
 
+		string = ''
+		for i in range(0,len(vetor)):
+			(prefixo, pAnos, pQuantidades) = vetor[i]
+
+			string += "\n" + prefixo + ":"
+			for j in range(0,len(pAnos)):
+				string += str(pAnos[j]) + ',' + str(pQuantidades[j]) + ';'
+
+		arquivo.write(string)
+		arquivo.close()
+
+	def salvarListaInternalizacaoTXT(self, listaDoiValido, nomeArquivo):
+		dir = self.obterParametro('global-diretorio_de_saida')
+		arquivo = open(dir+"/"+nomeArquivo, 'w')
+		for i in range(0,len(listaDoiValido)):
+			elemento = listaDoiValido[i]
+			if type(elemento)==type(unicode()):
+				elemento = elemento.encode("utf8")
+			else:
+				elemento = str(elemento)
+			arquivo.write(elemento+'\n')
+		arquivo.close()
 
 	def gerarGraficosDeBarras(self):
 		gBarra = GraficoDeBarras(self.obterParametro('global-diretorio_de_saida'))
@@ -320,6 +347,8 @@ class Grupo:
 		gBarra.criarGrafico(self.compilador.listaCompletaParticipacaoEmEvento, 'Ep', 'Numero de Eventos')
 		gBarra.criarGrafico(self.compilador.listaCompletaOrganizacaoDeEvento, 'Eo', 'Numero de Eventos')
 
+		prefix = self.obterParametro('global-prefixo')+'-' if not self.obterParametro('global-prefixo')=='' else ''
+		self.salvarVetorDeProducoes(gBarra.obterVetorDeProducoes(), prefix+'vetorDeProducoes.txt')
 
 
 	def gerarGrafosDeColaboracoes(self):
@@ -329,15 +358,25 @@ class Grupo:
 	def gerarGraficoDeProporcoes(self):
 		if self.obterParametro('relatorio-incluir_grafico_de_proporcoes_bibliograficas'):
 			gProporcoes = GraficoDeProporcoes(self, self.obterParametro('global-diretorio_de_saida'))
-		
+
+	def calcularInternacionalizacao(self):
+		if self.obterParametro('relatorio-incluir-internacionalizacao'):
+			print "\n[ANALISANDO INTERNACIONALIZACAO]"
+			self.analisadorDePublicacoes = AnalisadorDePublicacoes(self)
+			self.listaDePublicacoesEinternacionalizacao = self.analisadorDePublicacoes.analisarInternacionalizacaoNaCoautoria()
+			if self.analisadorDePublicacoes.listaDoiValido is not None:
+				self.salvarListaInternalizacaoTXT( self.analisadorDePublicacoes.listaDoiValido, "Internacionalizacao.txt")
+
 
 	def imprimirListasCompletas(self):
 		self.compilador.imprimirListasCompletas()
 
 	def imprimirMatrizesDeFrequencia(self):
 		self.compilador.imprimirMatrizesDeFrequencia()
-		self.logger.debug("Co-authoring vector" + str(self.vetorDeCoAutoria))
-		self.logger.debug("Normalized frequency matric" + str(self.matrizDeFrequenciaNormalizada))
+		print "\n[VETOR DE CO-AUTORIA]"
+		print self.vetorDeCoAutoria
+		print "\n[MATRIZ DE FREQUENCIA NORMALIZADA]"
+		print self.matrizDeFrequenciaNormalizada
 
 	def numeroDeMembros(self):
 		return len(self.listaDeMembros)
@@ -367,7 +406,7 @@ class Grupo:
 			if parametro==self.listaDeParametros[i][0]:
 				self.listaDeParametros[i][1] = valor
 				return
-		self.logger.error("Invalid parameter" + parametro)
+		print "[AVISO IMPORTANTE] Nome de parametro desconhecido: "+parametro
 
 	def obterParametro(self, parametro):
 		for i in range(0,len(self.listaDeParametros)):
@@ -394,6 +433,7 @@ class Grupo:
 		self.listaDeParametros.append(['global-criar_paginas_jsp', 'nao'])
 		self.listaDeParametros.append(['global-google_analytics_key', ''])
 		self.listaDeParametros.append(['global-prefixo', ''])
+		self.listaDeParametros.append(['global-diretorio_de_armazenamento_de_cvs', ''])
 
 		self.listaDeParametros.append(['relatorio-salvar_publicacoes_em_formato_ris', 'nao'])
 		self.listaDeParametros.append(['relatorio-incluir_artigo_em_periodico', 'sim'])
@@ -438,6 +478,7 @@ class Grupo:
 		self.listaDeParametros.append(['relatorio-incluir_participacao_em_evento', 'sim'])
 		self.listaDeParametros.append(['relatorio-incluir_organizacao_de_evento', 'sim'])
 
+
 		self.listaDeParametros.append(['grafo-mostrar_grafo_de_colaboracoes', 'sim'])
 		self.listaDeParametros.append(['grafo-mostrar_todos_os_nos_do_grafo', 'sim'])
 		self.listaDeParametros.append(['grafo-considerar_rotulos_dos_membros_do_grupo', 'sim'])
@@ -470,6 +511,6 @@ class Grupo:
 		self.listaDeParametros.append(['mapa-incluir_alunos_de_pos_doutorado', 'sim'])
 		self.listaDeParametros.append(['mapa-incluir_alunos_de_doutorado', 'sim'])
 		self.listaDeParametros.append(['mapa-incluir_alunos_de_mestrado', 'nao'])
-		self.listaDeParametros.append(['mapa-google_map_key', ''])
 
+		self.listaDeParametros.append(['relatorio-incluir-internacionalizacao', 'nao'])
 

@@ -3,16 +3,16 @@
 # filename: orientacaoConcluida.py
 #
 #  scriptLattes V8
-#  Copyright 2005-2011: Jesús P. Mena-Chalco e Roberto M. Cesar-Jr.
+#  Copyright 2005-2012: Jesús P. Mena-Chalco e Roberto M. Cesar-Jr.
 #  http://scriptlattes.sourceforge.net/
 #
 #
 #  Este programa é um software livre; você pode redistribui-lo e/ou 
 #  modifica-lo dentro dos termos da Licença Pública Geral GNU como 
 #  publicada pela Fundação do Software Livre (FSF); na versão 2 da 
-#  Licença, ou (na sua opnião) qualquer versão.
+#  Licença, ou (na sua opinião) qualquer versão.
 #
-#  Este programa é distribuido na esperança que possa ser util, 
+#  Este programa é distribuído na esperança que possa ser util, 
 #  mas SEM NENHUMA GARANTIA; sem uma garantia implicita de ADEQUAÇÂO a qualquer
 #  MERCADO ou APLICAÇÃO EM PARTICULAR. Veja a
 #  Licença Pública Geral GNU para maiores detalhes.
@@ -43,14 +43,13 @@ class OrientacaoConcluida:
 	def __init__(self, idMembro, partesDoItem='', idOrientando=''):
 		self.idMembro = set([])
 		self.idMembro.add(idMembro)
-		
+
 		if not partesDoItem=='':
 			# partesDoItem[0]: Numero (NAO USADO)
 			# partesDoItem[1]: Descricao
 			self.item = partesDoItem[1]
 			self.idOrientando = str(idOrientando)
 
-	
 			# Dividir o item na suas partes constituintes 
 			partes = self.item.partition(". Orientador: ")
 			if not partes[1]=='': 
@@ -65,7 +64,7 @@ class OrientacaoConcluida:
 					self.tipoDeOrientacao = 'Supervisor'
 					partes = partes[0].rpartition('. ')
 					partes = partes[0]
-	
+
 			partes1 =  partes.rpartition(". ")
 			partes = partes1[2].rpartition(", ")
 			if not partes[1]=='':

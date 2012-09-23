@@ -3,16 +3,16 @@
 # filename: geradorDePaginasWeb
 #
 #  scriptLattes V8
-#  Copyright 2005-2011: Jesús P. Mena-Chalco e Roberto M. Cesar-Jr.
+#  Copyright 2005-2012: Jesús P. Mena-Chalco e Roberto M. Cesar-Jr.
 #  http://scriptlattes.sourceforge.net/
 #
 #
 #  Este programa é um software livre; você pode redistribui-lo e/ou 
 #  modifica-lo dentro dos termos da Licença Pública Geral GNU como 
 #  publicada pela Fundação do Software Livre (FSF); na versão 2 da 
-#  Licença, ou (na sua opnião) qualquer versão.
+#  Licença, ou (na sua opinião) qualquer versão.
 #
-#  Este programa é distribuido na esperança que possa ser util, 
+#  Este programa é distribuído na esperança que possa ser util, 
 #  mas SEM NENHUMA GARANTIA; sem uma garantia implicita de ADEQUAÇÂO a qualquer
 #  MERCADO ou APLICAÇÃO EM PARTICULAR. Veja a
 #  Licença Pública Geral GNU para maiores detalhes.
@@ -26,6 +26,8 @@
 import datetime
 import re
 import math
+from graficoDeInternacionalizacao import *
+
 
 class GeradorDePaginasWeb:
 	grupo = None
@@ -36,7 +38,7 @@ class GeradorDePaginasWeb:
 
 	def __init__(self, grupo):
 		self.grupo = grupo
-		self.version = 'V8.03'
+		self.version = 'V8.05'
 		self.dir = self.grupo.obterParametro('global-diretorio_de_saida')
 		
 		if self.grupo.obterParametro('global-criar_paginas_jsp'):
@@ -76,6 +78,9 @@ class GeradorDePaginasWeb:
 		
 		if self.grupo.obterParametro('grafo-mostrar_grafo_de_colaboracoes'):
 			self.gerarPaginaDeGrafosDeColaboracoes()
+
+		if self.grupo.obterParametro('relatorio-incluir-internacionalizacao'):
+			self.gerarPaginasDeInternacionalizacao()
 		
 		# final do fim! 
 		self.gerarPaginaPrincipal()
@@ -92,8 +97,7 @@ class GeradorDePaginasWeb:
            <title>'+nomeGrupo+'</title> \
            <meta name="Generator" content="scriptLattes"> \
            <link rel="stylesheet" href="scriptLattes.css" type="text/css">  \
-           <meta http-equiv="Content-Type" content="text/html; charset=utf-8">  \
-           <script src="http://maps.google.com/maps?file=api&amp;v=2.x&amp;sensor=false&amp;key='+self.grupo.obterParametro('mapa-google_map_key').decode("utf8")+'" type="text/javascript"></script>'
+           <meta http-equiv="Content-Type" content="text/html; charset=utf-8">'
 		if self.grupo.obterParametro('mapa-mostrar_mapa_de_geolocalizacao'):
 			s+= self.grupo.mapaDeGeolocalizacao.mapa #.encode("utf8")
 
@@ -123,6 +127,9 @@ class GeradorDePaginasWeb:
 
 		if self.grupo.obterParametro('mapa-mostrar_mapa_de_geolocalizacao'):
 			s+='| <a href=#mapa>Mapa de geolocalização</a> '.decode("utf8")
+
+		if self.grupo.obterParametro('relatorio-incluir-internacionalizacao'):
+			s+='| <a href=#internacionalizacao>Internacionalização</a> '.decode("utf8")
 
 		s+=' ] </center><br></div>'
 		s+='<h3 id="producaoBibliografica">Produção bibliográfica</h3> <ul>'.decode("utf8")
@@ -155,9 +162,9 @@ class GeradorDePaginasWeb:
 
 		s+='</ul> <h3 id="producaoTecnica">Produção técnica</h3> <ul>'.decode("utf8")
 		if self.nPT0>0:
-			s+= '<li> <a href="PT0-0'+self.extensaoPagina+'">Softwares com registro de patente</a> '.decode("utf8")+'('+str(self.nPT0)+')'
+			s+= '<li> <a href="PT0-0'+self.extensaoPagina+'">Programas de computador com registro de patente</a> '.decode("utf8")+'('+str(self.nPT0)+')'
 		if self.nPT1>0:
-			s+= '<li> <a href="PT1-0'+self.extensaoPagina+'">Softwares sem registro de patente</a> '.decode("utf8")+'('+str(self.nPT1)+')'
+			s+= '<li> <a href="PT1-0'+self.extensaoPagina+'">Programas de computador sem registro de patente</a> '.decode("utf8")+'('+str(self.nPT1)+')'
 		if self.nPT2>0:
 			s+= '<li> <a href="PT2-0'+self.extensaoPagina+'">Produtos tecnológicos</a> '.decode("utf8")+'('+str(self.nPT2)+')'
 		if self.nPT3>0:
@@ -243,7 +250,7 @@ class GeradorDePaginasWeb:
 				s+= '<i>Nenhum item achado nos currículos Lattes</i>'.decode("utf8")
 			s+='</ul>'
 
-
+		
 		if self.grupo.obterParametro('relatorio-incluir_participacao_em_evento'):
 			s+='</ul> <h3 id="eventos">Participação em eventos</h3> <ul>'.decode("utf8")
 			if self.nEp>0:
@@ -262,12 +269,9 @@ class GeradorDePaginasWeb:
 			s+='</ul>'
 
 
-
 		if self.grupo.obterParametro('grafo-mostrar_grafo_de_colaboracoes'):
 			s+='</ul> <h3 id="grafo">Grafo de colaborações</h3> <ul>'.decode("utf8")
 			s+='<a href="grafoDeColaboracoes'+self.extensaoPagina+'"><img src="grafoDeColaboracoesSemPesos-t.png" border=1> </a>'
-
-
 		s+='</ul>'
 
 		if self.grupo.obterParametro('mapa-mostrar_mapa_de_geolocalizacao'):
@@ -282,6 +286,20 @@ class GeradorDePaginasWeb:
 			if self.grupo.obterParametro('mapa-incluir_alunos_de_mestrado'):
 				s+='<tr><td> <img src=lattesPoint3.png></td> <td>  Aluno com mestrado e ID Lattes cadastrado no currículo do orientador </td></tr>'.decode("utf8")
 			s+='</table>'
+
+
+		########################################
+		########################################
+		if self.grupo.obterParametro('relatorio-incluir-internacionalizacao'):
+			s+='</ul> <h3 id="internacionalizacao">Internacionalização</h3> <ul>'.decode("utf8")
+			if self.nIn0>0:
+				s+= '<li> <a href="In0-0'+self.extensaoPagina+'">Coautoria e internacionalização</a> '.decode("utf8")+'('+str(self.nIn0)+')'
+			else:
+				s+= '<i>Nenhuma publicação com DOI disponível para análise</i>'.decode("utf8")
+			s+='</ul>'
+		########################################
+		########################################
+
 		
 		s+= self.paginaBottom()
 		self.salvarPagina("index"+self.extensaoPagina, s)
@@ -431,6 +449,11 @@ class GeradorDePaginasWeb:
 		self.nEo = 0
 		self.nEo = self.gerarPaginaDeProducoes(self.grupo.compilador.listaCompletaOrganizacaoDeEvento, "Total de organização de eventos", "Eo")
 
+	def gerarPaginasDeInternacionalizacao(self):
+		self.nIn0 = 0
+		self.nIn0 = self.gerarPaginaDeInternacionalizacao(self.grupo.listaDePublicacoesEinternacionalizacao, "Coautoria e internacionalização", "In0")
+
+
 
 	def gerarPaginaDeProducoes(self, listaCompleta, tituloPagina, prefixo, ris=False):
 		numeroTotalDeProducoes = 0
@@ -499,6 +522,47 @@ class GeradorDePaginasWeb:
 			return '<center>'+s+'</center>'
 
 
+	##################################################################################################
+	def gerarPaginaDeInternacionalizacao(self, listaCompleta, tituloPagina, prefixo):
+		numeroTotalDeProducoes = 0
+		gInternacionalizacao = GraficoDeInternacionalizacao(listaCompleta)
+		htmlCharts = gInternacionalizacao.criarGraficoDeBarrasDeOcorrencias()
+
+		keys = listaCompleta.keys()
+		keys.sort(reverse=True) 
+		if len(keys)>0: # apenas geramos páginas web para lista com pelo menos 1 elemento
+			for ano in keys:
+				numeroTotalDeProducoes += len(listaCompleta[ano])
+
+			s = self.paginaTop(cabecalho=htmlCharts)
+
+			s+= '\n<h3>'+tituloPagina.decode("utf8")+'</h3> <br> <center> <table> <tr> <td valign="top"><div id="barchart_div"></div> </td> <td valign="top"><div id="geochart_div"></div> </td> </tr> </table> </center>'
+			s+= '<table>'
+			s+= '<tr><td>Número total de publicações realizadas SEM parceria com estrangeiros:</td><td>'.decode("utf8")+str(gInternacionalizacao.numeroDePublicacoesRealizadasSemParceirasComEstrangeiros())+'</td><td><i>(publicações realizadas só por pesquisadores brasileiros)</i></td></tr>'.decode("utf8")
+			s+= '<tr><td>Número total de publicações realizadas COM parceria com estrangeiros:</td><td>'.decode("utf8")+str(gInternacionalizacao.numeroDePublicacoesRealizadasComParceirasComEstrangeiros())+'</td><td></td></tr>'
+			s+= '<tr><td>Número total de publicações com parcerias NÂO identificadas:</td><td>'.decode("utf8")+str(gInternacionalizacao.numeroDePublicacoesComParceriasNaoIdentificadas())+'</td><td></td></tr>'
+			s+= '<tr><td>Número total de publicações com DOI cadastrado:</td><td><b>'.decode("utf8")+str(numeroTotalDeProducoes)+'</b></td><td></td></tr>'
+			s+= '</table>'
+
+			s+= '<br> <font color="red">(*) A estimativa de "coautoria e internacionalização" é baseada na análise automática dos DOIs das publicações cadastradas nos CVs Lattes. A identificação de países, para cada publicação, é feita através de buscas simples de nomes de países.</font><br><p>'.decode("utf8")
+
+			for ano in keys:
+				anoRotulo = str(ano) if not ano==0 else '*itens sem ano'
+				s+= '<h3 class="year">'+anoRotulo+'</h3> <table>'
+
+				elementos = listaCompleta[ano]
+				elementos.sort(key = lambda x: x.chave.lower())	# Ordenamos a lista em forma ascendente (hard to explain!)
+				for index in range(0, len(elementos)):
+					pub = elementos[index]
+					s  += '<tr valign="top"><td>'+str(index+1)+'. &nbsp;</td> <td>'+ pub.html() +'</td></tr>'
+				s+= '</table>' 
+			s+= self.paginaBottom()
+			self.salvarPagina(prefixo+'-0'+self.extensaoPagina, s)
+
+		return numeroTotalDeProducoes 
+	##################################################################################################
+
+
 	def gerarPaginaDeGrafosDeColaboracoes(self):
 		lista = ''
 		if self.grupo.obterParametro('grafo-incluir_artigo_em_periodico'):
@@ -546,19 +610,19 @@ class GeradorDePaginasWeb:
 		s+='\
         <ul> \
         <li><b>Grafo de colabora&ccedil;&otilde;es sem pesos</b><br> \
-            <img src=grafoDeColaboracoesSemPesos.svg border=1 ISMAP USEMAP="#grafo1"> <br><p> \
+            <img src=grafoDeColaboracoesSemPesos.png border=1 ISMAP USEMAP="#grafo1"> <br><p> \
         <li><b>Grafo de colabora&ccedil;&otilde;es com pesos</b><br> \
-            <img src=grafoDeColaboracoesComPesos.svg border=1 ISMAP USEMAP="#grafo2"> <br><p> \
+            <img src=grafoDeColaboracoesComPesos.png border=1 ISMAP USEMAP="#grafo2"> <br><p> \
         <li><b>Grafo de colabora&ccedil;&otilde;es com pesos normalizados</b><br> \
-            <img src=grafoDeColaboracoesNormalizado.svg border=1 ISMAP USEMAP="#grafo3"> \
+            <img src=grafoDeColaboracoesNormalizado.png border=1 ISMAP USEMAP="#grafo3"> \
         </ul>'.decode("utf8")
 	
 		cmapx1 = self.grupo.grafosDeColaboracoes.grafoDeCoAutoriaSemPesosCMAPX
 		cmapx2 = self.grupo.grafosDeColaboracoes.grafoDeCoAutoriaComPesosCMAPX
-		# cmapx3 = self.grupo.grafosDeColaboracoes.grafoDeCoAutoriaNormalizadoCMAPX
+		cmapx3 = self.grupo.grafosDeColaboracoes.grafoDeCoAutoriaNormalizadoCMAPX
 		s+='<map id="grafo1" name="grafo1">'+cmapx1.decode("utf8")+'\n</map>\n'
 		s+='<map id="grafo2" name="grafo2">'+cmapx2.decode("utf8")+'\n</map>\n'
-		# s+='<map id="grafo3" name="grafo3">'+cmapx3.decode("utf8")+'\n</map>\n'
+		s+='<map id="grafo3" name="grafo3">'+cmapx3.decode("utf8")+'\n</map>\n'
 
 		if self.grupo.obterParametro('grafo-incluir_grau_de_colaboracao'):
 			s+='<br><p><h3>Grau de colaboração</h3> \
@@ -601,21 +665,24 @@ class GeradorDePaginasWeb:
 	def gerarPaginaDeMembros(self):
 		s= self.paginaTop()
 		s+='\n<h3>Lista de membros</h3> <table> \
-              <tr><td></td> <td></td> <td></td> <td class="centered"><b><font size=-1>Bolsa de produtividade</font></b></td> <td class="centered"><b><font size=-1>Período de</font></b></td>           <td class="centered"><b><font size=-1>Data de          </font><b></td>  <td class="centered"></td></tr> \
-              <tr><td></td> <td></td> <td></td> <td class="centered"><b><font size=-1>em pesquisa do CNPq</font></b></td>    <td class="centered"><b><font size=-1>análise individual</font></b></td> <td class="centered"><b><font size=-1>atualização do CV</font><b></td>  <td class="centered"></td></tr>'.decode("utf8")
+              <tr><td></td> <td></td> <td></td> <td></td> <td class="centered"><b><font size=-1>Bolsa de produtividade</font></b></td> <td class="centered"><b><font size=-1>Período de</font></b></td>           <td class="centered"><b><font size=-1>Data de          </font><b></td>  <td class="centered"></td></tr> \
+              <tr><td></td> <td></td> <td></td> <td></td> <td class="centered"><b><font size=-1>em pesquisa do CNPq</font></b></td>    <td class="centered"><b><font size=-1>análise individual</font></b></td> <td class="centered"><b><font size=-1>atualização do CV</font><b></td>  <td class="centered"></td></tr>'.decode("utf8")
 
 		elemento = 0
 		for membro in self.grupo.listaDeMembros:
 			elemento += 1
 			bolsa = '('+membro.bolsaProdutividade+')' if not membro.bolsaProdutividade=='' else ''
+			rotulo=  membro.rotulo if not membro.rotulo=='[sem rotulo]' else ''
 			s+= '\n<tr> \
                      <td valign="center" height="40px">'+str(elemento)+'.</td> \
                      <td valign="top" height="40px"><img src="'+membro.foto+'" width="40px"></td> \
                      <td><a href="'+membro.url+'">'+membro.nomeCompleto+'</a></td> \
+                     <td class="centered"><font size=-1>'+rotulo+'</font></td> \
                      <td class="centered"><font size=-1>'+bolsa+'</font></td> \
                      <td class="centered"><font size=-1>'+membro.periodo+'</font></td> \
                      <td class="centered"><font size=-1>'+membro.atualizacaoCV+'</font></td> \
-                     <td class="centered"><a href="http://academic.research.microsoft.com/Search?query=author:('+membro.nomeCompleto+')"><font size=-1>[Cita&ccedil;&otilde;es em Microsoft Acad&ecirc;mico]</font></a></td> \
+                     <td class="centered"><a href="http://scholar.google.com.br/citations?view_op=search_authors&mauthors='+membro.nomeCompleto+'"><font size=-1>[ Cita&ccedil;&otilde;es em Google Acad&ecirc;mico | </font></a></td> \
+                     <td class="centered"><a href="http://academic.research.microsoft.com/Search?query=author:('+membro.nomeCompleto+')"><font size=-1>Cita&ccedil;&otilde;es em Microsoft Acad&ecirc;mico ]</font></a></td> \
                  </tr>'
 		s+='\n</table>'
 		s+= self.paginaBottom()
@@ -624,7 +691,7 @@ class GeradorDePaginasWeb:
 
 			
 
-	def paginaTop(self):
+	def paginaTop(self, cabecalho=''):
 		nomeGrupo = self.grupo.obterParametro('global-nome_do_grupo').decode("utf8")
 
 		s = self.html1+' \
@@ -632,7 +699,10 @@ class GeradorDePaginasWeb:
            <title>'+nomeGrupo+'</title> \
            <meta name="Generator" content="scriptLattes"> \
            <link rel="stylesheet" href="scriptLattes.css" type="text/css">  \
-           <meta http-equiv="Content-Type" content="text/html; charset=utf8">  \
+           <meta http-equiv="Content-Type" content="text/html; charset=utf8">'
+		if (not cabecalho==''):
+			s+= cabecalho
+		s+=' \
         </head> \n \
         <body> <div id="header2"> <button onClick="history.go(-1)">Voltar</button> \
         <h2> '+nomeGrupo+'</h2> </div>'
@@ -662,7 +732,8 @@ class GeradorDePaginasWeb:
 		s+='\n<br>Data de processamento: '+data+'<br> \
         <div id="footer"> \
         Este arquivo foi gerado automaticamente por <a href="http://scriptlattes.sourceforge.net/">scriptLattes '+self.version+'</a> \
-        (desenvolvido no <a href="http://ccsl.ime.usp.br/">CCSL-IME/USP</a> por <a href="http://www.vision.ime.usp.br/~jmena">Jesús P. Mena-Chalco</a> e <a href="http://www.ime.usp.br/~cesar">Roberto M. Cesar-Jr</a>). \
+        (desenvolvido no <a href="http://cmcc.ufabc.edu.br/">CMCC-UFABC</a> e \
+        no <a href="http://ccsl.ime.usp.br/">CCSL-IME/USP</a> por <a href="http://www.vision.ime.usp.br/~jmena">Jesús P. Mena-Chalco</a> e <a href="http://www.ime.usp.br/~cesar">Roberto M. Cesar-Jr</a>). \
         Os resultados estão sujeitos a falhas devido a inconsistências no preenchimento dos currículos Lattes. Caso note alguma falha, por favor, contacte o responsável por esta página: <a href="mailto:'+self.grupo.obterParametro('global-email_do_admin')+'">'+self.grupo.obterParametro('global-email_do_admin')+'</a> \
         </div> \
         <script type="text/javascript">\

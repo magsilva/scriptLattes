@@ -3,16 +3,16 @@
 # filename: trabalhoCompletoEmCongresso.py
 #
 #  scriptLattes V8
-#  Copyright 2005-2011: Jesús P. Mena-Chalco e Roberto M. Cesar-Jr.
+#  Copyright 2005-2012: Jesús P. Mena-Chalco e Roberto M. Cesar-Jr.
 #  http://scriptlattes.sourceforge.net/
 #
 #
 #  Este programa é um software livre; você pode redistribui-lo e/ou 
 #  modifica-lo dentro dos termos da Licença Pública Geral GNU como 
 #  publicada pela Fundação do Software Livre (FSF); na versão 2 da 
-#  Licença, ou (na sua opnião) qualquer versão.
+#  Licença, ou (na sua opinião) qualquer versão.
 #
-#  Este programa é distribuido na esperança que possa ser util, 
+#  Este programa é distribuído na esperança que possa ser util, 
 #  mas SEM NENHUMA GARANTIA; sem uma garantia implicita de ADEQUAÇÂO a qualquer
 #  MERCADO ou APLICAÇÃO EM PARTICULAR. Veja a
 #  Licença Pública Geral GNU para maiores detalhes.
@@ -31,6 +31,7 @@ class TrabalhoCompletoEmCongresso:
 	item = None # dado bruto
 	idMembro = None
 
+	doi = None
 	relevante = None
 	autores = None
 	titulo = None
@@ -41,7 +42,7 @@ class TrabalhoCompletoEmCongresso:
 	paginas = None
 	chave = None
 
-	def __init__(self, idMembro, partesDoItem='',  relevante=''):
+	def __init__(self, idMembro, partesDoItem='', doi='', relevante=''):
 		self.idMembro = set([])
 		self.idMembro.add(idMembro)
 
@@ -50,6 +51,7 @@ class TrabalhoCompletoEmCongresso:
 			# partesDoItem[1]: Descricao do livro (DADO BRUTO)
 
 			self.item = partesDoItem[1]
+			self.doi = doi
 			self.relevante = relevante
 
 			# Dividir o item na suas partes constituintes
@@ -98,6 +100,7 @@ class TrabalhoCompletoEmCongresso:
 			self.chave = self.autores # chave de comparação entre os objetos
 
 		else:
+			self.doi = ''
 			self.relevante = ''
 			self.autores = ''
 			self.titulo = ''
@@ -112,6 +115,9 @@ class TrabalhoCompletoEmCongresso:
 			# Os IDs dos membros são agrupados. 
 			# Essa parte é importante para a criação do GRAFO de colaborações
 			self.idMembro.update(objeto.idMembro)
+
+			if len(self.doi)<len(objeto.doi):
+				self.doi = objeto.doi
 
 			if len(self.autores)<len(objeto.autores):
 				self.autores = objeto.autores
@@ -141,6 +147,9 @@ class TrabalhoCompletoEmCongresso:
 		s+= 'p. ' + self.paginas + ', ' if not self.paginas=='' else ''
 		s+= str(self.ano) + '.'         if str(self.ano).isdigit() else '.'
 
+		if not self.doi=='':
+			s+= ' <a href="'+self.doi+'" target="_blank" style="PADDING-RIGHT:4px;"><img border=0 src="doi.png"></a>' 
+
  		s+= menuHTMLdeBuscaPB(self.titulo)
 		return s
 
@@ -163,6 +172,7 @@ class TrabalhoCompletoEmCongresso:
 		s+= '\nSP  - '+p1
 		s+= '\nEP  - '+p2
 		s+= '\nPY  - '+str(self.ano)
+		s+= '\nL2  - '+self.doi
 		s+= '\nER  - '
 		return s
 
@@ -172,6 +182,7 @@ class TrabalhoCompletoEmCongresso:
 		s  = "\n[TRABALHO COMPLETO PUBLICADO EM CONGRESSO] \n"
 		s += "+ID-MEMBRO   : " + str(self.idMembro) + "\n"
 		s += "+RELEVANTE   : " + str(self.relevante) + "\n"
+		s += "+DOI         : " + self.doi.encode('utf8','replace') + "\n"
 		s += "+AUTORES     : " + self.autores.encode('utf8','replace') + "\n"
 		s += "+TITULO      : " + self.titulo.encode('utf8','replace') + "\n"
 		s += "+NOME EVENTO : " + self.nomeDoEvento.encode('utf8','replace') + "\n"
@@ -179,5 +190,5 @@ class TrabalhoCompletoEmCongresso:
 		s += "+ANO         : " + str(self.ano) + "\n"
 		s += "+VOLUME      : " + self.volume.encode('utf8','replace') + "\n"
 		s += "+PAGINAS     : " + self.paginas.encode('utf8','replace') + "\n"
-###		s += "+item        : @@" + self.item.encode('utf8','replace') + "@@\n"
+		s += "+item        : " + self.item.encode('utf8','replace') + "\n"
 		return s

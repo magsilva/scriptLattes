@@ -3,16 +3,16 @@
 # filename: compiladorDeListas.py
 #
 #  scriptLattes V8
-#  Copyright 2005-2011: Jesús P. Mena-Chalco e Roberto M. Cesar-Jr.
+#  Copyright 2005-2012: Jesús P. Mena-Chalco e Roberto M. Cesar-Jr.
 #  http://scriptlattes.sourceforge.net/
 #
 #
 #  Este programa é um software livre; você pode redistribui-lo e/ou 
 #  modifica-lo dentro dos termos da Licença Pública Geral GNU como 
 #  publicada pela Fundação do Software Livre (FSF); na versão 2 da 
-#  Licença, ou (na sua opnião) qualquer versão.
+#  Licença, ou (na sua opinião) qualquer versão.
 #
-#  Este programa é distribuido na esperança que possa ser util, 
+#  Este programa é distribuído na esperança que possa ser util, 
 #  mas SEM NENHUMA GARANTIA; sem uma garantia implicita de ADEQUAÇÂO a qualquer
 #  MERCADO ou APLICAÇÃO EM PARTICULAR. Veja a
 #  Licença Pública Geral GNU para maiores detalhes.
@@ -24,7 +24,8 @@
 
 
 import operator
-import numpy
+from scipy import sparse
+#import numpy
 
 class CompiladorDeListas:
 	grupo = None
@@ -91,6 +92,7 @@ class CompiladorDeListas:
 		self.listaCompletaOCTCC = {}
 		self.listaCompletaOCIniciacaoCientifica = {}
 		self.listaCompletaOCOutroTipoDeOrientacao = {}
+
 		self.listaCompletaPremioOuTitulo = {}
 		self.listaCompletaProjetoDePesquisa = {}
 
@@ -297,8 +299,10 @@ class CompiladorDeListas:
 	#  - (1) adjacência
     #  - (2) frequencia
 	def criarMatrizes(self, listaCompleta):
-		matriz1 = numpy.zeros((self.grupo.numeroDeMembros(), self.grupo.numeroDeMembros()), dtype=numpy.int32)
-		matriz2 = numpy.zeros((self.grupo.numeroDeMembros(), self.grupo.numeroDeMembros()), dtype=numpy.float32)
+		# matriz1 = numpy.zeros((self.grupo.numeroDeMembros(), self.grupo.numeroDeMembros()), dtype=numpy.int32)
+		# matriz2 = numpy.zeros((self.grupo.numeroDeMembros(), self.grupo.numeroDeMembros()), dtype=numpy.float32)
+		matriz1 = sparse.lil_matrix((self.grupo.numeroDeMembros(), self.grupo.numeroDeMembros()))
+		matriz2 = sparse.lil_matrix((self.grupo.numeroDeMembros(), self.grupo.numeroDeMembros()))
 
 		keys = listaCompleta.keys()
 		keys.sort(reverse=True)
@@ -312,11 +316,11 @@ class CompiladorDeListas:
 					# (2) incrementamos a 'frequencia' de colaboracao
 					combinacoes = self.calcularCombinacoes(pub.idMembro)
 					for c in combinacoes:
-						matriz1[c[0]][c[1]]+=1
-						matriz1[c[1]][c[0]]+=1
+						matriz1[c[0] , c[1]] += 1
+						matriz1[c[1] , c[0]] += 1
 
-						matriz2[c[0]][c[1]]+=1.0/(numeroDeCoAutores-1)
-						matriz2[c[1]][c[0]]+=1.0/(numeroDeCoAutores-1)
+						matriz2[c[0] , c[1]] += 1.0/(numeroDeCoAutores-1)
+						matriz2[c[1] , c[0]] += 1.0/(numeroDeCoAutores-1)
 
 		return [matriz1, matriz2]
 
@@ -336,8 +340,10 @@ class CompiladorDeListas:
 
 
 	def uniaoDeMatrizesDeColaboracao(self):
-		matriz1 = numpy.zeros((self.grupo.numeroDeMembros(), self.grupo.numeroDeMembros()), dtype=numpy.int32)
-		matriz2 = numpy.zeros((self.grupo.numeroDeMembros(), self.grupo.numeroDeMembros()), dtype=numpy.float32)
+		##matriz1 = numpy.zeros((self.grupo.numeroDeMembros(), self.grupo.numeroDeMembros()), dtype=numpy.int32)
+		##matriz2 = numpy.zeros((self.grupo.numeroDeMembros(), self.grupo.numeroDeMembros()), dtype=numpy.float32)
+		matriz1 = sparse.lil_matrix((self.grupo.numeroDeMembros(), self.grupo.numeroDeMembros()))
+		matriz2 = sparse.lil_matrix((self.grupo.numeroDeMembros(), self.grupo.numeroDeMembros()))
 
 		if self.grupo.obterParametro('grafo-incluir_artigo_em_periodico'):
 			matriz1 += self.matrizesArtigoEmPeriodico[0]

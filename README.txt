@@ -6,7 +6,7 @@ SINOPSIS
 
 REQUISITOS
 	Para a compilação precisam-se de alguns módulos Python. Para instalar esses módulos execute como root:
-	# apt-get install python-all python-setuptools python-utidylib python-matplotlib python-levenshtein python-pygraphviz python-numpy tidy
+	# apt-get install python-all python-setuptools python-utidylib python-matplotlib python-levenshtein python-pygraphviz python-numpy tidy python-scipy python-scipy
 	# easy_install pytidylib
 
 EXECUÇÃO
@@ -17,13 +17,14 @@ EXECUÇÃO
 	$ ./scriptLattes.py ./exemplo/teste.config
 
 	Nesse exemplo consideram-se todas as produções cujos anos de publicações
-	estão entre 2006 e 2010. Rótulos para os membros não foram considerados. 
+	estão entre 2006 e 2012. Rótulos para os membros não foram considerados. 
 	
 	Os IDs Lattes dos 3 membros está listada em:
 	./exemplo/teste.list
 
 	O resultado da execução estará disponível em:
 	./exemplo/teste/
+
 
 	(*) EXEMPLO B:
 	$ cd <nome_diretorio_scriptLattes>
@@ -39,7 +40,7 @@ EXECUÇÃO
 	./exemplo/vision-ime-usp/
 
 IDEALIZADORES DO PROJETO
-	Jesús P. Mena-Chalco <jmena@vision.ime.usp.br>
+	Jesús P. Mena-Chalco <jesus.mena@ufabc.edu.br>
 	Roberto M. Cesar-Jr <cesar@vision.ime.usp.br>
 
 URL DO PROJETO
@@ -48,6 +49,37 @@ URL DO PROJETO
 
 =========================================================================================
 LOG
+
+Thu Jun  7 14:13:35 BRT 2012
+-- Foi corrigido o procedimento para baixar os CVs Lattes. 
+-- O parâmetro 'mapa-google_map_key' não é mais requerido para o Mapa de Geolocalização.
+   A versão 2 da API do google maps está obsoleta. Atualmente usamos a versão 3. Assim,
+   não é mais necessário ter um cadastro no googleMaps.
+-- A página de membros foi atualizada. Foi acrescentada uma coluna com o rótulo
+   de cada membro (se este for informado no arquivo .config). Essa informação é
+   útil para na criação de relatórios que contenham membros afastados temporariamente
+   do grupo (e.g. professores aposentados, professores transferidos a outra unidade).
+-- Foi corrigido um erro de codificação no pygraphviz (python 2.7.3 disponível na 
+   distribuição Ubuntu 12.04)
+
+Tue Feb 28 12:00:34 BRT 2012
+-- São utilizados estruturas de dados que permitam representar as matrizes de coautoria 
+   através de matrizes esparsas. Nesse caso deve de se instalar o pacote python-scipy 
+   (a instrução para a instalar o pacote está indicada na seção 'Requisitos').
+-- Compatibilidade com exceções (except) de python.
+-- Melhora de alguns procedimentos pontuais. Não é necessário carregar o X para a
+   geração dos gráficos de barras.
+
+Mon Jan 23 11:49:54 BRST 2012
+-- Foi considerado, mediante um novo parâmetro 'global-diretorio_de_armazenamento_de_cvs',
+   o armazenamento temporário (cache) de CVs.
+   Esta característica permite realizar diferentes análises baixando apenas
+   uma vez cada CV. Se nenhum valor for indicado para o parâmetro não for indicado, então
+   serão utilizadas as últimas versões dos CVs. Isto é, para toda nova execução serão
+   baixados os CVs.
+-- São consideradas inúmeras tentativas para baixar os CVs Lattes.
+   Algumas vezes o servidor Lattes não consegue distribuir o CV. Nesse caso, o programa
+   faz uma pausa de 20seg para, seguidamente, realizar uma nova tentativa.
 
 Sat Oct 15 23:32:21 BRT 2011
 -- Foi melhorado o procedimento para baixar CVs da Plataforma Lattes.

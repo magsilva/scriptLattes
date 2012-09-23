@@ -3,16 +3,16 @@
 # filename: grafoDeColaboracoes.py
 #
 #  scriptLattes V8
-#  Copyright 2005-2011: Jesús P. Mena-Chalco e Roberto M. Cesar-Jr.
+#  Copyright 2005-2012: Jesús P. Mena-Chalco e Roberto M. Cesar-Jr.
 #  http://scriptlattes.sourceforge.net/
 #
 #
 #  Este programa é um software livre; você pode redistribui-lo e/ou 
 #  modifica-lo dentro dos termos da Licença Pública Geral GNU como 
 #  publicada pela Fundação do Software Livre (FSF); na versão 2 da 
-#  Licença, ou (na sua opnião) qualquer versão.
+#  Licença, ou (na sua opinião) qualquer versão.
 #
-#  Este programa é distribuido na esperança que possa ser util, 
+#  Este programa é distribuído na esperança que possa ser util, 
 #  mas SEM NENHUMA GARANTIA; sem uma garantia implicita de ADEQUAÇÂO a qualquer
 #  MERCADO ou APLICAÇÃO EM PARTICULAR. Veja a
 #  Licença Pública Geral GNU para maiores detalhes.
@@ -63,40 +63,35 @@ class GrafoDeColaboracoes:
 					['#000000','#FFFFFF'] ]
 		
 		self.grafoDeCoAutoriaSemPesos = self.criarGrafoDeCoAutoriaSemPesos()
-		self.grafoDeCoAutoriaSemPesos.draw(path=diretorioDeSaida+'/grafoDeColaboracoesSemPesos.svg', format='svg')
+		self.grafoDeCoAutoriaSemPesos.draw(path=diretorioDeSaida+'/grafoDeColaboracoesSemPesos.png', format='png')
 		self.grafoDeCoAutoriaSemPesos.draw(path=diretorioDeSaida+'/grafoDeColaboracoesSemPesos.dot', format='dot')
 		self.grafoDeCoAutoriaSemPesosCMAPX = self.grafoDeCoAutoriaSemPesos.draw(format='cmapx')
-#		print self.grafoDeCoAutoriaSemPesosCMAPX
 
 		self.grafoDeCoAutoriaComPesos = self.criarGrafoDeCoAutoriaComPesos()
-		self.grafoDeCoAutoriaComPesos.draw(path=diretorioDeSaida+'/grafoDeColaboracoesComPesos.svg', format='svg')
+		self.grafoDeCoAutoriaComPesos.draw(path=diretorioDeSaida+'/grafoDeColaboracoesComPesos.png', format='png')
 		self.grafoDeCoAutoriaComPesos.draw(path=diretorioDeSaida+'/grafoDeColaboracoesComPesos.dot', format='dot')
 		self.grafoDeCoAutoriaComPesosCMAPX = self.grafoDeCoAutoriaComPesos.draw(format='cmapx')
-#		print self.grafoDeCoAutoriaSemPesosCMAPX
 
-#		self.grafoDeCoAutoriaNormalizado = self.criarGrafoDeCoAutoriaNormalizada()
-#		self.grafoDeCoAutoriaNormalizado.draw(path=diretorioDeSaida+'/grafoDeColaboracoesNormalizado.svg', format='svg')
-#		self.grafoDeCoAutoriaNormalizado.draw(path=diretorioDeSaida+'/grafoDeColaboracoesNormalizado.dot', format='dot')
-#		self.grafoDeCoAutoriaNormalizadoCMAPX = self.grafoDeCoAutoriaNormalizado.draw(format='cmapx')
-#		print self.grafoDeCoAutoriaNormalizadoCMAPX
+		self.grafoDeCoAutoriaNormalizado = self.criarGrafoDeCoAutoriaNormalizada()
+		self.grafoDeCoAutoriaNormalizado.draw(path=diretorioDeSaida+'/grafoDeColaboracoesNormalizado.png', format='png')
+		self.grafoDeCoAutoriaNormalizado.draw(path=diretorioDeSaida+'/grafoDeColaboracoesNormalizado.dot', format='dot')
+		self.grafoDeCoAutoriaNormalizadoCMAPX = self.grafoDeCoAutoriaNormalizado.draw(format='cmapx')
 
 #		self.grafoDeCoAutoriaCompleta = self.criarGrafoDeCoAutoriaCompleta()
 #		self.grafoDeCoAutoriaCompleta.draw(path='grafoDeColaboracoesCompleto.png', format='png')
 #		self.grafoDeCoAutoriaCompleta.draw(path='grafoDeColaboracoesCompleto.dot', format='dot')
 #		self.grafoDeCoAutoriaCompletaCMAPX = self.grafoDeCoAutoriaCompleta.draw(format='cmapx')
-#		print self.grafoDeCoAutoriaCompletaCMAPX
 
 
 		# Criamos um thumbnail do grafo sem pesos
-#		im = Image.open(diretorioDeSaida+'/grafoDeColaboracoesSemPesos.png')
-#		im.thumbnail((400,400))
-#		im.save(diretorioDeSaida+'/grafoDeColaboracoesSemPesos-t.png')
+		im = Image.open(diretorioDeSaida+'/grafoDeColaboracoesSemPesos.png')
+		im.thumbnail((400,400))
+		im.save(diretorioDeSaida+'/grafoDeColaboracoesSemPesos-t.png')
 
 
 	def criarGrafoDeCoAutoriaSemPesos(self):
 		print "\n[CRIANDO GRAFOS DE COLABORACOES SEM PESOS]"
 
-#		grafo = pygraphviz.AGraph(strict=False, directed=False)
 		grafo = pygraphviz.AGraph(directed=False, overlap="False", id="grafo1", name="grafo1")
 		grafo.node_attr['shape']='rectangle'
 		grafo.node_attr['fontsize']='8'
@@ -105,8 +100,8 @@ class GrafoDeColaboracoes:
 		# Inserimos os nos
 		for m in range(0,self.grupo.numeroDeMembros()):
 			membro = self.grupo.listaDeMembros[m]
-			nome = self.abreviarNome(membro.nomeCompleto).encode('utf8')+" ["+str(int(self.grupo.vetorDeCoAutoria[m]))+"]"
-
+			nome = self.abreviarNome(membro.nomeCompleto)+" ["+str(int(self.grupo.vetorDeCoAutoria[m]))+"]"
+			
 			if self.grupo.obterParametro('grafo-considerar_rotulos_dos_membros_do_grupo'):
 				indice = self.grupo.listaDeRotulos.index(membro.rotulo)
 				cor = self.atribuirCorLegal(indice)
@@ -118,13 +113,15 @@ class GrafoDeColaboracoes:
 				corDoNoBG = '#003399'
 
 			if self.grupo.vetorDeCoAutoria[m]>0 or self.grupo.obterParametro('grafo-mostrar_todos_os_nos_do_grafo'):
-				grafo.add_node(membro.idMembro, label=nome, fontcolor=corDoNoFG, color=corDoNoBG, height="0.2", URL=membro.url)
+				try:
+					grafo.add_node(membro.idMembro, label=nome, fontcolor=corDoNoFG, color=corDoNoBG, height="0.2", URL=membro.url)
+				except:
+					grafo.add_node(membro.idMembro, label=nome.encode('utf8'), fontcolor=corDoNoFG, color=corDoNoBG, height="0.2", URL=membro.url)
 
 		# Inserimos as arestas
 		for i in range(0, self.grupo.numeroDeMembros()-1):
 			for j in range(i, self.grupo.numeroDeMembros()):
-				#if self.grupo.matrizDeFrequenciaNormalizada[i][j]>0:
-				if self.grupo.matrizDeAdjacencia[i][j]>0:
+				if self.grupo.matrizDeAdjacencia[i,j]>0:
 					grafo.add_edge(i, j)
 
 		grafo.layout('dot')    # circo dot neato
@@ -134,7 +131,6 @@ class GrafoDeColaboracoes:
 	def criarGrafoDeCoAutoriaComPesos(self):
 		print "\n[CRIANDO GRAFOS DE COLABORACOES COM PESOS]"
 
-#		grafo = pygraphviz.AGraph(strict=False, directed=False)
 		grafo = pygraphviz.AGraph(directed=False, overlap="False", id="grafo2", name="grafo2")
 		grafo.node_attr['shape']='rectangle'
 		grafo.node_attr['fontsize']='8'
@@ -143,7 +139,7 @@ class GrafoDeColaboracoes:
 		# Inserimos os nos
 		for m in range(0,self.grupo.numeroDeMembros()):
 			membro = self.grupo.listaDeMembros[m]
-			nome = self.abreviarNome(membro.nomeCompleto).encode('utf8')+" ["+str(int(self.grupo.vetorDeCoAutoria[m]))+"]"
+			nome = self.abreviarNome(membro.nomeCompleto)+" ["+str(int(self.grupo.vetorDeCoAutoria[m]))+"]"
 
 			if self.grupo.obterParametro('grafo-considerar_rotulos_dos_membros_do_grupo'):
 				indice = self.grupo.listaDeRotulos.index(membro.rotulo)
@@ -156,13 +152,16 @@ class GrafoDeColaboracoes:
 				corDoNoBG = '#003399'
 
 			if self.grupo.vetorDeCoAutoria[m]>0 or self.grupo.obterParametro('grafo-mostrar_todos_os_nos_do_grafo'):
-				grafo.add_node(membro.idMembro, label=nome, fontcolor=corDoNoFG, color=corDoNoBG, height="0.2", URL=membro.url)
+				try:
+					grafo.add_node(membro.idMembro, label=nome, fontcolor=corDoNoFG, color=corDoNoBG, height="0.2", URL=membro.url)
+				except:
+					grafo.add_node(membro.idMembro, label=nome.encode('utf8'), fontcolor=corDoNoFG, color=corDoNoBG, height="0.2", URL=membro.url)
 
 		# Inserimos as arestas
 		for i in range(0, self.grupo.numeroDeMembros()-1):
 			for j in range(i, self.grupo.numeroDeMembros()):
-				if self.grupo.matrizDeAdjacencia[i][j]>0:
-					grafo.add_edge(i, j, label=str(self.grupo.matrizDeAdjacencia[i][j]), fontsize='8')
+				if self.grupo.matrizDeAdjacencia[i,j]>0:
+					grafo.add_edge(i, j, label=str(self.grupo.matrizDeAdjacencia[i,j]), fontsize='8')
 
 		grafo.layout('dot')    # circo dot neato
 		return grafo
@@ -171,7 +170,6 @@ class GrafoDeColaboracoes:
 	def criarGrafoDeCoAutoriaNormalizada(self):
 		print "\n[CRIANDO GRAFOS DE COLABORACOES NORMALIZADO]"
 
-#		grafo = pygraphviz.AGraph(strict=False, directed=True)
 		grafo = pygraphviz.AGraph(directed=True, overlap="False", id="grafo3", name="grafo3")
 		grafo.node_attr['shape']='rectangle'
 		grafo.node_attr['fontsize']='8'
@@ -180,7 +178,7 @@ class GrafoDeColaboracoes:
 		# Inserimos os nos: This is SPARTA!!!
 		for m in range(0,self.grupo.numeroDeMembros()):
 			membro = self.grupo.listaDeMembros[m]
-			nome = self.abreviarNome(membro.nomeCompleto).encode('utf8')+" ["+str(int(self.grupo.vetorDeCoAutoria[m]))+"]"
+			nome = self.abreviarNome(membro.nomeCompleto)+" ["+str(int(self.grupo.vetorDeCoAutoria[m]))+"]"
 
 			if self.grupo.obterParametro('grafo-considerar_rotulos_dos_membros_do_grupo'):
 				indice = self.grupo.listaDeRotulos.index(membro.rotulo)
@@ -193,12 +191,16 @@ class GrafoDeColaboracoes:
 				corDoNoBG = '#003399'
 
 			if self.grupo.vetorDeCoAutoria[m]>0 or self.grupo.obterParametro('grafo-mostrar_todos_os_nos_do_grafo'):
-				grafo.add_node(membro.idMembro, label=nome, fontcolor=corDoNoFG, color=corDoNoBG, height="0.2", URL=membro.url)
+				try:
+					grafo.add_node(membro.idMembro, label=nome, fontcolor=corDoNoFG, color=corDoNoBG, height="0.2", URL=membro.url)
+				except:
+					grafo.add_node(membro.idMembro, label=nome.encode('utf8'), fontcolor=corDoNoFG, color=corDoNoBG, height="0.2", URL=membro.url)
+					
 
 		# Inserimos as arestas
 		for i in range(0, self.grupo.numeroDeMembros()):
 			for j in range(0, self.grupo.numeroDeMembros()):
-				valor = round(self.grupo.matrizDeFrequenciaNormalizada[i][j],2)
+				valor = round(self.grupo.matrizDeFrequenciaNormalizada[i,j],2)
 				if valor>0:
 					if self.grupo.obterParametro('grafo-mostrar_aresta_proporcional_ao_numero_de_colaboracoes'):
 						grossura = str(0.5+3*valor)
@@ -250,7 +252,7 @@ class GrafoDeColaboracoes:
 		# Inserimos as arestas
 		for i in range(0, self.grupo.numeroDeMembros()-1):
 			for j in range(i, self.grupo.numeroDeMembros()):
-				if self.grupo.matrizDeFrequenciaNormalizada[i][j]>0:
+				if self.grupo.matrizDeFrequenciaNormalizada[i,j]>0:
 					grafo.add_edge(i, j)
 
 		#grafo.layout('twopi')

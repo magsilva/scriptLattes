@@ -3,16 +3,16 @@
 # filename: membro.py
 #
 #  scriptLattes V8
-#  Copyright 2005-2011: Jesús P. Mena-Chalco e Roberto M. Cesar-Jr.
+#  Copyright 2005-2012: Jesús P. Mena-Chalco e Roberto M. Cesar-Jr.
 #  http://scriptlattes.sourceforge.net/
 #
 #
 #  Este programa é um software livre; você pode redistribui-lo e/ou 
 #  modifica-lo dentro dos termos da Licença Pública Geral GNU como 
 #  publicada pela Fundação do Software Livre (FSF); na versão 2 da 
-#  Licença, ou (na sua opnião) qualquer versão.
+#  Licença, ou (na sua opinião) qualquer versão.
 #
-#  Este programa é distribuido na esperança que possa ser util, 
+#  Este programa é distribuído na esperança que possa ser util, 
 #  mas SEM NENHUMA GARANTIA; sem uma garantia implicita de ADEQUAÇÂO a qualquer
 #  MERCADO ou APLICAÇÃO EM PARTICULAR. Veja a
 #  Licença Pública Geral GNU para maiores detalhes.
@@ -22,13 +22,13 @@
 #  Livre(FSF) Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #
 
+
 import urllib2
 import re
 import sets
 import datetime
 import time
-import os
-import logging
+
 
 from parserLattes import *
 from parserLattesXML import *
@@ -39,9 +39,6 @@ class Membro:
 	idLattes = None # ID Lattes
 	idMembro = None
 	rotulo = ''
-
-	logging.basicConfig()
-	logger = logging.getLogger('scriptLattes')
 
 	nomeInicial = ''
 	nomeCompleto = ''
@@ -58,11 +55,12 @@ class Membro:
 	atualizacaoCV = ''
 	foto = ''
 	textoResumo = ''
-	xml = None
+	### xml = None
 
 
 	itemsDesdeOAno = '' # periodo global
 	itemsAteOAno = ''   # periodo global
+	diretorioCache = '' # diretorio de armazento de CVs (útil para extensas listas de CVs)
 
 	listaFormacaoAcademica = []
 	listaProjetoDePesquisa = []
@@ -120,19 +118,18 @@ class Membro:
 
 
 
-
-	def __init__(self, idMembro, identificador, nome, periodo, rotulo, itemsDesdeOAno, itemsAteOAno, xml = ''):
+	###def __init__(self, idMembro, identificador, nome, periodo, rotulo, itemsDesdeOAno, itemsAteOAno, xml=''):
+	def __init__(self, idMembro, identificador, nome, periodo, rotulo, itemsDesdeOAno, itemsAteOAno, diretorioCache):
 		self.idMembro = idMembro
 		self.idLattes = identificador
 		self.nomeInicial = nome
 		self.periodo = periodo
 		self.rotulo = rotulo
-		self.url = 'http://lattes.cnpq.br/' + identificador
+		self.url = 'http://lattes.cnpq.br/'+identificador
 		self.itemsDesdeOAno = itemsDesdeOAno
 		self.itemsAteOAno = itemsAteOAno
 		self.criarListaDePeriodos(self.periodo)
-		self.xml = xml
-		self.logger.setLevel(logging.INFO)
+		self.diretorioCache = diretorioCache
 
 
 	def criarListaDePeriodos(self, periodoDoMembro):
@@ -156,36 +153,40 @@ class Membro:
 				if ano1.isdigit() and ano2.isdigit():
 					self.listaPeriodo.append([int(ano1), int(ano2)])
 				else:
-					self.logger.error('Invalid period %s for CV %s, skipping it' % (lista[i], self.idLattes))
+					print "\n[AVISO IMPORTANTE] Periodo nao válido: "+lista[i]+". (periodo desconsiderado na lista)"
+					print "[AVISO IMPORTANTE] CV Lattes: "+self.idLattes+". Membro: "+self.nomeInicial.encode('utf8')+"\n"
 		
 
 	def carregarDadosCVLattes(self):
-		# Load from HTML file
-		if not self.idLattes == '':
-			cacheDirName = os.path.expanduser(os.path.join("~", ".scriptLattes", "cache"))
-			if not os.path.exists(cacheDirName):
-				os.makedirs(cacheDirName)
-			cachedFileName = os.path.join(cacheDirName, self.idLattes)
-			
-			# Check if cached file (if any) is valid
-			if os.path.exists(cachedFileName):
-				if os.path.getsize(cachedFileName) < 1000:
-					self.logger.info('Invalid CV Lattes found for %s, deleting cached file' % self.idLattes)
-					os.remove(cachedFileName)
-				else:
-					if os.path.getmtime(cachedFileName) < (time.time() - 365 * 24 * 60 * 60):
-						self.logger.info('Cached file for CV Lattes %s is too old, deleting it' % self.idLattes)
-						os.remove(cachedFileName)
-						
-			# Check if the curriculum is valid
-			if os.path.exists(cachedFileName):
-				self.logger.info('Found good CV Lattes for %s in the cache, skipping download' % self.idLattes)
-				cachedFile = open(cachedFileName, 'r')
-				cvLattesHTML = cachedFile.read()
+		cvPath = self.diretorioCache+'/'+self.idLattes
+
+		if 'xml' in cvPath:
+			arquivoX = open(cvPath)
+			cvLattesXML = arquivoX.read()
+			arquivoX.close()
+
+			extended_chars= u''.join(unichr(c) for c in xrange(127, 65536, 1)) # srange(r"[\0x80-\0x7FF]")
+			special_chars = ' -'''
+			cvLattesXML   = cvLattesXML.decode('iso-8859-1','replace')+extended_chars+special_chars
+			parser        = ParserLattesXML(self.idMembro, cvLattesXML)
+
+			self.idLattes = parser.idLattes
+			self.url      = parser.url
+			print "(*) Utilizando CV armazenado no cache: "+cvPath
+
+		else:
+			if os.path.exists(cvPath):
+				arquivoH = open(cvPath)
+				cvLattesHTML = arquivoH.read()
+				print "(*) Utilizando CV armazenado no cache: "+cvPath
 			else:
-				# Download CV Lattes
+				cvLattesHTML = ''
+				tentativa = 0
+				while tentativa<5:
+				#while True:
 				try:
-					headers = {
+					txdata = None
+					txheaders = {   
 						'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64; rv:2.0) Gecko/20100101 Firefox/4.0',
 						'Accept-Language': 'en-us,en;q=0.5',
 						'Accept-Encoding': 'deflate',
@@ -194,54 +195,42 @@ class Membro:
 						'Cache-Control': 'max-age=0',
 						'Cookie': 'style=standard; __utma=140185953.294397416.1313390179.1313390179.1317145115.2; __utmz=140185953.1317145115.2.2.utmccn=(referral)|utmcsr=emailinstitucional.cnpq.br|utmcct=/ei/emailInstitucional.do|utmcmd=referral; JSESSIONID=1B98ABF9642E01597AABA0F7A8807FD1.node2',
 					}
-					self.logger.info('Downloading CV Lattes for %s' % self.idLattes)
-					req = urllib2.Request(self.url, None, headers) # Young folks by P,B&J!
-					response = urllib2.urlopen(req)
-					cvLattesHTML = response.read()
-					response.close()
-					
-					# If downloaded file is invalid, try to download using alternative method
-					alternativeLattesId = re.findall(u'name="id" value="(.*)" id=', cvLattesHTML)
-					if len(alternativeLattesId) > 0:
-						self.logger.info('Downloading CV Lattes for %s using alternative method' % self.idLattes)
-						alternativeUrl ='http://buscatextual.cnpq.br/buscatextual/visualizacv.do?metodo=apresentar&palavra=10&id=' + alternativeLattesId[-1]
-						req = urllib2.Request(alternativeUrl, None, headers)
-						response = urllib2.urlopen(req)
-						cvLattesHTML = response.read()
+		
+						print "Baixando CV :"+self.url
 
-					cachedFile = open(cachedFileName, 'w')
-					cachedFile.write(cvLattesHTML)
-					cachedFile.close()
-					
-				except urllib2.URLError, e:
-					self.logger.error('Cannot download data for %(id)s (%(url)s) due to %(errorid)d' % {'id' : self.idLattes, 'url' : self.url, 'errorid' : e.code})
+					req = urllib2.Request(self.url, txdata, txheaders) # Young folks by P,B&J!
+					arquivoH = urllib2.urlopen(req) 
+					cvLattesHTML = arquivoH.read()
+					arquivoH.close()
+					time.sleep(1)
 
-				
+						if len(cvLattesHTML)<=1000:
+							print '[AVISO] O scriptLattes tentará baixar novamente o seguinte CV Lattes: ', self.url
+						time.sleep(30)
+							tentativa+=1
+							continue
 
-			if os.path.exists(cachedFileName):
-				if os.path.getsize(cachedFileName) < 1000:
-					self.logger.info('Invalid CV Lattes found for %s, deleting cached file' % self.idLattes)
-					os.remove(cachedFileName)
-					pass
+						if not self.diretorioCache=='':
+					file = open(cvPath, 'w')
+					file.write(cvLattesHTML)
+					file.close()
+							print " (*) O CV está sendo armazenado no Cache"
+						break
 
+					### except urllib2.URLError: ###, e:
+					except:
+						print '[AVISO] Nao é possível obter o CV Lattes: ', self.url
+						print '[AVISO] Certifique-se que o CV existe. O scriptLattes tentará baixar o CV em 30 segundos...'
+						###print '[ERRO] Código de erro: ', e.code
+					time.sleep(30)
+						tentativa+=1
+						continue
 
 			extended_chars= u''.join(unichr(c) for c in xrange(127, 65536, 1)) # srange(r"[\0x80-\0x7FF]")
 			special_chars = ' -'''
-			cvLattesHTML  = cvLattesHTML.decode('ascii','replace') + extended_chars + special_chars
+			#cvLattesHTML  = cvLattesHTML.decode('ascii','replace')+extended_chars+special_chars                                          # Wed Jul 25 16:47:39 BRT 2012
+			cvLattesHTML  = cvLattesHTML.decode('iso-8859-1','replace')+extended_chars+special_chars
 			parser        = ParserLattes(self.idMembro, cvLattesHTML)
-		# Load from XML file
-		else:
-			arquivoX = open(self.xml)
-			cvLattesXML = arquivoX.read()
-			arquivoX.close()
-
-			extended_chars= u''.join(unichr(c) for c in xrange(127, 65536, 1)) # srange(r"[\0x80-\0x7FF]")
-			special_chars = ' -'''
-			cvLattesXML   = cvLattesXML.decode('iso-8859-1','replace') + extended_chars + special_chars
-			parser        = ParserLattesXML(self.idMembro, cvLattesXML)
-
-			self.idLattes = parser.idLattes
-			self.url      = parser.url
 
 		
 		# -----------------------------------------------------------------------------------------
@@ -310,33 +299,6 @@ class Membro:
 
 		# -----------------------------------------------------------------------------------------
 
-	def dumpToFile(self, file):
-		file.write(str(self.idLattes))
-		file.write(",")
-		file.write(self.nomeCompleto)
-		file.write(",")
-		file.write(str(len(self.listaArtigoEmPeriodico)))
-		file.write(",")
-		file.write(str(len(self.listaTrabalhoCompletoEmCongresso)))
-		file.write(",")
-		file.write(str(len(self.listaLivroPublicado)))
-		file.write(",")
-		file.write(str(len(self.listaCapituloDeLivroPublicado)))
-		file.write(",")
-		file.write(str(len(self.listaOCSupervisaoDePosDoutorado)))
-		file.write(",")
-		file.write(str(len(self.listaOCTeseDeDoutorado)))
-		file.write(",")
-		file.write(str(len(self.listaOCDissertacaoDeMestrado)))
-		file.write(",")
-		file.write(str(len(self.listaOCMonografiaDeEspecializacao)))
-		file.write(",")
-		file.write(str(len(self.listaOCTCC)))
-		file.write(",")
-		file.write(str(len(self.listaSoftwareComPatente) + len(self.listaSoftwareSemPatente)))
-		file.write(",")
-		file.write(str(len(self.listaProdutoTecnologico)))
-		file.write("\n")
 
 	def filtrarItemsPorPeriodo(self):
 		self.listaArtigoEmPeriodico                = self.filtrarItems(self.listaArtigoEmPeriodico)
@@ -375,9 +337,9 @@ class Membro:
 		self.listaOCIniciacaoCientifica            = self.filtrarItems(self.listaOCIniciacaoCientifica)
 		self.listaOCOutroTipoDeOrientacao          = self.filtrarItems(self.listaOCOutroTipoDeOrientacao)
 
-		self.listaPremioOuTitulo    = self.filtrarItems(self.listaPremioOuTitulo)
-		self.listaProjetoDePesquisa = self.filtrarItems(self.listaProjetoDePesquisa)
-
+		self.listaPremioOuTitulo       = self.filtrarItems(self.listaPremioOuTitulo)
+		self.listaProjetoDePesquisa    = self.filtrarItems(self.listaProjetoDePesquisa)
+		
 		self.listaParticipacaoEmEvento = self.filtrarItems(self.listaParticipacaoEmEvento)
 		self.listaOrganizacaoDeEvento  = self.filtrarItems(self.listaOrganizacaoDeEvento)
 
@@ -443,10 +405,9 @@ class Membro:
 	def __str__(self):
 		verbose = 0
 
-		s  = "\n======================================================================\n"
-		s += "+ ID-MEMBRO   : " + str(self.idMembro) + "\n"
+		s = "+ ID-MEMBRO   : " + str(self.idMembro) + "\n"
 		s += "+ ROTULO      : " + self.rotulo + "\n"
-#		s += "+ ALIAS       : " + self.nomeInicial.encode('utf8','replace') + "\n"
+		#s += "+ ALIAS       : " + self.nomeInicial.encode('utf8','replace') + "\n"
 		s += "+ NOME REAL   : " + self.nomeCompleto.encode('utf8','replace') + "\n"
 		s += "+ SEXO        : " + self.sexo.encode('utf8','replace') + "\n"
 		s += "+ NOME Cits.  : " + self.nomeEmCitacoesBibliograficas.encode('utf8','replace') + "\n"
@@ -467,7 +428,7 @@ class Membro:
 			s += "\n"
 			for formacao in self.listaFormacaoAcademica:
 				s += formacao.__str__()
-	
+  	
 			s += "\n"
 			for projeto in self.listaProjetoDePesquisa:
 				s += projeto.__str__()
@@ -591,6 +552,7 @@ class Membro:
 			s += "\n- Prêmios e títulos                           : " + str(len(self.listaPremioOuTitulo))
 			s += "\n- Participação em eventos                     : " + str(len(self.listaParticipacaoEmEvento))
 			s += "\n- Organização de eventos                      : " + str(len(self.listaOrganizacaoDeEvento))
+			s += "\n\n"
 
 		return s
 

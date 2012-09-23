@@ -3,16 +3,16 @@
 # filename: resumoEmCongresso.py
 #
 #  scriptLattes V8
-#  Copyright 2005-2011: Jesús P. Mena-Chalco e Roberto M. Cesar-Jr.
+#  Copyright 2005-2012: Jesús P. Mena-Chalco e Roberto M. Cesar-Jr.
 #  http://scriptlattes.sourceforge.net/
 #
 #
 #  Este programa é um software livre; você pode redistribui-lo e/ou 
 #  modifica-lo dentro dos termos da Licença Pública Geral GNU como 
 #  publicada pela Fundação do Software Livre (FSF); na versão 2 da 
-#  Licença, ou (na sua opnião) qualquer versão.
+#  Licença, ou (na sua opinião) qualquer versão.
 #
-#  Este programa é distribuido na esperança que possa ser util, 
+#  Este programa é distribuído na esperança que possa ser util, 
 #  mas SEM NENHUMA GARANTIA; sem uma garantia implicita de ADEQUAÇÂO a qualquer
 #  MERCADO ou APLICAÇÃO EM PARTICULAR. Veja a
 #  Licença Pública Geral GNU para maiores detalhes.
@@ -214,6 +214,6 @@ class ResumoEmCongresso:
 		s += "+VOLUME      : " + self.volume.encode('utf8','replace') + "\n"
 		s += "+NUMERO      : " + self.numero.encode('utf8','replace') + "\n"
 		s += "+PAGINAS     : " + self.paginas.encode('utf8','replace') + "\n"
-#		s += "+item        : @@" + self.item.encode('utf8','replace') + "@@\n"
+		s += "+item        : " + self.item.encode('utf8','replace') + "\n"
 
 		return s
