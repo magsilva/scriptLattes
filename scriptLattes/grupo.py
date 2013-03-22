@@ -3,7 +3,7 @@
 # filename: grupo.py
 #
 #  scriptLattes V8
-#  Copyright 2005-2012: Jesús P. Mena-Chalco e Roberto M. Cesar-Jr.
+#  Copyright 2005-2013: Jesús P. Mena-Chalco e Roberto M. Cesar-Jr.
 #  http://scriptlattes.sourceforge.net/
 #
 #
@@ -36,6 +36,8 @@ from mapaDeGeolocalizacao import *
 from geradorDePaginasWeb import *
 from authorRank import *
 from analisadorDePublicacoes import *
+from qualis import *
+from geradorDeXML import *
 	
 class Grupo:
 	compilador = None
@@ -48,6 +50,7 @@ class Grupo:
 	itemsDesdeOAno = None
 	itemsAteOAno = None
 	diretorioCache = None
+	diretorioDoi = None
 
 	matrizArtigoEmPeriodico = None
 	matrizLivroPublicado = None
@@ -73,11 +76,14 @@ class Grupo:
 	vetorDeCoAutoria = None
 	grafosDeColaboracoes = None
 	mapaDeGeolocalizacao = None
+	geradorDeXml = None
 
 	vectorRank = None
 	nomes = None
 	rotulos = None
 
+	qualis = None 
+	
 	def __init__(self, arquivo):
 		self.arquivoConfiguracao = arquivo
 		self.carregarParametrosPadrao()
@@ -109,10 +115,15 @@ class Grupo:
 
 		self.diretorioCache = self.obterParametro('global-diretorio_de_armazenamento_de_cvs')
 		if self.diretorioCache == '':
-			cacheDirName = os.path.expanduser(os.path.join("~", ".scriptLattes", "cache"))
-
+			self.diretorioCache = os.path.expanduser(os.path.join("~", ".scriptLattes", "cacheCV"))
 		if not os.path.exists(self.diretorioCache):
-                                os.makedirs(cacheDirName)
+			criarDiretorio(self.diretorioCache)
+
+		self.diretorioDoi = self.obterParametro('global-diretorio_de_armazenamento_de_doi')
+		if self.diretorioDoi == '':
+			self.diretorioDoi = os.path.expanduser(os.path.join("~", ".scriptlattes", "cacheDoi"))
+		if not self.diretorioDoi == '':
+			criarDiretorio(self.diretorioDoi)
 
 		# carregamos a lista de membros
 		idSequencial = 0
@@ -144,9 +155,84 @@ class Grupo:
 		self.listaDeRotulos.sort()
 		self.listaDeRotulosCores =  ['']*len(self.listaDeRotulos) 
 
+		self.qualis = Qualis(self) # carregamos Qualis a partir de arquivos definidos no arquivo de configuração
+
+	
+	def gerarXMLdeGrupo(self):
+		if self.obterParametro('global-salvar_informacoes_em_formato_xml'):
+			self.geradorDeXml = GeradorDeXML(self)
+			self.geradorDeXml.gerarXmlParaGrupo()
+
+			if self.geradorDeXml.listaErroXml:
+				print "\n\n[AVISO] Erro ao gerar XML para os lattes abaixo:"
+				for item in self.geradorDeXml.listaErroXml:
+			 		print "- [ID Lattes: " + item + "]"
+
+	def gerarCSVdeQualisdeGrupo(self):
+		if self.obterParametro('global-identificar_publicacoes_com_qualis'):
+			prefix = self.obterParametro('global-prefixo')+'-' if not self.obterParametro('global-prefixo')=='' else ''
+
+			# Salvamos a lista individual
+			s = ""
+			for membro in self.listaDeMembros:
+				if (not self.obterParametro('global-arquivo_qualis_de_periodicos')==''):
+					s += self.imprimeCSVListaIndividual(membro.nomeCompleto, membro.listaArtigoEmPeriodico)
+				if (not self.obterParametro('global-arquivo_qualis_de_congressos')==''):
+					s += self.imprimeCSVListaIndividual(membro.nomeCompleto, membro.listaTrabalhoCompletoEmCongresso)
+					s += self.imprimeCSVListaIndividual(membro.nomeCompleto, membro.listaResumoExpandidoEmCongresso)
+			self.salvarArquivoGenerico(s, prefix+'qualisPorMembro.csv')
+	
+			# Salvamos a lista total (publicações do grupo)
+			s = ""
+			if (not self.obterParametro('global-arquivo_qualis_de_periodicos')==''):
+				s += self.imprimeCSVListaGrupal(self.compilador.listaCompletaArtigoEmPeriodico)
+			if (not self.obterParametro('global-arquivo_qualis_de_congressos')==''):
+				s += self.imprimeCSVListaGrupal(self.compilador.listaCompletaTrabalhoCompletoEmCongresso)
+				s += self.imprimeCSVListaGrupal(self.compilador.listaCompletaResumoExpandidoEmCongresso)
+			self.salvarArquivoGenerico(s, prefix+'qualisGrupal.csv')
+
+	
+	def imprimeCSVListaIndividual(self, nomeCompleto, lista):
+		s = ""
+		for pub in lista:
+			s += pub.csv(nomeCompleto).encode('utf8')+"\n"
+		return s
+
+	def imprimeCSVListaGrupal(self, listaCompleta):
+		s = ""
+		keys = listaCompleta.keys()
+		keys.sort(reverse=True)
+
+		if len(keys)>0:
+			for ano in keys:
+				elementos = listaCompleta[ano]
+				elementos.sort(key = lambda x: x.chave.lower())
+				for index in range(0, len(elementos)):
+					pub = elementos[index]
+					s  += pub.csv().encode('utf8')+"\n"
+		return s
+
+
+	def gerarRISdeGrupo(self):
+		prefix = self.obterParametro('global-prefixo')+'-' if not self.obterParametro('global-prefixo')=='' else ''
+		s = ""
+		for membro in self.listaDeMembros:
+			s +=  membro.ris().encode('utf8')+"\n"
+		self.salvarArquivoGenerico(s, prefix+'membros.ris')
+
+
+	def salvarArquivoGenerico(self, conteudo, nomeArquivo):
+		dir = self.obterParametro('global-diretorio_de_saida')
+		arquivo = open(dir+"/"+nomeArquivo, 'w')
+		arquivo.write(conteudo)
+		arquivo.close()
+
 
 	def carregarDadosCVLattes(self):
+		indice = 1
 		for membro in self.listaDeMembros:
+			print "\n[LENDO REGISTRO LATTES: " + str(indice) + "o. DA LISTA]"
+			indice += 1
 			membro.carregarDadosCVLattes()
 			membro.filtrarItemsPorPeriodo()
 			print membro
@@ -198,6 +284,14 @@ class Grupo:
 		# (3) medidas de authorRanks 
 		self.salvarListaTXT(self.vectorRank, prefix+"authorRank.txt")
 
+
+	def identificarQualisEmPublicacoes(self):
+		if self.obterParametro('global-identificar_publicacoes_com_qualis'):
+			print "\n[IDENTIFICANDO QUALIS EM PUBLICAÇÕES]"
+			for membro in self.listaDeMembros:
+				self.qualis.analisarPublicacoes(membro, self) # Qualis - Adiciona Qualis as publicacoes dos membros
+			self.qualis.calcularTotaisDosQualis(self)
+	
 
 	def salvarListaTXT(self, lista, nomeArquivo):
 		dir = self.obterParametro('global-diretorio_de_saida')
@@ -272,15 +366,12 @@ class Grupo:
 	def salvarVetorDeProducoes(self, vetor, nomeArquivo):
 		dir = self.obterParametro('global-diretorio_de_saida')
 		arquivo = open(dir+"/"+nomeArquivo, 'w')
-
 		string = ''
 		for i in range(0,len(vetor)):
 			(prefixo, pAnos, pQuantidades) = vetor[i]
-
 			string += "\n" + prefixo + ":"
 			for j in range(0,len(pAnos)):
 				string += str(pAnos[j]) + ',' + str(pQuantidades[j]) + ';'
-
 		arquivo.write(string)
 		arquivo.close()
 
@@ -360,13 +451,13 @@ class Grupo:
 			gProporcoes = GraficoDeProporcoes(self, self.obterParametro('global-diretorio_de_saida'))
 
 	def calcularInternacionalizacao(self):
-		if self.obterParametro('relatorio-incluir-internacionalizacao'):
+		if self.obterParametro('relatorio-incluir_internacionalizacao'):
 			print "\n[ANALISANDO INTERNACIONALIZACAO]"
 			self.analisadorDePublicacoes = AnalisadorDePublicacoes(self)
 			self.listaDePublicacoesEinternacionalizacao = self.analisadorDePublicacoes.analisarInternacionalizacaoNaCoautoria()
 			if self.analisadorDePublicacoes.listaDoiValido is not None:
-				self.salvarListaInternalizacaoTXT( self.analisadorDePublicacoes.listaDoiValido, "Internacionalizacao.txt")
-
+				prefix = self.obterParametro('global-prefixo')+'-' if not self.obterParametro('global-prefixo')=='' else ''
+				self.salvarListaInternalizacaoTXT( self.analisadorDePublicacoes.listaDoiValido,prefix+'internacionalizacao.txt')
 
 	def imprimirListasCompletas(self):
 		self.compilador.imprimirListasCompletas()
@@ -434,6 +525,12 @@ class Grupo:
 		self.listaDeParametros.append(['global-google_analytics_key', ''])
 		self.listaDeParametros.append(['global-prefixo', ''])
 		self.listaDeParametros.append(['global-diretorio_de_armazenamento_de_cvs', ''])
+		self.listaDeParametros.append(['global-diretorio_de_armazenamento_de_doi', ''])
+		self.listaDeParametros.append(['global-salvar_informacoes_em_formato_xml', 'nao'])
+
+		self.listaDeParametros.append(['global-identificar_publicacoes_com_qualis', 'nao'])
+		self.listaDeParametros.append(['global-arquivo_qualis_de_periodicos', ''])
+		self.listaDeParametros.append(['global-arquivo_qualis_de_congressos', ''])
 
 		self.listaDeParametros.append(['relatorio-salvar_publicacoes_em_formato_ris', 'nao'])
 		self.listaDeParametros.append(['relatorio-incluir_artigo_em_periodico', 'sim'])
@@ -477,7 +574,7 @@ class Grupo:
 		self.listaDeParametros.append(['relatorio-incluir_premio', 'sim'])
 		self.listaDeParametros.append(['relatorio-incluir_participacao_em_evento', 'sim'])
 		self.listaDeParametros.append(['relatorio-incluir_organizacao_de_evento', 'sim'])
-
+		self.listaDeParametros.append(['relatorio-incluir_internacionalizacao', 'nao'])
 
 		self.listaDeParametros.append(['grafo-mostrar_grafo_de_colaboracoes', 'sim'])
 		self.listaDeParametros.append(['grafo-mostrar_todos_os_nos_do_grafo', 'sim'])
@@ -503,7 +600,6 @@ class Grupo:
 		self.listaDeParametros.append(['grafo-incluir_outro_tipo_de_producao_tecnica', 'sim'])
 
 		self.listaDeParametros.append(['grafo-incluir_producao_artistica', 'sim'])
-
 		self.listaDeParametros.append(['grafo-incluir_grau_de_colaboracao', 'nao'])
 
 		self.listaDeParametros.append(['mapa-mostrar_mapa_de_geolocalizacao', 'sim'])
@@ -511,6 +607,4 @@ class Grupo:
 		self.listaDeParametros.append(['mapa-incluir_alunos_de_pos_doutorado', 'sim'])
 		self.listaDeParametros.append(['mapa-incluir_alunos_de_doutorado', 'sim'])
 		self.listaDeParametros.append(['mapa-incluir_alunos_de_mestrado', 'nao'])
-
-		self.listaDeParametros.append(['relatorio-incluir-internacionalizacao', 'nao'])
 

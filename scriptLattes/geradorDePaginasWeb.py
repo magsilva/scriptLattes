@@ -3,7 +3,7 @@
 # filename: geradorDePaginasWeb
 #
 #  scriptLattes V8
-#  Copyright 2005-2012: Jesús P. Mena-Chalco e Roberto M. Cesar-Jr.
+#  Copyright 2005-2013: Jesús P. Mena-Chalco e Roberto M. Cesar-Jr.
 #  http://scriptlattes.sourceforge.net/
 #
 #
@@ -27,7 +27,7 @@ import datetime
 import re
 import math
 from graficoDeInternacionalizacao import *
-
+from qualis import * # Qualis
 
 class GeradorDePaginasWeb:
 	grupo = None
@@ -38,7 +38,7 @@ class GeradorDePaginasWeb:
 
 	def __init__(self, grupo):
 		self.grupo = grupo
-		self.version = 'V8.05'
+		self.version = 'V8.06'
 		self.dir = self.grupo.obterParametro('global-diretorio_de_saida')
 		
 		if self.grupo.obterParametro('global-criar_paginas_jsp'):
@@ -79,7 +79,7 @@ class GeradorDePaginasWeb:
 		if self.grupo.obterParametro('grafo-mostrar_grafo_de_colaboracoes'):
 			self.gerarPaginaDeGrafosDeColaboracoes()
 
-		if self.grupo.obterParametro('relatorio-incluir-internacionalizacao'):
+		if self.grupo.obterParametro('relatorio-incluir_internacionalizacao'):
 			self.gerarPaginasDeInternacionalizacao()
 		
 		# final do fim! 
@@ -128,7 +128,7 @@ class GeradorDePaginasWeb:
 		if self.grupo.obterParametro('mapa-mostrar_mapa_de_geolocalizacao'):
 			s+='| <a href=#mapa>Mapa de geolocalização</a> '.decode("utf8")
 
-		if self.grupo.obterParametro('relatorio-incluir-internacionalizacao'):
+		if self.grupo.obterParametro('relatorio-incluir_internacionalizacao'):
 			s+='| <a href=#internacionalizacao>Internacionalização</a> '.decode("utf8")
 
 		s+=' ] </center><br></div>'
@@ -274,6 +274,7 @@ class GeradorDePaginasWeb:
 			s+='<a href="grafoDeColaboracoes'+self.extensaoPagina+'"><img src="grafoDeColaboracoesSemPesos-t.png" border=1> </a>'
 		s+='</ul>'
 
+
 		if self.grupo.obterParametro('mapa-mostrar_mapa_de_geolocalizacao'):
 			s+='<h3 id="mapa">Mapa de geolocaliza&ccedil;&atilde;o</h3> <br> <div id="map_canvas" style="width: 800px; height: 600px"></div> <br>'
 			s+='<b>Legenda</b><table>'
@@ -288,17 +289,13 @@ class GeradorDePaginasWeb:
 			s+='</table>'
 
 
-		########################################
-		########################################
-		if self.grupo.obterParametro('relatorio-incluir-internacionalizacao'):
+		if self.grupo.obterParametro('relatorio-incluir_internacionalizacao'):
 			s+='</ul> <h3 id="internacionalizacao">Internacionalização</h3> <ul>'.decode("utf8")
 			if self.nIn0>0:
 				s+= '<li> <a href="In0-0'+self.extensaoPagina+'">Coautoria e internacionalização</a> '.decode("utf8")+'('+str(self.nIn0)+')'
 			else:
 				s+= '<i>Nenhuma publicação com DOI disponível para análise</i>'.decode("utf8")
 			s+='</ul>'
-		########################################
-		########################################
 
 		
 		s+= self.paginaBottom()
@@ -457,6 +454,82 @@ class GeradorDePaginasWeb:
 
 	def gerarPaginaDeProducoes(self, listaCompleta, tituloPagina, prefixo, ris=False):
 		numeroTotalDeProducoes = 0
+		sQualis = ""
+
+		if self.grupo.obterParametro('global-identificar_publicacoes_com_qualis'):
+			if (not self.grupo.obterParametro('global-arquivo_qualis_de_periodicos')==''):
+				if prefixo == 'PB0': 
+					sQualis = self.formatarTotaisQualis(self.grupo.qualis.qtdPB0)
+			if (not self.grupo.obterParametro('global-arquivo_qualis_de_congressos')==''):
+				if prefixo == 'PB4':
+					sQualis = self.formatarTotaisQualis(self.grupo.qualis.qtdPB4)
+				elif prefixo == 'PB5':
+					sQualis = self.formatarTotaisQualis(self.grupo.qualis.qtdPB5)
+
+		keys = listaCompleta.keys()
+		keys.sort(reverse=True) 
+		if len(keys)>0: # apenas geramos páginas web para lista com pelo menos 1 elemento
+			for ano in keys:
+				numeroTotalDeProducoes += len(listaCompleta[ano])
+			maxElementos = int(self.grupo.obterParametro('global-itens_por_pagina'))
+			numeroDePaginas = int(math.ceil(numeroTotalDeProducoes/(maxElementos*1.0))) # dividimos os relatórios em grupos (e.g 1000 items)
+			numeroDeItem = 1
+			numeroDePaginaAtual = 0
+			s = ''
+
+			for ano in keys:
+				anoRotulo = str(ano) if not ano==0 else '*itens sem ano'
+				s+= '<h3 class="year">'+anoRotulo+'</h3> <table>'
+				elementos = listaCompleta[ano]
+				elementos.sort(key = lambda x: x.chave.lower())	# Ordenamos a lista em forma ascendente (hard to explain!)
+
+				for index in range(0, len(elementos)):
+					pub = elementos[index]
+					s += '<tr valign="top"><td>'+str(index+1)+'. &nbsp;</td> <td>'+ pub.html(self.grupo.listaDeMembros)+'</td></tr>' 
+
+					# armazenamos uma copia da publicacao (formato RIS)
+					if self.grupo.obterParametro('relatorio-salvar_publicacoes_em_formato_ris') and ris==True:
+						self.salvarPublicacaoEmFormatoRIS(pub)
+				
+					if numeroDeItem%maxElementos==0 or numeroDeItem==numeroTotalDeProducoes:
+						st = self.paginaTop()
+						st+= '\n<h3>'+tituloPagina.decode("utf8")+'</h3> <br> <img src="'+prefixo+'.png"> <br>'
+						st+= 'Número total de itens: '.decode("utf8")+str(numeroTotalDeProducoes)+'<br>'
+						st+= sQualis
+						st+= self.gerarIndiceDePaginas(numeroDePaginas, numeroDePaginaAtual, prefixo)
+						st+= s #.decode("utf8") 
+						st+= '</table>' 
+						st+= self.paginaBottom()
+
+						self.salvarPagina(prefixo+'-'+str(numeroDePaginaAtual)+self.extensaoPagina, st)
+						numeroDePaginaAtual += 1
+
+						if (index+1)<len(elementos):
+							s = '<h3 class="year">'+anoRotulo+'</h3> <table>'
+						else:
+							s = '' 
+					numeroDeItem += 1
+
+				s+= '</table>' 
+		return numeroTotalDeProducoes 
+
+	def gerarIndiceDePaginas(self, numeroDePaginas, numeroDePaginaAtual, prefixo):
+		if numeroDePaginas==1:
+			return ''
+		else:
+			s = 'Página: '.decode("utf8")
+			for i in range(0, numeroDePaginas):
+				if i==numeroDePaginaAtual:
+					s+= '<b>'+str(i+1)+'</b> &nbsp;'
+				else:
+					s+= '<a href="'+prefixo+'-'+str(i)+self.extensaoPagina+'">'+str(i+1)+'</a> &nbsp;'
+			return '<center>'+s+'</center>'
+
+
+	def gerarPaginaDeInternacionalizacao(self, listaCompleta, tituloPagina, prefixo):
+		numeroTotalDeProducoes = 0
+		gInternacionalizacao = GraficoDeInternacionalizacao(listaCompleta)
+		htmlCharts = gInternacionalizacao.criarGraficoDeBarrasDeOcorrencias()
 
 		keys = listaCompleta.keys()
 		keys.sort(reverse=True) 
@@ -480,17 +553,19 @@ class GeradorDePaginasWeb:
 
 				for index in range(0, len(elementos)):
 					pub = elementos[index]
-					s  += '<tr valign="top"><td>'+str(index+1)+'. &nbsp;</td> <td>'+ pub.html(self.grupo.listaDeMembros) +'</td></tr>'
-
-					# armazenamos uma copia da publicacao (formato RIS)
-					if self.grupo.obterParametro('relatorio-salvar_publicacoes_em_formato_ris') and ris==True:
-						self.salvarPublicacaoEmFormatoRIS(pub)
-				
+					s  += '<tr valign="top"><td>'+str(index+1)+'. &nbsp;</td> <td>'+ pub.html() +'</td></tr>'
+					
 					if numeroDeItem%maxElementos==0 or numeroDeItem==numeroTotalDeProducoes:
-						st = self.paginaTop()
-						st+= '\n<h3>'+tituloPagina.decode("utf8")+'</h3> <br> <img src="'+prefixo+'.png"> <br>'
+						st = self.paginaTop(cabecalho=htmlCharts)
+						st+= '\n<h3>'+tituloPagina.decode("utf8")+'</h3> <br> <center> <table> <tr> <td valign="top"><div id="barchart_div"></div> </td> <td valign="top"><div id="geochart_div"></div> </td> </tr> </table> </center>'
+						st+= '<table>'
+						st+= '<tr><td>Número total de publicações realizadas SEM parceria com estrangeiros:</td><td>'.decode("utf8")+str(gInternacionalizacao.numeroDePublicacoesRealizadasSemParceirasComEstrangeiros())+'</td><td><i>(publicações realizadas só por pesquisadores brasileiros)</i></td></tr>'.decode("utf8")
+						st+= '<tr><td>Número total de publicações realizadas COM parceria com estrangeiros:</td><td>'.decode("utf8")+str(gInternacionalizacao.numeroDePublicacoesRealizadasComParceirasComEstrangeiros())+'</td><td></td></tr>'
+						st+= '<tr><td>Número total de publicações com parcerias NÂO identificadas:</td><td>'.decode("utf8")+str(gInternacionalizacao.numeroDePublicacoesComParceriasNaoIdentificadas())+'</td><td></td></tr>'
+						st+= '<tr><td>Número total de publicações com DOI cadastrado:</td><td><b>'.decode("utf8")+str(numeroTotalDeProducoes)+'</b></td><td></td></tr>'
+						st+= '</table>'
+						st+= '<br> <font color="red">(*) A estimativa de "coautoria e internacionalização" é baseada na análise automática dos DOIs das publicações cadastradas nos CVs Lattes. A identificação de países, para cada publicação, é feita através de buscas simples de nomes de países.</font><br><p>'.decode("utf8")
 
-						st+= 'Número total de itens: '.decode("utf8")+str(numeroTotalDeProducoes)+'<br>'
 						st+= self.gerarIndiceDePaginas(numeroDePaginas, numeroDePaginaAtual, prefixo)
 						st+= s #.decode("utf8") 
 						st+= '</table>' 
@@ -507,60 +582,6 @@ class GeradorDePaginasWeb:
 
 				s+= '</table>' 
 		return numeroTotalDeProducoes 
-
-
-	def gerarIndiceDePaginas(self, numeroDePaginas, numeroDePaginaAtual, prefixo):
-		if numeroDePaginas==1:
-			return ''
-		else:
-			s = 'Página: '.decode("utf8")
-			for i in range(0, numeroDePaginas):
-				if i==numeroDePaginaAtual:
-					s+= '<b>'+str(i+1)+'</b> &nbsp;'
-				else:
-					s+= '<a href="'+prefixo+'-'+str(i)+self.extensaoPagina+'">'+str(i+1)+'</a> &nbsp;'
-			return '<center>'+s+'</center>'
-
-
-	##################################################################################################
-	def gerarPaginaDeInternacionalizacao(self, listaCompleta, tituloPagina, prefixo):
-		numeroTotalDeProducoes = 0
-		gInternacionalizacao = GraficoDeInternacionalizacao(listaCompleta)
-		htmlCharts = gInternacionalizacao.criarGraficoDeBarrasDeOcorrencias()
-
-		keys = listaCompleta.keys()
-		keys.sort(reverse=True) 
-		if len(keys)>0: # apenas geramos páginas web para lista com pelo menos 1 elemento
-			for ano in keys:
-				numeroTotalDeProducoes += len(listaCompleta[ano])
-
-			s = self.paginaTop(cabecalho=htmlCharts)
-
-			s+= '\n<h3>'+tituloPagina.decode("utf8")+'</h3> <br> <center> <table> <tr> <td valign="top"><div id="barchart_div"></div> </td> <td valign="top"><div id="geochart_div"></div> </td> </tr> </table> </center>'
-			s+= '<table>'
-			s+= '<tr><td>Número total de publicações realizadas SEM parceria com estrangeiros:</td><td>'.decode("utf8")+str(gInternacionalizacao.numeroDePublicacoesRealizadasSemParceirasComEstrangeiros())+'</td><td><i>(publicações realizadas só por pesquisadores brasileiros)</i></td></tr>'.decode("utf8")
-			s+= '<tr><td>Número total de publicações realizadas COM parceria com estrangeiros:</td><td>'.decode("utf8")+str(gInternacionalizacao.numeroDePublicacoesRealizadasComParceirasComEstrangeiros())+'</td><td></td></tr>'
-			s+= '<tr><td>Número total de publicações com parcerias NÂO identificadas:</td><td>'.decode("utf8")+str(gInternacionalizacao.numeroDePublicacoesComParceriasNaoIdentificadas())+'</td><td></td></tr>'
-			s+= '<tr><td>Número total de publicações com DOI cadastrado:</td><td><b>'.decode("utf8")+str(numeroTotalDeProducoes)+'</b></td><td></td></tr>'
-			s+= '</table>'
-
-			s+= '<br> <font color="red">(*) A estimativa de "coautoria e internacionalização" é baseada na análise automática dos DOIs das publicações cadastradas nos CVs Lattes. A identificação de países, para cada publicação, é feita através de buscas simples de nomes de países.</font><br><p>'.decode("utf8")
-
-			for ano in keys:
-				anoRotulo = str(ano) if not ano==0 else '*itens sem ano'
-				s+= '<h3 class="year">'+anoRotulo+'</h3> <table>'
-
-				elementos = listaCompleta[ano]
-				elementos.sort(key = lambda x: x.chave.lower())	# Ordenamos a lista em forma ascendente (hard to explain!)
-				for index in range(0, len(elementos)):
-					pub = elementos[index]
-					s  += '<tr valign="top"><td>'+str(index+1)+'. &nbsp;</td> <td>'+ pub.html() +'</td></tr>'
-				s+= '</table>' 
-			s+= self.paginaBottom()
-			self.salvarPagina(prefixo+'-0'+self.extensaoPagina, s)
-
-		return numeroTotalDeProducoes 
-	##################################################################################################
 
 
 	def gerarPaginaDeGrafosDeColaboracoes(self):
@@ -733,7 +754,7 @@ class GeradorDePaginasWeb:
         <div id="footer"> \
         Este arquivo foi gerado automaticamente por <a href="http://scriptlattes.sourceforge.net/">scriptLattes '+self.version+'</a> \
         (desenvolvido no <a href="http://cmcc.ufabc.edu.br/">CMCC-UFABC</a> e \
-        no <a href="http://ccsl.ime.usp.br/">CCSL-IME/USP</a> por <a href="http://www.vision.ime.usp.br/~jmena">Jesús P. Mena-Chalco</a> e <a href="http://www.ime.usp.br/~cesar">Roberto M. Cesar-Jr</a>). \
+        no <a href="http://ccsl.ime.usp.br/">CCSL-IME/USP</a> por <a href="http://professor.ufabc.edu.br/~jesus.mena/">Jesús P. Mena-Chalco</a> e <a href="http://www.ime.usp.br/~cesar">Roberto M. Cesar-Jr</a>). \
         Os resultados estão sujeitos a falhas devido a inconsistências no preenchimento dos currículos Lattes. Caso note alguma falha, por favor, contacte o responsável por esta página: <a href="mailto:'+self.grupo.obterParametro('global-email_do_admin')+'">'+self.grupo.obterParametro('global-email_do_admin')+'</a> \
         </div> \
         <script type="text/javascript">\
@@ -758,7 +779,18 @@ class GeradorDePaginasWeb:
 
 	def salvarPublicacaoEmFormatoRIS(self, pub):
 		self.arquivoRis.write(pub.ris().encode('utf8'))
+
 		
+	def formatarTotaisQualis(self, qtd):
+		st = '(<b>A1</b>: '+str(qtd['A1'])+', <b>A2</b>: '+str(qtd['A2'])+', <b>B1</b>: '+str(qtd['B1'])+', <b>B2</b>: '+str(qtd['B2'])
+		st+= ', <b>B3</b>: '+str(qtd['B3'])+', <b>B4</b>: '+str(qtd['B4'])+', <b>B5</b>: '+str(qtd['B5'])+', <b>C</b>: '+str(qtd['C'])
+		st+= ', <b>Qualis n&atilde;o identificado</b>: '+str(qtd['Qualis nao identificado'])+')'
+		st+= '<br><p><b>Legenda Qualis:</b><ul>'
+		st+= '<li> Publica&ccedil;&atilde;o para a qual o nome exato do Qualis foi identificado: <font color="#336600"><b>Qualis &lt;estrato&gt;</b></font>'
+		st+= '<li> Publica&ccedil;&atilde;o para a qual um nome similar (n&atilde;o exato) do Qualis foi identificado: <font color="#FF9933"><b>Qualis &lt;estrato&gt;</b></font> (nome similar)'
+		st+= '<li> Publica&ccedil;&atilde;o para a qual nenhum nome do Qualis foi identificado: <font color="#8B0000"><b>Qualis n&atilde;o identificado</b></font> (nome usado na busca)'
+		st+= '</ul>'
+		return st
 
 
 def menuHTMLdeBuscaPB(titulo):
@@ -792,4 +824,23 @@ def menuHTMLdeBuscaPA(titulo):
            <a href="http://www.bing.com/search?q='+titulo+'">busca Bing</a> ] \
          </font><br>'
 	return s
+
+def formataQualis(qualis, qualissimilar):
+	s = ''
+	if not qualis==None:
+		if qualis=='':
+			qualis = 'Qualis nao identificado'
+	
+		if qualis=='Qualis nao identificado':
+			# Qualis nao identificado - imprime em vermelho
+			s += '<font color="#8B0000"><b>Qualis: N&atilde;o identificado</b></font> ('+qualissimilar+')'
+		else:
+			if qualissimilar=='':
+				# Casamento perfeito - imprime em verde
+				s += '<font color="#336600"><b>Qualis: ' + qualis + '</b></font>'	
+			else:
+				# Similar - imprime em laranja
+				s += '<font color="#FF9933"><b>Qualis: ' + qualis + '</b></font> ('+qualissimilar+')' 
+	return s
+
 

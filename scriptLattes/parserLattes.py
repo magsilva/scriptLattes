@@ -3,7 +3,7 @@
 # filename: parserLattes.py
 #
 #  scriptLattes V8
-#  Copyright 2005-2012: Jesús P. Mena-Chalco e Roberto M. Cesar-Jr.
+#  Copyright 2005-2013: Jesús P. Mena-Chalco e Roberto M. Cesar-Jr.
 #  http://scriptlattes.sourceforge.net/
 #
 #
@@ -64,6 +64,8 @@ from participacaoEmEvento import *
 
 
 class ParserLattes(HTMLParser):
+	
+	identificador16 = ''
 	item = None
 	nomeCompleto = ''
 	bolsaProdutividade = ''
@@ -73,7 +75,9 @@ class ParserLattes(HTMLParser):
 	atualizacaoCV = ''
 	foto = ''
 	textoResumo = ''
-
+	
+	
+	salvarIdentificador16 = None
 	salvarNome = None
 	salvarBolsaProdutividade = None
 	salvarEnderecoProfissional = None
@@ -106,6 +110,8 @@ class ParserLattes(HTMLParser):
 	achouOrientacoes = None
 	achouOutrasInformacoesRelevantes = None
 	spanInformacaoArtigo = None
+	
+	recuperarIdentificador16 = None
 
 
 
@@ -296,7 +302,10 @@ class ParserLattes(HTMLParser):
 					self.salvarNome = 1
 					self.item = ''
 					break
-
+		
+		if tag=='li':
+		    self.recuperarIdentificador16 = 1
+		    	      
 		if tag=='p':
 			for name, value in attributes:
 				if name=='class' and value=='resumo':
@@ -323,15 +332,15 @@ class ParserLattes(HTMLParser):
 				if name=='class' and value=='layout-cell-pad-5':
 					if self.achouNomeEmCitacoes:
 						self.salvarNomeEmCitacoes = 1
-					self.item = ''
-				
+						self.item = ''
+
 					if self.achouSexo:
 						self.salvarSexo = 1
-					self.item = ''
+						self.item = ''
 
 					if self.achouEnderecoProfissional:
 						self.salvarEnderecoProfissional = 1
-					self.item = ''
+						self.item = ''
 
 					if self.salvarParte1:
 						self.salvarParte1 = 0
@@ -343,7 +352,7 @@ class ParserLattes(HTMLParser):
 						self.salvarParte1 = 1
 						self.salvarParte2 = 0
 						if not self.salvarParte3:
-					self.partesDoItem = []
+							self.partesDoItem = []
 
 
 		if tag=='h1' and self.umaUnidade: 
@@ -367,7 +376,7 @@ class ParserLattes(HTMLParser):
 			self.achouEventos = 0
 			self.achouOrientacoes = 0
 			self.achouOutrasInformacoesRelevantes = 0
-					self.salvarItem = 0
+			self.salvarItem = 0
 
 
 		if tag=='img':
@@ -386,7 +395,7 @@ class ParserLattes(HTMLParser):
 
 		if tag=='br':
 			self.item = self.item + ' '
-
+		
 		if tag=='span':
 			if self.achouProducaoEmCTA:
 				for name, value in attributes:
@@ -406,7 +415,7 @@ class ParserLattes(HTMLParser):
 						if self.achouOrientacoesEmAndamento or self.achouOrientacoesConcluidas:
 							self.idOrientando = id[0]
 						break
-			
+
 
 	# ------------------------------------------------------------------------ #
 	def handle_endtag(self, tag):
@@ -429,6 +438,9 @@ class ParserLattes(HTMLParser):
 			self.bolsaProdutividade = self.bolsaProdutividade.strip('()')
 			self.salvarBolsaProdutividade = 0
 		
+		if tag=='span' and self.salvarIdentificador16 == 1:
+			self.identificador16 = re.findall(u'http://lattes.cnpq.br/(\d{16})', value)
+			self.salvarIdentificador16 = 0
 			
 		# Cabeçalhos
 		if tag=='h1' and self.procurarCabecalho:
@@ -453,16 +465,16 @@ class ParserLattes(HTMLParser):
 			
 			if (self.salvarParte1 and not self.salvarParte2) or (self.salvarParte2 and not self.salvarParte1) :
 				if len(stripBlanks(self.item))>0:
-					self.partesDoItem.append(stripBlanks(self.item)) # acrescentamos cada celula da linha numa lista!
+					self.partesDoItem.append(stripBlanks(self.item)) # acrescentamos cada celula da linha em uma lista!
 					self.item = ''
 
 				if self.salvarParte2:
 					self.salvarParte1 = 0
 					self.salvarParte2 = 0
 
-					if self.achouFormacaoAcademica:
-				iessimaFormacaoAcademica = FormacaoAcademica(self.partesDoItem) # criamos um objeto com a lista correspondentes às celulas da linha
-				self.listaFormacaoAcademica.append(iessimaFormacaoAcademica) # acrescentamos o objeto de FormacaoAcademica
+					if self.achouFormacaoAcademica and len(self.partesDoItem)>=2:
+						iessimaFormacaoAcademica = FormacaoAcademica(self.partesDoItem) # criamos um objeto com a lista correspondentes às celulas da linha
+						self.listaFormacaoAcademica.append(iessimaFormacaoAcademica) # acrescentamos o objeto de FormacaoAcademica
 
 					#if self.achouAtuacaoProfissional:
 					#	print self.partesDoItem
@@ -473,112 +485,112 @@ class ParserLattes(HTMLParser):
 						else:
 							self.salvarParte3 = 0
 							if len(self.partesDoItem)>=3:
-				iessimoProjetoDePesquisa = ProjetoDePesquisa(self.idMembro, self.partesDoItem) # criamos um objeto com a lista correspondentes às celulas da linha
-				self.listaProjetoDePesquisa.append(iessimoProjetoDePesquisa) # acrescentamos o objeto de ProjetoDePesquisa
+								iessimoProjetoDePesquisa = ProjetoDePesquisa(self.idMembro, self.partesDoItem) # criamos um objeto com a lista correspondentes às celulas da linha
+								self.listaProjetoDePesquisa.append(iessimoProjetoDePesquisa) # acrescentamos o objeto de ProjetoDePesquisa
 
 					#if self.achouMembroDeCorpoEditorial:
 					#	print self.partesDoItem
 
 					#if self.achouRevisorDePeriodico:
 					#	print self.partesDoItem
-
-					if self.achouAreaDeAtuacao:
+					
+					if self.achouAreaDeAtuacao and len(self.partesDoItem)>=2:
 						iessimaAreaDeAtucao = AreaDeAtuacao(self.partesDoItem) # criamos um objeto com a lista correspondentes às celulas da linha
 						self.listaAreaDeAtuacao.append(iessimaAreaDeAtucao) # acrescentamos o objeto de AreaDeAtuacao
 					
-					if self.achouIdioma:
+					if self.achouIdioma and len(self.partesDoItem)>=2:
 						iessimoIdioma = Idioma(self.partesDoItem) # criamos um objeto com a lista correspondentes às celulas da linha
 						self.listaIdioma.append(iessimoIdioma) # acrescentamos o objeto de Idioma
 
-					if self.achouPremioOuTitulo:
+					if self.achouPremioOuTitulo and len(self.partesDoItem)>=2:
 						iessimoPremio = PremioOuTitulo(self.idMembro, self.partesDoItem) # criamos um objeto com a lista correspondentes às celulas da linha
 						self.listaPremioOuTitulo.append(iessimoPremio) # acrescentamos o objeto de PremioOuTitulo
 
 					if self.achouProducoes:
 						if self.achouProducaoEmCTA:
-				if self.achouArtigoEmPeriodico:
- 					iessimoItem = ArtigoEmPeriodico(self.idMembro, self.partesDoItem, self.doi, self.relevante)
-					self.listaArtigoEmPeriodico.append(iessimoItem)
-					self.doi = ''
-					self.relevante = 0
-
-				if self.achouLivroPublicado:
- 					iessimoItem = LivroPublicado(self.idMembro, self.partesDoItem, self.relevante)
-					self.listaLivroPublicado.append(iessimoItem)
-					self.relevante = 0
-
-				if self.achouCapituloDeLivroPublicado:
- 					iessimoItem = CapituloDeLivroPublicado(self.idMembro, self.partesDoItem, self.relevante)
-					self.listaCapituloDeLivroPublicado.append(iessimoItem)
-					self.relevante = 0
-
-				if self.achouTextoEmJornalDeNoticia:
- 					iessimoItem = TextoEmJornalDeNoticia(self.idMembro, self.partesDoItem, self.relevante)
-					self.listaTextoEmJornalDeNoticia.append(iessimoItem)
-					self.relevante = 0
-
-				if self.achouTrabalhoCompletoEmCongresso:
- 					iessimoItem = TrabalhoCompletoEmCongresso(self.idMembro, self.partesDoItem, self.doi, self.relevante)
-					self.listaTrabalhoCompletoEmCongresso.append(iessimoItem)
-					self.doi = ''
-					self.relevante = 0
-
-				if self.achouResumoExpandidoEmCongresso:
- 					iessimoItem = ResumoExpandidoEmCongresso(self.idMembro, self.partesDoItem, self.doi, self.relevante)
-					self.listaResumoExpandidoEmCongresso.append(iessimoItem)
-					self.doi = ''
-					self.relevante = 0
-
-				if self.achouResumoEmCongresso:
- 					iessimoItem = ResumoEmCongresso(self.idMembro, self.partesDoItem, self.doi, self.relevante)
-					self.listaResumoEmCongresso.append(iessimoItem)
-					self.doi = ''
-					self.relevante = 0
-
-				if self.achouArtigoAceito:
- 					iessimoItem =  ArtigoAceito(self.idMembro, self.partesDoItem, self.doi, self.relevante)
-					self.listaArtigoAceito.append(iessimoItem)
-					self.doi = ''
-					self.relevante = 0
-
-				if self.achouApresentacaoDeTrabalho:
- 					iessimoItem =  ApresentacaoDeTrabalho(self.idMembro, self.partesDoItem, self.relevante)
-					self.listaApresentacaoDeTrabalho.append(iessimoItem)
-
-				if self.achouOutroTipoDeProducaoBibliografica:
- 					iessimoItem = OutroTipoDeProducaoBibliografica(self.idMembro, self.partesDoItem, self.relevante)
-					self.listaOutroTipoDeProducaoBibliografica.append(iessimoItem)
+							if self.achouArtigoEmPeriodico:
+ 	 							iessimoItem = ArtigoEmPeriodico(self.idMembro, self.partesDoItem, self.doi, self.relevante)
+								self.listaArtigoEmPeriodico.append(iessimoItem)
+								self.doi = ''
+								self.relevante = 0
+    
+							if self.achouLivroPublicado:
+	 	 						iessimoItem = LivroPublicado(self.idMembro, self.partesDoItem, self.relevante)
+								self.listaLivroPublicado.append(iessimoItem)
+								self.relevante = 0
+    
+							if self.achouCapituloDeLivroPublicado:
+		 						iessimoItem = CapituloDeLivroPublicado(self.idMembro, self.partesDoItem, self.relevante)
+								self.listaCapituloDeLivroPublicado.append(iessimoItem)
+								self.relevante = 0
+					
+							if self.achouTextoEmJornalDeNoticia:
+ 		 						iessimoItem = TextoEmJornalDeNoticia(self.idMembro, self.partesDoItem, self.relevante)
+								self.listaTextoEmJornalDeNoticia.append(iessimoItem)
+								self.relevante = 0
+					
+							if self.achouTrabalhoCompletoEmCongresso:
+ 	 							iessimoItem = TrabalhoCompletoEmCongresso(self.idMembro, self.partesDoItem, self.doi, self.relevante)
+								self.listaTrabalhoCompletoEmCongresso.append(iessimoItem)
+								self.doi = ''
+								self.relevante = 0
+						
+							if self.achouResumoExpandidoEmCongresso:
+ 	 							iessimoItem = ResumoExpandidoEmCongresso(self.idMembro, self.partesDoItem, self.doi, self.relevante)
+								self.listaResumoExpandidoEmCongresso.append(iessimoItem)
+								self.doi = ''
+								self.relevante = 0
+					
+							if self.achouResumoEmCongresso:
+ 		 						iessimoItem = ResumoEmCongresso(self.idMembro, self.partesDoItem, self.doi, self.relevante)
+								self.listaResumoEmCongresso.append(iessimoItem)
+								self.doi = ''
+								self.relevante = 0
+    
+							if self.achouArtigoAceito:
+ 		 						iessimoItem =  ArtigoAceito(self.idMembro, self.partesDoItem, self.doi, self.relevante)
+								self.listaArtigoAceito.append(iessimoItem)
+								self.doi = ''
+								self.relevante = 0
+					
+							if self.achouApresentacaoDeTrabalho:
+ 		 						iessimoItem =  ApresentacaoDeTrabalho(self.idMembro, self.partesDoItem, self.relevante)
+								self.listaApresentacaoDeTrabalho.append(iessimoItem)
+    
+							if self.achouOutroTipoDeProducaoBibliografica:
+ 		 						iessimoItem = OutroTipoDeProducaoBibliografica(self.idMembro, self.partesDoItem, self.relevante)
+								self.listaOutroTipoDeProducaoBibliografica.append(iessimoItem)
 
 
 						if self.achouProducaoTecnica:
-				if self.achouSoftwareComPatente:
- 					iessimoItem = SoftwareComPatente(self.idMembro, self.partesDoItem, self.relevante)
-					self.listaSoftwareComPatente.append(iessimoItem)
-
-				if self.achouSoftwareSemPatente:
- 					iessimoItem = SoftwareSemPatente(self.idMembro, self.partesDoItem, self.relevante)
-					self.listaSoftwareSemPatente.append(iessimoItem)
-
-				if self.achouProdutoTecnologico:
- 					iessimoItem = ProdutoTecnologico(self.idMembro, self.partesDoItem, self.relevante)
-					self.listaProdutoTecnologico.append(iessimoItem)
-
-				if self.achouProcessoOuTecnica:
- 					iessimoItem = ProcessoOuTecnica(self.idMembro, self.partesDoItem, self.relevante)
-					self.listaProcessoOuTecnica.append(iessimoItem)
-
-				if self.achouTrabalhoTecnico:
- 					iessimoItem = TrabalhoTecnico(self.idMembro, self.partesDoItem, self.relevante)
-					self.listaTrabalhoTecnico.append(iessimoItem)
-
-				if self.achouOutroTipoDeProducaoTecnica:
- 					iessimoItem = OutroTipoDeProducaoTecnica(self.idMembro, self.partesDoItem, self.relevante)
-					self.listaOutroTipoDeProducaoTecnica.append(iessimoItem)
+							if self.achouSoftwareComPatente:
+ 	 							iessimoItem = SoftwareComPatente(self.idMembro, self.partesDoItem, self.relevante)
+								self.listaSoftwareComPatente.append(iessimoItem)
+    
+							if self.achouSoftwareSemPatente:
+ 	 							iessimoItem = SoftwareSemPatente(self.idMembro, self.partesDoItem, self.relevante)
+								self.listaSoftwareSemPatente.append(iessimoItem)
+						
+							if self.achouProdutoTecnologico:
+ 	 							iessimoItem = ProdutoTecnologico(self.idMembro, self.partesDoItem, self.relevante)
+								self.listaProdutoTecnologico.append(iessimoItem)
+    
+							if self.achouProcessoOuTecnica:
+ 	 							iessimoItem = ProcessoOuTecnica(self.idMembro, self.partesDoItem, self.relevante)
+								self.listaProcessoOuTecnica.append(iessimoItem)
+    
+							if self.achouTrabalhoTecnico:
+ 	 							iessimoItem = TrabalhoTecnico(self.idMembro, self.partesDoItem, self.relevante)
+								self.listaTrabalhoTecnico.append(iessimoItem)
+    
+							if self.achouOutroTipoDeProducaoTecnica:
+ 	 							iessimoItem = OutroTipoDeProducaoTecnica(self.idMembro, self.partesDoItem, self.relevante)
+								self.listaOutroTipoDeProducaoTecnica.append(iessimoItem)
 
 						if self.achouProducaoArtisticaCultural:
 							if self.achouOutraProducaoArtisticaCultural:
- 					iessimoItem = ProducaoArtistica(self.idMembro, self.partesDoItem, self.relevante)
-					self.listaProducaoArtistica.append(iessimoItem)
+ 								iessimoItem = ProducaoArtistica(self.idMembro, self.partesDoItem, self.relevante)
+								self.listaProducaoArtistica.append(iessimoItem)
 
 					#if self.achouBancas:
 
@@ -591,51 +603,51 @@ class ParserLattes(HTMLParser):
 
 
 					if self.achouOrientacoes:
-				if self.achouOrientacoesEmAndamento:
-					if self.achouSupervisaoDePosDoutorado:
-						self.listaOASupervisaoDePosDoutorado.append( OrientacaoEmAndamento(self.idMembro, self.partesDoItem, self.idOrientando) )
+						if self.achouOrientacoesEmAndamento:
+							if self.achouSupervisaoDePosDoutorado:
+								self.listaOASupervisaoDePosDoutorado.append( OrientacaoEmAndamento(self.idMembro, self.partesDoItem, self.idOrientando) )
 								self.idOrientando = ''
-					if self.achouTeseDeDoutorado:
-						self.listaOATeseDeDoutorado.append( OrientacaoEmAndamento(self.idMembro, self.partesDoItem, self.idOrientando) )
-						self.idOrientando = ''
-					if self.achouDissertacaoDeMestrado:
-						self.listaOADissertacaoDeMestrado.append( OrientacaoEmAndamento(self.idMembro, self.partesDoItem, self.idOrientando) )
-						self.idOrientando = ''
-					if self.achouMonografiaDeEspecializacao:
-						self.listaOAMonografiaDeEspecializacao.append( OrientacaoEmAndamento(self.idMembro, self.partesDoItem, self.idOrientando) )
-						self.idOrientando = ''
-					if self.achouTCC:
-						self.listaOATCC.append( OrientacaoEmAndamento(self.idMembro, self.partesDoItem, self.idOrientando) )
-						self.idOrientando = ''
-					if self.achouIniciacaoCientifica:
-						self.listaOAIniciacaoCientifica.append( OrientacaoEmAndamento(self.idMembro, self.partesDoItem, self.idOrientando) )
-						self.idOrientando = ''
-					if self.achouOutroTipoDeOrientacao:
-						self.listaOAOutroTipoDeOrientacao.append( OrientacaoEmAndamento(self.idMembro, self.partesDoItem, self.idOrientando) )
-						self.idOrientando = ''
+							if self.achouTeseDeDoutorado:
+								self.listaOATeseDeDoutorado.append( OrientacaoEmAndamento(self.idMembro, self.partesDoItem, self.idOrientando) )
+								self.idOrientando = ''
+							if self.achouDissertacaoDeMestrado:
+								self.listaOADissertacaoDeMestrado.append( OrientacaoEmAndamento(self.idMembro, self.partesDoItem, self.idOrientando) )
+								self.idOrientando = ''
+							if self.achouMonografiaDeEspecializacao:
+								self.listaOAMonografiaDeEspecializacao.append( OrientacaoEmAndamento(self.idMembro, self.partesDoItem, self.idOrientando) )
+								self.idOrientando = ''
+							if self.achouTCC:
+								self.listaOATCC.append( OrientacaoEmAndamento(self.idMembro, self.partesDoItem, self.idOrientando) )
+								self.idOrientando = ''
+							if self.achouIniciacaoCientifica:
+								self.listaOAIniciacaoCientifica.append( OrientacaoEmAndamento(self.idMembro, self.partesDoItem, self.idOrientando) )
+								self.idOrientando = ''
+							if self.achouOutroTipoDeOrientacao:
+								self.listaOAOutroTipoDeOrientacao.append( OrientacaoEmAndamento(self.idMembro, self.partesDoItem, self.idOrientando) )
+								self.idOrientando = ''
 
-				if self.achouOrientacoesConcluidas :
-					if self.achouSupervisaoDePosDoutorado:
-						self.listaOCSupervisaoDePosDoutorado.append( OrientacaoConcluida(self.idMembro, self.partesDoItem, self.idOrientando) )
-						self.idOrientando = ''
-					if self.achouTeseDeDoutorado:
-						self.listaOCTeseDeDoutorado.append( OrientacaoConcluida(self.idMembro, self.partesDoItem, self.idOrientando) )
-						self.idOrientando = ''
-					if self.achouDissertacaoDeMestrado:
-						self.listaOCDissertacaoDeMestrado.append( OrientacaoConcluida(self.idMembro, self.partesDoItem, self.idOrientando) )
-						self.idOrientando = ''
-					if self.achouMonografiaDeEspecializacao:
-						self.listaOCMonografiaDeEspecializacao.append( OrientacaoConcluida(self.idMembro, self.partesDoItem, self.idOrientando) )
-						self.idOrientando = ''
-					if self.achouTCC:
-						self.listaOCTCC.append( OrientacaoConcluida(self.idMembro, self.partesDoItem, self.idOrientando) )
-						self.idOrientando = ''
-					if self.achouIniciacaoCientifica:
-						self.listaOCIniciacaoCientifica.append( OrientacaoConcluida(self.idMembro, self.partesDoItem, self.idOrientando) )
-						self.idOrientando = ''
-					if self.achouOutroTipoDeOrientacao:
-						self.listaOCOutroTipoDeOrientacao.append( OrientacaoConcluida(self.idMembro, self.partesDoItem, self.idOrientando) )
-						self.idOrientando = ''
+						if self.achouOrientacoesConcluidas :
+							if self.achouSupervisaoDePosDoutorado:
+								self.listaOCSupervisaoDePosDoutorado.append( OrientacaoConcluida(self.idMembro, self.partesDoItem, self.idOrientando) )
+								self.idOrientando = ''
+							if self.achouTeseDeDoutorado:
+								self.listaOCTeseDeDoutorado.append( OrientacaoConcluida(self.idMembro, self.partesDoItem, self.idOrientando) )
+								self.idOrientando = ''
+							if self.achouDissertacaoDeMestrado:
+								self.listaOCDissertacaoDeMestrado.append( OrientacaoConcluida(self.idMembro, self.partesDoItem, self.idOrientando) )
+								self.idOrientando = ''
+							if self.achouMonografiaDeEspecializacao:
+								self.listaOCMonografiaDeEspecializacao.append( OrientacaoConcluida(self.idMembro, self.partesDoItem, self.idOrientando) )
+								self.idOrientando = ''
+							if self.achouTCC:
+								self.listaOCTCC.append( OrientacaoConcluida(self.idMembro, self.partesDoItem, self.idOrientando) )
+								self.idOrientando = ''
+							if self.achouIniciacaoCientifica:
+								self.listaOCIniciacaoCientifica.append( OrientacaoConcluida(self.idMembro, self.partesDoItem, self.idOrientando) )
+								self.idOrientando = ''
+							if self.achouOutroTipoDeOrientacao:
+								self.listaOCOutroTipoDeOrientacao.append( OrientacaoConcluida(self.idMembro, self.partesDoItem, self.idOrientando) )
+								self.idOrientando = ''
 
 
 		if tag=='span':
@@ -646,37 +658,37 @@ class ParserLattes(HTMLParser):
 	# ------------------------------------------------------------------------ #
 	def handle_data(self, dado):
 		if not self.spanInformacaoArtigo:
-		self.item = self.item + htmlentitydecode(dado)
+			self.item = self.item + htmlentitydecode(dado)
 
-			dado = stripBlanks(dado)
+		dado = stripBlanks(dado)
+			
+		if self.salvarAtualizacaoCV:
+			data = re.findall(u'Última atualização do currículo em (\d{2}/\d{2}/\d{4})', dado)
+			if len(data)>0: # se a data de atualizacao do CV for identificada
+				self.atualizacaoCV = stripBlanks(data[0])
+				self.salvarAtualizacaoCV = 0
 
-			if self.salvarAtualizacaoCV:
-				data = re.findall(u'Última atualização do currículo em (\d{2}/\d{2}/\d{4})', dado)
-				if len(data)>0: # se a data de atualizacao do CV for identificada
-					self.atualizacaoCV = stripBlanks(data[0])
-					self.salvarAtualizacaoCV = 0
-
-			if self.procurarCabecalho:
+		if self.procurarCabecalho:
 			if u'Identificação'==dado:
 				self.achouIdentificacao = 1
 			if u'Endereço'==dado:
 				self.achouEndereco = 1
 			if u'Formação acadêmica/titulação'==dado:
-					self.achouFormacaoAcademica = 1
+				self.achouFormacaoAcademica = 1
 			if u'Atuação Profissional'==dado:
 				self.achouAtuacaoProfissional = 1
 			if u'Projetos de pesquisa'==dado:
-					self.achouProjetoDePesquisa = 1
+				self.achouProjetoDePesquisa = 1
 			if u'Membro de corpo editorial'==dado:
 				self.achouMembroDeCorpoEditorial = 1
 			if u'Revisor de periódico'==dado:
 				self.achouRevisorDePeriodico = 1
-				if u'Áreas de atuação'==dado:
-					self.achouAreaDeAtuacao = 1
-				if u'Idiomas'==dado:
-					self.achouIdioma = 1
-				if u'Prêmios e títulos'==dado:
-					self.achouPremioOuTitulo = 1
+			if u'Áreas de atuação'==dado:
+				self.achouAreaDeAtuacao = 1
+			if u'Idiomas'==dado:
+				self.achouIdioma = 1
+			if u'Prêmios e títulos'==dado:
+				self.achouPremioOuTitulo = 1
 			if u'Produções'==dado:  # !---
 				self.achouProducoes = 1
 				#self.achouProducaoEmCTA = 1
@@ -693,7 +705,7 @@ class ParserLattes(HTMLParser):
 			if u'Outras informações relevantes'==dado:
 				self.achouOutrasInformacoesRelevantes = 1
 			self.umaUnidade = 0
-
+			
 		if self.achouIdentificacao:
 			if u'Nome em citações bibliográficas'==dado:
 				self.achouNomeEmCitacoes = 1
@@ -726,9 +738,9 @@ class ParserLattes(HTMLParser):
 
 
 			if self.achouProducaoEmCTA:
-			if  u'Artigos completos publicados em periódicos'==dado:
+				if u'Artigos completos publicados em periódicos'==dado:
 					self.salvarItem = 1
-				self.achouArtigoEmPeriodico = 1
+					self.achouArtigoEmPeriodico = 1
 					self.achouLivroPublicado = 0
 					self.achouCapituloDeLivroPublicado = 0
 					self.achouTextoEmJornalDeNoticia = 0
@@ -738,10 +750,10 @@ class ParserLattes(HTMLParser):
 					self.achouArtigoAceito = 0
 					self.achouApresentacaoDeTrabalho = 0
 					self.achouOutroTipoDeProducaoBibliografica = 0
-			if u'Livros publicados/organizados ou edições'==dado:
+				if u'Livros publicados/organizados ou edições'==dado:
 					self.salvarItem = 1
 					self.achouArtigoEmPeriodico = 0
-				self.achouLivroPublicado = 1
+					self.achouLivroPublicado = 1
 					self.achouCapituloDeLivroPublicado = 0
 					self.achouTextoEmJornalDeNoticia = 0
 					self.achouTrabalhoCompletoEmCongresso = 0
@@ -750,11 +762,11 @@ class ParserLattes(HTMLParser):
 					self.achouArtigoAceito = 0
 					self.achouApresentacaoDeTrabalho = 0
 					self.achouOutroTipoDeProducaoBibliografica = 0
-			if u'Capítulos de livros publicados'==dado:
+				if u'Capítulos de livros publicados'==dado:
 					self.salvarItem = 1
 					self.achouArtigoEmPeriodico = 0
 					self.achouLivroPublicado = 0
-				self.achouCapituloDeLivroPublicado = 1
+					self.achouCapituloDeLivroPublicado = 1
 					self.achouTextoEmJornalDeNoticia = 0
 					self.achouTrabalhoCompletoEmCongresso = 0
 					self.achouResumoExpandidoEmCongresso = 0
@@ -762,55 +774,43 @@ class ParserLattes(HTMLParser):
 					self.achouArtigoAceito = 0
 					self.achouApresentacaoDeTrabalho = 0
 					self.achouOutroTipoDeProducaoBibliografica = 0
-			if u'Textos em jornais de notícias/revistas'==dado:
+				if u'Textos em jornais de notícias/revistas'==dado:
 					self.salvarItem = 1
 					self.achouArtigoEmPeriodico = 0
 					self.achouLivroPublicado = 0
 					self.achouCapituloDeLivroPublicado = 0
-				self.achouTextoEmJornalDeNoticia = 1
+					self.achouTextoEmJornalDeNoticia = 1
 					self.achouTrabalhoCompletoEmCongresso = 0
 					self.achouResumoExpandidoEmCongresso = 0
 					self.achouResumoEmCongresso = 0
 					self.achouArtigoAceito = 0
 					self.achouApresentacaoDeTrabalho = 0
 					self.achouOutroTipoDeProducaoBibliografica = 0
-			if u'Trabalhos completos publicados em anais de congressos'==dado:
+				if u'Trabalhos completos publicados em anais de congressos'==dado:
 					self.salvarItem = 1
 					self.achouArtigoEmPeriodico = 0
 					self.achouLivroPublicado = 0
 					self.achouCapituloDeLivroPublicado = 0
 					self.achouTextoEmJornalDeNoticia = 0
-				self.achouTrabalhoCompletoEmCongresso = 1
+					self.achouTrabalhoCompletoEmCongresso = 1
 					self.achouResumoExpandidoEmCongresso = 0
 					self.achouResumoEmCongresso = 0
 					self.achouArtigoAceito = 0
 					self.achouApresentacaoDeTrabalho = 0
 					self.achouOutroTipoDeProducaoBibliografica = 0
-			if u'Resumos expandidos publicados em anais de congressos'==dado:
+				if u'Resumos expandidos publicados em anais de congressos'==dado:
 					self.salvarItem = 1
 					self.achouArtigoEmPeriodico = 0
 					self.achouLivroPublicado = 0
 					self.achouCapituloDeLivroPublicado = 0
 					self.achouTextoEmJornalDeNoticia = 0
 					self.achouTrabalhoCompletoEmCongresso = 0
-				self.achouResumoExpandidoEmCongresso = 1
+					self.achouResumoExpandidoEmCongresso = 1
 					self.achouResumoEmCongresso = 0
 					self.achouArtigoAceito = 0
 					self.achouApresentacaoDeTrabalho = 0
 					self.achouOutroTipoDeProducaoBibliografica = 0
-			if u'Resumos publicados em anais de congressos' in dado:
-					self.salvarItem = 1
-					self.achouArtigoEmPeriodico = 0
-					self.achouLivroPublicado = 0
-					self.achouCapituloDeLivroPublicado = 0
-					self.achouTextoEmJornalDeNoticia = 0
-					self.achouTrabalhoCompletoEmCongresso = 0
-					self.achouResumoExpandidoEmCongresso = 0
-				self.achouResumoEmCongresso = 1
-					self.achouArtigoAceito = 0
-					self.achouApresentacaoDeTrabalho = 0
-					self.achouOutroTipoDeProducaoBibliografica = 0
-			if u'Artigos aceitos para publicação'==dado:
+				if u'Resumos publicados em anais de congressos' in dado:
 					self.salvarItem = 1
 					self.achouArtigoEmPeriodico = 0
 					self.achouLivroPublicado = 0
@@ -818,11 +818,11 @@ class ParserLattes(HTMLParser):
 					self.achouTextoEmJornalDeNoticia = 0
 					self.achouTrabalhoCompletoEmCongresso = 0
 					self.achouResumoExpandidoEmCongresso = 0
-					self.achouResumoEmCongresso = 0
-				self.achouArtigoAceito = 1
+					self.achouResumoEmCongresso = 1
+					self.achouArtigoAceito = 0
 					self.achouApresentacaoDeTrabalho = 0
 					self.achouOutroTipoDeProducaoBibliografica = 0
-			if u'Apresentações de Trabalho'==dado:
+				if u'Artigos aceitos para publicação'==dado:
 					self.salvarItem = 1
 					self.achouArtigoEmPeriodico = 0
 					self.achouLivroPublicado = 0
@@ -831,8 +831,20 @@ class ParserLattes(HTMLParser):
 					self.achouTrabalhoCompletoEmCongresso = 0
 					self.achouResumoExpandidoEmCongresso = 0
 					self.achouResumoEmCongresso = 0
+					self.achouArtigoAceito = 1
+					self.achouApresentacaoDeTrabalho = 0
+					self.achouOutroTipoDeProducaoBibliografica = 0
+				if u'Apresentações de Trabalho'==dado:
+					self.salvarItem = 1
+					self.achouArtigoEmPeriodico = 0
+					self.achouLivroPublicado = 0
+					self.achouCapituloDeLivroPublicado = 0
+					self.achouTextoEmJornalDeNoticia = 0
+					self.achouTrabalhoCompletoEmCongresso = 0
+					self.achouResumoExpandidoEmCongresso = 0
+					self.achouResumoEmCongresso = 0
 					self.achouArtigoAceito = 0
-				self.achouApresentacaoDeTrabalho = 1
+					self.achouApresentacaoDeTrabalho = 1
 					self.achouOutroTipoDeProducaoBibliografica = 0
 				if u'Outras produções bibliográficas'==dado:
 				#if u'Demais tipos de produção bibliográfica'==dado:
@@ -846,13 +858,13 @@ class ParserLattes(HTMLParser):
 					self.achouResumoEmCongresso = 0
 					self.achouArtigoAceito = 0
 					self.achouApresentacaoDeTrabalho = 0
-				self.achouOutroTipoDeProducaoBibliografica = 1
+					self.achouOutroTipoDeProducaoBibliografica = 1
 
 			if self.achouProducaoTecnica:
 				#if u'Softwares com registro de patente'==dado:
 				if u'Programas de computador com registro de patente'==dado:
 					self.salvarItem = 1
-				self.achouSoftwareComPatente = 1
+					self.achouSoftwareComPatente = 1
 					self.achouSoftwareSemPatente = 0
 					self.achouProdutoTecnologico = 0
 					self.achouProcessoOuTecnica = 0
@@ -861,43 +873,43 @@ class ParserLattes(HTMLParser):
 				if u'Programas de computador sem registro de patente'==dado:
 					self.salvarItem = 1
 					self.achouSoftwareComPatente = 0
-				self.achouSoftwareSemPatente = 1
+					self.achouSoftwareSemPatente = 1
 					self.achouProdutoTecnologico = 0
 					self.achouProcessoOuTecnica = 0
 					self.achouTrabalhoTecnico = 0
 					self.achouOutroTipoDeProducaoTecnica = 0
-			if u'Produtos tecnológicos'==dado:
+				if u'Produtos tecnológicos'==dado:
 					self.salvarItem = 1
 					self.achouSoftwareComPatente = 0
 					self.achouSoftwareSemPatente = 0
-				self.achouProdutoTecnologico = 1
+					self.achouProdutoTecnologico = 1
 					self.achouProcessoOuTecnica = 0
 					self.achouTrabalhoTecnico = 0
 					self.achouOutroTipoDeProducaoTecnica = 0
-			if u'Processos ou técnicas'==dado:
+				if u'Processos ou técnicas'==dado:
 					self.salvarItem = 1
 					self.achouSoftwareComPatente = 0
 					self.achouSoftwareSemPatente = 0
 					self.achouProdutoTecnologico = 0
-				self.achouProcessoOuTecnica = 1
+					self.achouProcessoOuTecnica = 1
 					self.achouTrabalhoTecnico = 0
 					self.achouOutroTipoDeProducaoTecnica = 0
-			if u'Trabalhos técnicos'==dado:
-					self.salvarItem = 1
-					self.achouSoftwareComPatente = 0
-					self.achouSoftwareSemPatente = 0
-					self.achouProdutoTecnologico = 0
-					self.achouProcessoOuTecnica = 0
-				self.achouTrabalhoTecnico = 1
-					self.achouOutroTipoDeProducaoTecnica = 0
-			if u'Demais tipos de produção técnica'==dado:
+				if u'Trabalhos técnicos'==dado:
 					self.salvarItem = 1
 					self.achouSoftwareComPatente = 0
 					self.achouSoftwareSemPatente = 0
 					self.achouProdutoTecnologico = 0
 					self.achouProcessoOuTecnica = 0
+					self.achouTrabalhoTecnico = 1
+					self.achouOutroTipoDeProducaoTecnica = 0
+				if u'Demais tipos de produção técnica'==dado:
+					self.salvarItem = 1
+					self.achouSoftwareComPatente = 0
+					self.achouSoftwareSemPatente = 0
+					self.achouProdutoTecnologico = 0
+					self.achouProcessoOuTecnica = 0
 					self.achouTrabalhoTecnico = 0
-				self.achouOutroTipoDeProducaoTecnica = 1
+					self.achouOutroTipoDeProducaoTecnica = 1
 				#if u'Demais trabalhos'==dado:
 				#	self.salvarItem = 0
 				#	self.achouSoftwareComPatente = 0
@@ -1004,6 +1016,17 @@ class ParserLattes(HTMLParser):
 
 		if self.achouOutrasInformacoesRelevantes:
 			self.salvarItem = 0
+				
+		if self.recuperarIdentificador16 and self.identificador16 == '':
+		  id = re.findall(u'http://lattes.cnpq.br/(\d{16})', dado)
+		  if len(id) > 0:
+		    self.identificador16 = id[0]
+
+		if self.achouProjetoDePesquisa:
+			if u'Projeto certificado pelo(a) coordenador(a)' in dado or u'Projeto certificado pela empresa' in dado:
+				self.item = ''
+				self.salvarParte3 = 0
+
 
 
 # ---------------------------------------------------------------------------- #

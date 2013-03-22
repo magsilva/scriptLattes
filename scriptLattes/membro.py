@@ -3,7 +3,7 @@
 # filename: membro.py
 #
 #  scriptLattes V8
-#  Copyright 2005-2012: Jesús P. Mena-Chalco e Roberto M. Cesar-Jr.
+#  Copyright 2005-2013: Jesús P. Mena-Chalco e Roberto M. Cesar-Jr.
 #  http://scriptlattes.sourceforge.net/
 #
 #
@@ -28,7 +28,7 @@ import re
 import sets
 import datetime
 import time
-
+import os
 
 from parserLattes import *
 from parserLattesXML import *
@@ -50,7 +50,9 @@ class Membro:
 	enderecoProfissional = ''
 	enderecoProfissionalLat = ''
 	enderecoProfissionalLon = ''
-
+	
+	identificador10 = ''
+	
 	url = ''
 	atualizacaoCV = ''
 	foto = ''
@@ -116,8 +118,6 @@ class Membro:
 	listaParticipacaoEmEvento = []
 	listaOrganizacaoDeEvento = []
 
-
-
 	###def __init__(self, idMembro, identificador, nome, periodo, rotulo, itemsDesdeOAno, itemsAteOAno, xml=''):
 	def __init__(self, idMembro, identificador, nome, periodo, rotulo, itemsDesdeOAno, itemsAteOAno, diretorioCache):
 		self.idMembro = idMembro
@@ -125,7 +125,14 @@ class Membro:
 		self.nomeInicial = nome
 		self.periodo = periodo
 		self.rotulo = rotulo
-		self.url = 'http://lattes.cnpq.br/'+identificador
+	
+		p = re.compile('[a-zA-Z]+')
+		
+		if p.match(identificador):
+		    self.url = 'http://buscatextual.cnpq.br/buscatextual/visualizacv.do?id='+identificador
+		else:
+		    self.url = 'http://lattes.cnpq.br/'+identificador
+		
 		self.itemsDesdeOAno = itemsDesdeOAno
 		self.itemsAteOAno = itemsAteOAno
 		self.criarListaDePeriodos(self.periodo)
@@ -158,7 +165,7 @@ class Membro:
 		
 
 	def carregarDadosCVLattes(self):
-		cvPath = self.diretorioCache+'/'+self.idLattes
+		cvPath = os.path.join(self.diretorioCache, self.idLattes)
 
 		if 'xml' in cvPath:
 			arquivoX = open(cvPath)
@@ -182,11 +189,11 @@ class Membro:
 			else:
 				cvLattesHTML = ''
 				tentativa = 0
-				while tentativa<5:
+				while tentativa < 5:
 				#while True:
-				try:
-					txdata = None
-					txheaders = {   
+					try:
+						txdata = None
+						txheaders = {   
 						'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64; rv:2.0) Gecko/20100101 Firefox/4.0',
 						'Accept-Language': 'en-us,en;q=0.5',
 						'Accept-Encoding': 'deflate',
@@ -194,36 +201,36 @@ class Membro:
 						'Connection': 'keep-alive',
 						'Cache-Control': 'max-age=0',
 						'Cookie': 'style=standard; __utma=140185953.294397416.1313390179.1313390179.1317145115.2; __utmz=140185953.1317145115.2.2.utmccn=(referral)|utmcsr=emailinstitucional.cnpq.br|utmcct=/ei/emailInstitucional.do|utmcmd=referral; JSESSIONID=1B98ABF9642E01597AABA0F7A8807FD1.node2',
-					}
+						}
 		
 						print "Baixando CV :"+self.url
 
-					req = urllib2.Request(self.url, txdata, txheaders) # Young folks by P,B&J!
-					arquivoH = urllib2.urlopen(req) 
-					cvLattesHTML = arquivoH.read()
-					arquivoH.close()
-					time.sleep(1)
+						req = urllib2.Request(self.url, txdata, txheaders) # Young folks by P,B&J!
+						arquivoH = urllib2.urlopen(req) 
+						cvLattesHTML = arquivoH.read()
+						arquivoH.close()
+						time.sleep(1)
 
-						if len(cvLattesHTML)<=1000:
+						if len(cvLattesHTML) <= 1000:
 							print '[AVISO] O scriptLattes tentará baixar novamente o seguinte CV Lattes: ', self.url
-						time.sleep(30)
-							tentativa+=1
+							time.sleep(30)
+							tentativa += 1
 							continue
 
-						if not self.diretorioCache=='':
-					file = open(cvPath, 'w')
-					file.write(cvLattesHTML)
-					file.close()
+						if not self.diretorioCache == '':
+							file = open(cvPath, 'w')
+							file.write(cvLattesHTML)
+							file.close()
 							print " (*) O CV está sendo armazenado no Cache"
-						break
+							break
 
 					### except urllib2.URLError: ###, e:
 					except:
 						print '[AVISO] Nao é possível obter o CV Lattes: ', self.url
 						print '[AVISO] Certifique-se que o CV existe. O scriptLattes tentará baixar o CV em 30 segundos...'
 						###print '[ERRO] Código de erro: ', e.code
-					time.sleep(30)
-						tentativa+=1
+						time.sleep(30)
+						tentativa += 1
 						continue
 
 			extended_chars= u''.join(unichr(c) for c in xrange(127, 65536, 1)) # srange(r"[\0x80-\0x7FF]")
@@ -231,8 +238,13 @@ class Membro:
 			#cvLattesHTML  = cvLattesHTML.decode('ascii','replace')+extended_chars+special_chars                                          # Wed Jul 25 16:47:39 BRT 2012
 			cvLattesHTML  = cvLattesHTML.decode('iso-8859-1','replace')+extended_chars+special_chars
 			parser        = ParserLattes(self.idMembro, cvLattesHTML)
-
-		
+			
+			p = re.compile('[a-zA-Z]+');
+			if p.match(self.idLattes):
+				self.identificador10 = self.idLattes
+				self.idLattes = parser.identificador16
+				self.url = 'http://lattes.cnpq.br/'+self.idLattes
+			
 		# -----------------------------------------------------------------------------------------
 		# Obtemos todos os dados do CV Lattes
 		self.nomeCompleto                 = parser.nomeCompleto
@@ -401,6 +413,37 @@ class Membro:
 		self.enderecoProfissionalLat = geo.lat
 		self.enderecoProfissionalLon = geo.lon
 
+	def ris(self):
+		s = ''
+		s+= '\nTY  - MEMBRO'
+		s+= '\nNOME  - '+self.nomeCompleto
+		s+= '\nSEXO  - '+self.sexo
+		s+= '\nCITA  - '+self.nomeEmCitacoesBibliograficas
+		s+= '\nBOLS  - '+self.bolsaProdutividade
+		s+= '\nENDE  - '+self.enderecoProfissional
+		s+= '\nURLC  - '+self.url
+		s+= '\nDATA  - '+self.atualizacaoCV
+		s+= '\nRESU  - '+self.textoResumo
+
+		for i in range(0,len(self.listaFormacaoAcademica)):
+			formacao = self.listaFormacaoAcademica[i]
+			s+= '\nFO'+str(i+1)+'a  - '+formacao.anoInicio
+			s+= '\nFO'+str(i+1)+'b  - '+formacao.anoConclusao
+			s+= '\nFO'+str(i+1)+'c  - '+formacao.tipo
+			s+= '\nFO'+str(i+1)+'d  - '+formacao.nomeInstituicao
+			s+= '\nFO'+str(i+1)+'e  - '+formacao.descricao
+
+		for i in range(0,len(self.listaAreaDeAtuacao)):
+			area = self.listaAreaDeAtuacao[i]
+			s+= '\nARE'+str(i+1)+'  - '+area.descricao
+
+		for i in range(0,len(self.listaIdioma)):
+			idioma = self.listaIdioma[i]
+			s+= '\nID'+str(i+1)+'a  - '+idioma.nome
+			s+= '\nID'+str(i+1)+'b  - '+idioma.proficiencia
+
+		return s
+
 
 	def __str__(self):
 		verbose = 0
@@ -409,16 +452,16 @@ class Membro:
 		s += "+ ROTULO      : " + self.rotulo + "\n"
 		#s += "+ ALIAS       : " + self.nomeInicial.encode('utf8','replace') + "\n"
 		s += "+ NOME REAL   : " + self.nomeCompleto.encode('utf8','replace') + "\n"
-		s += "+ SEXO        : " + self.sexo.encode('utf8','replace') + "\n"
-		s += "+ NOME Cits.  : " + self.nomeEmCitacoesBibliograficas.encode('utf8','replace') + "\n"
-		s += "+ PERIODO     : " + self.periodo.encode('utf8','replace') + "\n"
-		s += "+ BOLSA Prod. : " + self.bolsaProdutividade.encode('utf8','replace') + "\n"
-		s += "+ ENDERECO    : " + self.enderecoProfissional.encode('utf8','replace') +"\n"
-		s += "+ URL         : " + self.url.encode('utf8','replace') +"\n"
-		s += "+ ATUALIZACAO : " + self.atualizacaoCV.encode('utf8','replace') +"\n"
-		s += "+ FOTO        : " + self.foto.encode('utf8','replace') +"\n"
-		s += "+ RESUMO      : " + self.textoResumo.encode('utf8','replace') + "\n"
-		s += "+ COLABORADs. : " + str(len(self.listaIDLattesColaboradoresUnica)) 
+		#s += "+ SEXO        : " + self.sexo.encode('utf8','replace') + "\n"
+		#s += "+ NOME Cits.  : " + self.nomeEmCitacoesBibliograficas.encode('utf8','replace') + "\n"
+		#s += "+ PERIODO     : " + self.periodo.encode('utf8','replace') + "\n"
+		#s += "+ BOLSA Prod. : " + self.bolsaProdutividade.encode('utf8','replace') + "\n"
+		#s += "+ ENDERECO    : " + self.enderecoProfissional.encode('utf8','replace') +"\n"
+		#s += "+ URL         : " + self.url.encode('utf8','replace') +"\n"
+		#s += "+ ATUALIZACAO : " + self.atualizacaoCV.encode('utf8','replace') +"\n"
+		#s += "+ FOTO        : " + self.foto.encode('utf8','replace') +"\n"
+		#s += "+ RESUMO      : " + self.textoResumo.encode('utf8','replace') + "\n"
+		#s += "+ COLABORADs. : " + str(len(self.listaIDLattesColaboradoresUnica)) 
 
 		if verbose:
 			s += "\n[COLABORADORES]"

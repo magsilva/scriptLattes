@@ -3,7 +3,7 @@
 # filename: trabalhoCompletoEmCongresso.py
 #
 #  scriptLattes V8
-#  Copyright 2005-2012: Jesús P. Mena-Chalco e Roberto M. Cesar-Jr.
+#  Copyright 2005-2013: Jesús P. Mena-Chalco e Roberto M. Cesar-Jr.
 #  http://scriptlattes.sourceforge.net/
 #
 #
@@ -30,6 +30,8 @@ import re
 class TrabalhoCompletoEmCongresso:
 	item = None # dado bruto
 	idMembro = None
+	qualis = None
+	qualissimilar = None
 
 	doi = None
 	relevante = None
@@ -42,6 +44,8 @@ class TrabalhoCompletoEmCongresso:
 	paginas = None
 	chave = None
 
+	sigla = None # Qualis
+	
 	def __init__(self, idMembro, partesDoItem='', doi='', relevante=''):
 		self.idMembro = set([])
 		self.idMembro.add(idMembro)
@@ -93,7 +97,18 @@ class TrabalhoCompletoEmCongresso:
 				self.nomeDoEvento = ''
 				partes = partes[2]
 			else:
-				self.nomeDoEvento = partes[2].strip().rstrip(".")
+				# Qualis - Eh preciso separa o titulo da conferencia em partes[2] do restante
+#				self.nomeDoEvento = partes[2].strip().rstrip(".")
+				partesV = partes[2].split(", ")
+				self.nomeDoEvento = ''
+				self.sigla = ''
+				i = 0
+				self.nomeDoEvento += partesV[i].rstrip()
+				partesV = self.nomeDoEvento.split("(")
+				if len(partesV)==2:
+					partesV = partesV[1].split(")")
+					self.sigla = partesV[0].strip('\'-0123456789 ')
+				# Qualis - Verificar se todas as informacoes estao sendo armazenadas!
 				partes = partes[0]
 	
 			self.titulo = partes.strip().rstrip(".")
@@ -142,7 +157,7 @@ class TrabalhoCompletoEmCongresso:
 	def html(self, listaDeMembros):
 		s = self.autores + '. <b>' + self.titulo + '</b>. '
 
-		s+= 'Em: ' + self.nomeDoEvento + ', '  if not self.nomeDoEvento==''  else ''
+		s+= 'Em: <font color=#330066>' + self.nomeDoEvento + '</font>, '  if not self.nomeDoEvento==''  else ''
 		s+= 'v. ' + self.volume + ', '  if not self.volume==''  else ''
 		s+= 'p. ' + self.paginas + ', ' if not self.paginas=='' else ''
 		s+= str(self.ano) + '.'         if str(self.ano).isdigit() else '.'
@@ -151,8 +166,8 @@ class TrabalhoCompletoEmCongresso:
 			s+= ' <a href="'+self.doi+'" target="_blank" style="PADDING-RIGHT:4px;"><img border=0 src="doi.png"></a>' 
 
  		s+= menuHTMLdeBuscaPB(self.titulo)
+		s+= formataQualis(self.qualis, self.qualissimilar)
 		return s
-
 
 
 	def ris(self):
@@ -174,6 +189,15 @@ class TrabalhoCompletoEmCongresso:
 		s+= '\nPY  - '+str(self.ano)
 		s+= '\nL2  - '+self.doi
 		s+= '\nER  - '
+		return s
+	
+
+	def csv(self, nomeCompleto=""):
+		s  = "trabalhoCompletoEmCongresso\t"
+		if nomeCompleto=="": # tratamento grupal
+			s +=  str(self.ano) +"\t"+ self.doi +"\t"+ self.titulo +"\t"+ self.nomeDoEvento +"\t"+ self.autores +"\t"+ self.qualis +"\t"+ self.qualissimilar
+		else: # tratamento individual
+			s += nomeCompleto +"\t"+ str(self.ano) +"\t"+ self.doi +"\t"+ self.titulo +"\t"+ self.nomeDoEvento +"\t"+ self.autores +"\t"+ self.qualis +"\t"+ self.qualissimilar
 		return s
 
 

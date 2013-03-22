@@ -3,7 +3,7 @@
 # filename: idioma.py
 #
 #  scriptLattes V8
-#  Copyright 2005-2012: Jesús P. Mena-Chalco e Roberto M. Cesar-Jr.
+#  Copyright 2005-2013: Jesús P. Mena-Chalco e Roberto M. Cesar-Jr.
 #  http://scriptlattes.sourceforge.net/
 #
 #
@@ -25,6 +25,8 @@
 
 class Idioma:
 	descricao = ''
+	nome = ''
+	proficiencia = ''
 
 	def __init__(self, partesDoItem):
 		# partesDoItem[0]: Nome do idioma

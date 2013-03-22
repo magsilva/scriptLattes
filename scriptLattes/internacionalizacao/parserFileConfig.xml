@@ -7,6 +7,13 @@
     		<prefixo>,.*,\s*</prefixo>
     		<posfixo>[\s*|,|;|-|\.|\'|\"]</posfixo>
   	</parser>
+	<parser idDoi='10.1007'>
+    		<tag>ul</tag>
+    		<type>class</type>
+    		<name>author-affiliations</name>
+    		<prefixo>,.*,\s*</prefixo>
+    		<posfixo>[\s*|,|\.|\'|\"|;|-]</posfixo>
+  	</parser>
 	<parser idDoi='10.1016'>
     		<tag>ul</tag>
     		<type>class</type>

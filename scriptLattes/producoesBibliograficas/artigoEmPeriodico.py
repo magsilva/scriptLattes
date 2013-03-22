@@ -3,7 +3,7 @@
 # filename: artigoEmPeriodicos.py
 #
 #  scriptLattes V8
-#  Copyright 2005-2012: Jesús P. Mena-Chalco e Roberto M. Cesar-Jr.
+#  Copyright 2005-2013: Jesús P. Mena-Chalco e Roberto M. Cesar-Jr.
 #  http://scriptlattes.sourceforge.net/
 #
 #
@@ -29,6 +29,8 @@ from geradorDePaginasWeb import *
 class ArtigoEmPeriodico:
 	item = None # dado bruto
 	idMembro = None
+	qualis = None
+	qualissimilar = None
 
 	doi = None
 	relevante = None
@@ -68,7 +70,7 @@ class ArtigoEmPeriodico:
 				self.paginas = partes[2].strip()
 				partes = partes[0]
 	
-			partes = partes.rpartition(", n. ")
+			partes = partes.rpartition(", n.")
 			if partes[1]=='': # se nao existe numero
 				self.numero = ''
 				partes = partes[2]
@@ -84,7 +86,8 @@ class ArtigoEmPeriodico:
 				self.volume = partes[2].strip().rstrip(",")
 				partes = partes[0]
 
-			partes = partes.rpartition(". ")
+			partes = partes.partition(". ")
+			#partes = partes.rpartition(". ")
 			self.titulo = partes[0].strip()
 			self.revista = partes[2].strip()
 
@@ -151,7 +154,7 @@ class ArtigoEmPeriodico:
 # America. A, Optics Image Science and Vision
 
 	def html(self, listaDeMembros):
-		s = self.autores + '. <b>' + self.titulo + '</b>. ' + self.revista + '. '
+		s = self.autores + '. <b>' + self.titulo + '</b>. <font color=#330066>' + self.revista + '</font>. '
 		s+= 'v. ' + self.volume + ', '  if not self.volume==''  else ''
 		s+= 'n. ' + self.numero + ', '  if not self.numero== '' else ''
 		s+= 'p. ' + self.paginas + ', ' if not self.paginas=='' else ''
@@ -161,6 +164,7 @@ class ArtigoEmPeriodico:
 			s+= ' <a href="'+self.doi+'" target="_blank" style="PADDING-RIGHT:4px;"><img border=0 src="doi.png"></a>' 
 
  		s+= menuHTMLdeBuscaPB(self.titulo)
+		s+= formataQualis(self.qualis, self.qualissimilar)
 		return s
 
 
@@ -184,6 +188,14 @@ class ArtigoEmPeriodico:
 		s+= '\nPY  - '+str(self.ano)
 		s+= '\nL2  - '+self.doi
 		s+= '\nER  - '
+		return s
+
+	def csv(self, nomeCompleto=""):
+		s  = "artigoEmPeriodico\t"
+		if nomeCompleto=="": # tratamento grupal
+			s +=  str(self.ano) +"\t"+ self.doi +"\t"+ self.titulo +"\t"+ self.revista +"\t"+ self.autores +"\t"+ self.qualis +"\t"+ self.qualissimilar
+		else: # tratamento individual
+			s += nomeCompleto +"\t"+ str(self.ano) +"\t" + self.doi +"\t"+ self.titulo +"\t"+ self.revista +"\t"+ self.autores +"\t"+ self.qualis +"\t"+ self.qualissimilar
 		return s
 
 

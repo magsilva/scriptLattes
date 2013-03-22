@@ -3,7 +3,7 @@
 # filename: resumoExpandidoEmCongresso.py
 #
 #  scriptLattes V8
-#  Copyright 2005-2012: Jesús P. Mena-Chalco e Roberto M. Cesar-Jr.
+#  Copyright 2005-2013: Jesús P. Mena-Chalco e Roberto M. Cesar-Jr.
 #  http://scriptlattes.sourceforge.net/
 #
 #
@@ -30,6 +30,8 @@ import re
 class ResumoExpandidoEmCongresso:
 	item = None # dado bruto
 	idMembro = None
+	qualis = None
+	qualissimilar = None
 
 	doi = None
 	relevante = None
@@ -150,6 +152,7 @@ class ResumoExpandidoEmCongresso:
 			s+= '<a href="'+self.doi+'" target="_blank" style="PADDING-RIGHT:4px;"><img border=0 src="doi.png"></a>' 
 
  		s+= menuHTMLdeBuscaPB(self.titulo)
+		s+= formataQualis(self.qualis, self.qualissimilar)
 		return s
 
 
@@ -174,6 +177,14 @@ class ResumoExpandidoEmCongresso:
 		s+= '\nER  - '
 		return s
 
+
+	def csv(self, nomeCompleto=""):
+		s  = "resumoExpandidoEmCongresso\t"
+		if nomeCompleto=="": # tratamento grupal
+			s +=  str(self.ano) +"\t"+ self.titulo +"\t"+ self.nomeDoEvento +"\t"+ self.autores +"\t"+ self.qualis +"\t"+ self.qualissimilar
+		else: # tratamento individual
+			s += nomeCompleto +"\t"+ str(self.ano) +"\t"+ self.titulo +"\t"+ self.nomeDoEvento +"\t"+ self.autores +"\t"+ self.qualis +"\t"+ self.qualissimilar
+		return s
 
 	# ------------------------------------------------------------------------ #
 	def __str__(self):

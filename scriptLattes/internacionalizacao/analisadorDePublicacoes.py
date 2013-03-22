@@ -3,7 +3,7 @@
 # filename: analisadorDePublicacoes.py
 #
 #  scriptLattes V8
-#  Copyright 2005-2012: Jesús P. Mena-Chalco e Roberto M. Cesar-Jr.
+#  Copyright 2005-2013: Jesús P. Mena-Chalco e Roberto M. Cesar-Jr.
 #  http://scriptlattes.sourceforge.net/
 #
 #
@@ -33,6 +33,7 @@ from HTMLParserNew import HTMLParser
 from tidylib import tidy_document
 from publicacaoEinternacionalizacao import * 
 import xml.dom.minidom
+import os.path
 
 from genericParser import *
 from parser101007 import *
@@ -48,7 +49,7 @@ class AnalisadorDePublicacoes:
 	def __init__(self, grupo):
 		self.grupo = grupo
 		self.listaDePublicacoesEinternacionalizacao = {}
-		self.parserFile  = xml.dom.minidom.parse('./scriptLattes/internacionalizacao/parserFileConfig.xml')#read the file just the fist time
+		self.parserFile  = xml.dom.minidom.parse('./scriptLattes/internacionalizacao/parserFileConfig.xml') # read the file just the fist time
 		self.paises = {
 			"Abkhazia":       ["Apsny", "Abkhaziya"],
 			"Afghanistan":    ["Afghanestan"],
@@ -289,10 +290,10 @@ class AnalisadorDePublicacoes:
 		}   		
 
 	def analisarInternacionalizacaoNaCoautoria(self):
-		listaCompletaPB = self.grupo.compilador.listaCompletaPB
-
+		# listaCompletaPB = self.grupo.compilador.listaCompletaPB
+		listaCompletaPB = self.grupo.compilador.listaCompletaArtigoEmPeriodico
 		keys = listaCompletaPB.keys()
-		for ano in keys:
+		for ano in keys:		
 			elementos = listaCompletaPB[ano]
 			for index in range(0, len(elementos)):
 				pub = elementos[index]
@@ -310,64 +311,43 @@ class AnalisadorDePublicacoes:
 		return self.listaDePublicacoesEinternacionalizacao
 
 
-	def identificarPaisesEmPublicacao(self, urlDOI,ano):
-		#print "------------------------------------------==========================================================================================="
-		#print "------------------------------------------==========================================================================================="
-		#print urlDOI
-
+	def identificarPaisesEmPublicacao(self, urlDOI, ano):
 		listaDePaisesIdentificados = None
 		dataDoi = self.obterDadosAtravesDeDOI(urlDOI)
-		#doihtml = dataDoi[0]
-
+		
 		if dataDoi:	
-			#doihtml = doihtml.encode('utf8','replace')
-			#print "------------------------------------------==========================================================================================="
-			#print doihtml
-
-			#doihtml = doihtml.lower()
-			#prefixo = ",\s*"
-			#prefixo = ",.*,\s*"			
-
 			listaDePaisesIdentificados = []
 
 			for key in self.paises.keys():
 				nomeDePais = key
 				# Procuramos o nome em ingles (nome original)
 				totalInternacionais=0
-#				if self.procurarPais(doihtml, nomeDePais, prefixo,urlDOI):
-				if self.procurarPais(dataDoi, nomeDePais,urlDOI):
+				if self.procurarPais(dataDoi, nomeDePais, urlDOI):
 					listaDePaisesIdentificados.append(nomeDePais)
 				else:
 					if len(self.paises[nomeDePais])>0:
 						# Procuramos os nomes alternativos dos países
 						for nomeAlternativoDePais in self.paises[nomeDePais]:
-#							if self.procurarPais(doihtml, nomeAlternativoDePais, prefixo,urlDOI):
-							if self.procurarPais(dataDoi, nomeAlternativoDePais,urlDOI):
-#								listaDePaisesIdentificados.append(nomeDePais) 
+							if self.procurarPais(dataDoi, nomeAlternativoDePais, urlDOI):
 								listaDePaisesIdentificados.append(nomeDePais)
 								break
 
-		print "Paises identificados : " + str(listaDePaisesIdentificados)
+		print "- Paises identificados : " + str(listaDePaisesIdentificados)
+
 		# na lista de paises identificados
 		if listaDePaisesIdentificados is not None:
 			if len(listaDePaisesIdentificados)>0:
 				if "Brazil" not in listaDePaisesIdentificados and "Brasil" not in listaDePaisesIdentificados:
 					listaDePaisesIdentificados.append("Brazil")
-			#cadeia = str(ano)+" , "+urlDOI+" , "+str(len(listaDePaisesIdentificados))
-			cadeia = str(ano)+" , "+urlDOI+" , "+str(len(listaDePaisesIdentificados))+ ", "
+			cadeia = str(ano) + " , " + urlDOI + " , " + str(len(listaDePaisesIdentificados)) + ", "
 			for nomPais in listaDePaisesIdentificados:
 				cadeia = cadeia+nomPais+"; "
 			self.listaDoiValido.append(cadeia)
-		# print "------------------------------------------==========================================================================================="
-		# print listaDePaisesIdentificados
-		# print "------------------------------------------==========================================================================================="
-		# print "------------------------------------------==========================================================================================="
 	
 		return listaDePaisesIdentificados
 	
 
-	#def procurarPais(self, doihtml, nomeDePais, prefixo,urlDOI):
-	def procurarPais(self, dataDoi, nomeDePais,urlDOI):
+	def procurarPais(self, dataDoi, nomeDePais, urlDOI):
 		nomeDePais = nomeDePais.lower()
 		nomeDePais = HTMLParser().unescape(nomeDePais.decode("utf8", "ignore"))
 		nomeDePais = unicodedata.normalize('NFKD',unicode(nomeDePais)).encode('ascii','ignore')
@@ -384,26 +364,23 @@ class AnalisadorDePublicacoes:
 			posfixo = dataDoi[1][5]
 			idDoi = dataDoi[1][0]
 			if re.search((prefixo,'')[prefixo is None]+re.escape(nomeDePais)+(posfixo,'')[posfixo is None], doihtml):
-					print "generic case"
-					#print idDoi+" "+(prefixo,'')[prefixo is None] +" "+(posfixo,'')[posfixo is None]
+					# print "generic case"
+					# print idDoi+" "+(prefixo,'')[prefixo is None] +" "+(posfixo,'')[posfixo is None]
 					return True
 			else:
 					return False
 		elif len(dataDoi) == 1:
 			doihtml = dataDoi[0]
 			doihtml = doihtml.encode('utf8','replace')
-			doihtml=doihtml.lower()
+			doihtml = doihtml.lower()
 			prefixo = ",.*,\s*"
-		if re.search(prefixo+re.escape(nomeDePais)+r"\s*\n", doihtml):
-			return True
-		if re.search(prefixo+re.escape(nomeDePais)+r"\W*\n", doihtml):
-			return True
+			if re.search(prefixo+re.escape(nomeDePais)+r"\s*\n", doihtml):
+				return True
+			if re.search(prefixo+re.escape(nomeDePais)+r"\W*\n", doihtml):
+				return True
 			return False
 		else:
 			return False
-		#if re.search(prefixo+re.escape(nomeDePais)+r"\b", doihtml):
-		#	return True
-		
 
 
 	def obterDadosAtravesDeDOI(self, urlDOI):
@@ -418,82 +395,104 @@ class AnalisadorDePublicacoes:
 		'Cache-Control': 'max-age=0',
 		}
 
-		# tentamos 3 vezes baixar a página web associado ao DOI
-		tentativa = 1
-		while tentativa<=1:
-			try:
-				req = urllib2.Request(urlDOI, txdata, txheaders)
+		doiNumber = urlDOI
+		doiNumber = doiNumber.replace('http://dx.doi.org/','');
+		doiNumber = doiNumber.replace('/','-');
+		doiPath   = self.grupo.diretorioDoi+'/'+doiNumber
 
-				cj = cookielib.CookieJar()
-				opener = urllib2.build_opener(urllib2.HTTPCookieProcessor(cj))
-				response = opener.open(req)
-				rawDOIhtml = response.read()
-				break
-			except:
-				print '[AVISO] Tentativa '+str(tentativa)+': DOI não identificado corretamente: ', urlDOI
-				time.sleep(100)
-				rawDOIhtml = None
-				tentativa += 1
-				continue
+		if (os.path.isfile(doiPath)):
+			arquivoX   = open(doiPath)
+			rawDOIhtml = arquivoX.read()
+			arquivoX.close()
+			print "- Utilizando DOI armazenado no cache: " + doiPath
+
+		#-----------------------------------------------------------------
+		# tentamos 3 vezes baixar a página web associado ao DOI
+		else:
+			tentativa = 1
+			while tentativa<=1:
+				try:
+					req = urllib2.Request(urlDOI, txdata, txheaders)
+	
+					cj = cookielib.CookieJar()
+					opener = urllib2.build_opener(urllib2.HTTPCookieProcessor(cj))
+					response = opener.open(req)
+					rawDOIhtml = response.read()
+					print "- Baixando publicacao com DOI: " + urlDOI
+
+					# rawDOIhtml = HTMLParser.HTMLParser().unescape(rawDOIhtml.decode("utf8", "ignore"))
+					rawDOIhtml = HTMLParser().unescape(rawDOIhtml.decode("utf8", "ignore"))
+					rawDOIhtml = unicodedata.normalize('NFKD',unicode(rawDOIhtml)).encode('ascii','ignore')
+		
+					if not self.grupo.diretorioDoi=='':
+						print "- Armazenando DOI armazenado no cache: " + doiPath
+						filename = doiPath
+						file = open(filename, "w")
+						file.write(rawDOIhtml)
+						file.close()
+					break
+				except:
+					print '[AVISO] Tentativa '+str(tentativa)+': DOI não está disponível na internet: ', urlDOI
+					time.sleep(10)
+					rawDOIhtml = None
+					tentativa += 1
+					continue
 		dataDoi=[]
 		if rawDOIhtml is not None:
-			print "***************************************************"
-			print type(rawDOIhtml)
-			print type(rawDOIhtml.decode("utf8", "ignore"))
-#			rawDOIhtml = HTMLParser.HTMLParser().unescape(rawDOIhtml.decode("utf8", "ignore"))
-			rawDOIhtml = HTMLParser().unescape(rawDOIhtml.decode("utf8", "ignore"))
-			rawDOIhtml = unicodedata.normalize('NFKD',unicode(rawDOIhtml)).encode('ascii','ignore')
-			parserData=self.procurarParser(urlDOI)
+
+			parserData = self.procurarParser(urlDOI)
 			if parserData is not None:				
 				if len(parserData)==6:
-					print "**caso - "+parserData[0]
-					caso=genericParser(parserData)
+					print "**caso -- " + parserData[0]
+					caso = genericParser(parserData)
 					caso.feed(rawDOIhtml)
-					doihtml= str(caso.data)
+					doihtml = str(caso.data)
 					dataDoi.append(doihtml)
 					dataDoi.append(parserData)
 
 			elif urlDOI.find("10.1134")>-1:
 				print "**caso - 10.1134"
-				casoUrl=parser101007()
+				casoUrl = parser101007()
 				casoUrl.feed(rawDOIhtml)
-				doihtml= str(casoUrl.data)
-				parserData=["10.1134",'','','','authoraddress=.*\+','.*&contentid']
+				doihtml = str(casoUrl.data)
+				parserData = ["10.1134",'','','','authoraddress=.*\+','.*&contentid']
 				dataDoi.append(doihtml)
 				dataDoi.append(parserData)
-			elif urlDOI.find("10.1007")>-1:
-				print "**caso - 10.1007"
-				casoUrl=parser101007()
-				casoUrl.feed(rawDOIhtml)
-				doihtml= str(casoUrl.data)
-				parserData=["10.1007",'','','','authoraddress=.*\+','.*&contentid']
-				dataDoi.append(doihtml)
-				dataDoi.append(parserData)
-			elif urlDOI.find("10.1021")>-1:
-				print "**caso -- 10.1021"
-				caso=parser101021()
-				caso.feed(rawDOIhtml)
-				doihtml= str(caso.data)
-				parserData=["10.1021",'','','',',.*,\s*','[\s*|,|;|-|\.|\'|\"]']
-				dataDoi.append(doihtml)
-				dataDoi.append(parserData)
+
+		#	elif urlDOI.find("10.1007")>-1:
+		#		print "**caso - 10.1007"
+		#		casoUrl = parser101007()
+		#		casoUrl.feed(rawDOIhtml)
+		#		doihtml = str(casoUrl.data)
+		#		parserData = ["10.1007",'','','','authoraddress=.*\+','.*&contentid']
+		#		dataDoi.append(doihtml)
+		#		dataDoi.append(parserData)
+
+		#	elif urlDOI.find("10.1021")>-1:
+		#		# print "**caso -- 10.1021"
+		#		caso=parser101021()
+		#		caso.feed(rawDOIhtml)
+		#		doihtml= str(caso.data)
+		#		parserData=["10.1021",'','','',',.*,\s*','[\s*|,|;|-|\.|\'|\"]']
+		#		dataDoi.append(doihtml)
+		#		dataDoi.append(parserData)
+
 			elif urlDOI.find("10.1590")>-1:
 				print "**caso -- 10.1590"
-				caso=parser101590()
+				caso = parser101590()
 				caso.feed(rawDOIhtml)
-				doihtml= str(caso.data)
-				print doihtml
-				parserData=["10.1590",'','','',',.*,\s*','[\s*|,|;|-|\.|\'|\"]']
+				doihtml = str(caso.data)
+				#print doihtml
+				parserData = ["10.1590",'','','',',.*,\s*','[\s*|,|;|-|\.|\'|\"]']
 				dataDoi.append(doihtml)
 				dataDoi.append(parserData)
 			else:
 				print "**caso DEFAULT não esta no xml"
-			doihtml =  self.html2texto(rawDOIhtml)
+				doihtml =  self.html2texto(rawDOIhtml)
 				dataDoi.append(doihtml)
 
 		else:
 			dataDoi=[]
-
 		return dataDoi
 
 
@@ -521,12 +520,10 @@ class AnalisadorDePublicacoes:
 		##cleaned = re.sub(r"  ", " ", cleaned)
 
 		cleaned = re.sub(r"\s+\n", "\n", cleaned)
-
 		return cleaned.strip()
 
 
-
-	def procurarParser(self,urlDOI):
+	def procurarParser(self, urlDOI):
 			idDoi=urlDOI[18:25]
 			x=self.parserFile
 			nos = x.documentElement
@@ -552,4 +549,3 @@ class AnalisadorDePublicacoes:
 		    text += child.data
 		return text
 					
-
