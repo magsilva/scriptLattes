@@ -75,6 +75,12 @@ class OrientacaoEmAndamento:
 		self.ano = partes[0]
 		partes = partes[2]
 
+		aux = re.findall(u'((?:19|20)\d\d)\\b', self.ano)
+		if len(aux)>0:
+			self.ano = aux[0] #.strip().rstrip(".").rstrip(",")
+		else:
+			self.ano = ''
+
 		partes = partes.rpartition(", ")
 		if not partes[1]=='':
 			self.instituicao = partes[0]
@@ -84,6 +90,7 @@ class OrientacaoEmAndamento:
 			self.agenciaDeFomento = ''
 
 		self.chave = self.nome # chave de comparação entre os objetos
+
 
 
 

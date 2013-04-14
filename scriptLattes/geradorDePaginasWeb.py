@@ -38,7 +38,7 @@ class GeradorDePaginasWeb:
 
 	def __init__(self, grupo):
 		self.grupo = grupo
-		self.version = 'V8.06'
+		self.version = 'V8.08'
 		self.dir = self.grupo.obterParametro('global-diretorio_de_saida')
 		
 		if self.grupo.obterParametro('global-criar_paginas_jsp'):

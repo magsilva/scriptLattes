@@ -6,38 +6,43 @@ SINOPSIS
 
 REQUISITOS
 	Para a compilação precisam-se de alguns módulos Python. Para instalar esses módulos execute como root:
-	# apt-get install python-all python-setuptools python-utidylib python-matplotlib python-levenshtein python-pygraphviz python-numpy tidy python-scipy python-scipy
+	# apt-get install python-all python-setuptools python-utidylib python-matplotlib python-levenshtein python-pygraphviz python-numpy tidy python-scipy python-imaging
 	# easy_install pytidylib
 
 EXECUÇÃO
 	Teste o scriptLattes com os seguintes exemplos de compilação na linha de comando:
 
-	(*) EXEMPLO A:
+
+	(*) EXEMPLO 01:
 	$ cd <nome_diretorio_scriptLattes>
-	$ ./scriptLattes.py ./exemplo/teste.config
+	$ ./scriptLattes.py ./exemplo/teste-01.config
 
 	Nesse exemplo consideram-se todas as produções cujos anos de publicações
-	estão entre 2006 e 2012. Rótulos para os membros não foram considerados. 
+	estão entre 2006 e 2012. Nenhum rótulo foi considerado para os membros. 
 	
 	Os IDs Lattes dos 3 membros está listada em:
-	./exemplo/teste.list
+	./exemplo/teste-01.list
 
 	O resultado da execução estará disponível em:
-	./exemplo/teste/
+	./exemplo/teste-01/
 
 
-	(*) EXEMPLO B:
+
+	(*) EXEMPLO 02:
 	$ cd <nome_diretorio_scriptLattes>
-	$ ./scriptLattes.py ./exemplo/vision-ime-usp.config
+	$ ./scriptLattes.py ./exemplo/teste-02.config
 
 	Nesse exemplo consideram-se todas as produções cadastradas nos CVs Lattes.
 	São considerados rótulos para os membros do grupo (professor, colaborador, aluno)
+	Adicionalmente também são apresentadas as informações de Qualis para os
+	artigos publicados (congressos e periodicos), e uma medida de
+	internacionalização.
 
 	Os IDs Lattes dos 10 membros está listada em:
-	./exemplo/vision-ime-usp.list
+	./exemplo/teste-02.list
 
 	O resultado da execução estará disponível em:
-	./exemplo/vision-ime-usp/
+	./exemplo/teste-02/
 
 IDEALIZADORES DO PROJETO
 	Jesús P. Mena-Chalco <jesus.mena@ufabc.edu.br>
@@ -49,6 +54,73 @@ URL DO PROJETO
 
 =========================================================================================
 LOG
+
+Dom Abr 14 12:32:54 BRST 2013
+-- Foi corrigida a função de localização geográfica.
+
+
+Sáb Fev 16 17:08:53 BRST 2013
+-- Foi melhorada a função de busca/associação de Qualis em publicações.
+-- Melhora do parser de internacionalização.
+-- Melhora do procedimento para a criação de grafos: from PIL import Image
+   Correção de um bug.
+-- A identificação das partes constituintes de uma publicação foi melhorada
+   para as publicações com grande número de coautores (mais do que 10).
+-- Os períodos para as orientações em andamento foram corrigidas.
+
+
+Sáb Jan 19 10:18:29 BRST 2013
+-- O parser do scriptLattes foi corrigido/atualizado. Atualmente, alguns
+   projetos de pesquisa apresentam informação de validação do tipo:
+   "Projeto certificado pelo(a) coordenador(a) XXX YYY em 28/12/2012."
+   "Projeto certificado pela empresa XXX em 21/08/2012."
+
+Seg Nov 19 17:42:32 BRST 2012
+-- Foi implementada a identificação automática de publicações com Qualis. Para a
+   associação de Qualis deve de se informar um arquivo CSV contendo a lista de
+   publicações (em periódicos ou congressos) aprovados pelo Comitê Avalidor de
+   cada Área (CAPES).
+
+   Veja alguns exemplos de arquivos CSV de QUALIS em 
+   http://scriptlattes.sourceforge.net/qualis.html
+
+   Três novos parâmetros foram considerados:
+   - global-identificar_publicacoes_com_qualis = [sim|nao]
+   - global-arquivo_qualis_de_periodicos = [arquivo.csv]
+   - global-arquivo_qualis_de_congressos = [arquivo.csv]
+   A qualidade de identificação de publicações com Qualis depende:
+   (i) da qualidade dos dados cadastrados nos CVs Lattes e
+   (ii) das listas CSV informadas na execução do scriptLattes.
+   Evite o uso de listas CSVs, desatualizadas, incompletas ou mal formatadas.
+   Essa característica foi inicialmente desenvolvida por Helena Caseli.
+
+-- Foi considerado, mediante o novo parâmetro:
+   - relatorio-incluir_internacionalizacao = [sim|nao]
+   um relatório de 'internacionalização'. Para os artigos publicados em
+   periódicos (journals), com DOI cadastrado nos CVs Lattes. Para esse relatório,
+   são identificados todos os países dos coautores das publicações.
+   Maiores detalhes do procedimento estão disponíveis no artigo: 'Towards a quantitative
+   academic internationalization assessment of brazilian research group'
+   (eScience 2012).
+   Essa característica está sendo desenvolvida em colaboração com Evelyn Perez Cervantes.
+
+-- As informações individuais de cada pesquisador também podem ser armazenadas,
+   localmente, em formato XML. Para isso foi criado um novo parâmetro:
+   - global-salvar_informacoes_em_formato_xml = [sim|nao]
+   Durante a execução um novo arquivo é gerado: 'database.xml'. 
+   Essa característica foi inicialmente desenvolvida por Richard W. Valdivia.
+
+
+Dom Ago 12 08:12:39 BRT 2012
+-- A classe parserLattes foi adaptada para suportar o novo formato HTML dos CVs
+   Lattes.
+-- O critério utilizado para comparar produções bibliográficas foi atualizado.
+   Duas produções são consideradas iguais (ou similares) se a distância
+   Levenshtein entre eles for menor ou igual do que 5.
+
+Ter Jun 12 22:30:15 BRT 2012
+-- As vezes os IDs Lattes cadastrados nos CVs Lattes não são válidos (erros na escrita),
+   assim, o scriptLattes tenta 5 vezes baixar o CV. Caso contrário o CV é desconsiderado.
 
 Thu Jun  7 14:13:35 BRT 2012
 -- Foi corrigido o procedimento para baixar os CVs Lattes. 

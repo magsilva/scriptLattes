@@ -95,13 +95,13 @@ class MapaDeGeolocalizacao:
 					idOrientando = aluno.idOrientando
 
 					if len(idOrientando)==16 and cvsProcessados.isdisjoint([idOrientando]):
-						print "\n-Processando o CV do ex-posdoc: "+idOrientando+" "+membro.nomeCompleto.encode('utf8')
 						membro = Membro('', idOrientando, '', '', '', '', '', self.grupo.diretorioCache)
 						membro.carregarDadosCVLattes()
 						membro.obterCoordenadasDeGeolocalizacao()
 						if not membro.enderecoProfissionalLat=='0' and not membro.enderecoProfissionalLon=='0':
 							self.mapa += '\n    setMarker1(map, '+membro.enderecoProfissionalLat+'+0.001*Math.random(), '+membro.enderecoProfissionalLon+'+0.001*Math.random(), "'+membro.nomeCompleto+'","'+membro.enderecoProfissional+'","'+self.obterNomesDosOrientadores(aluno, self.grupo.listaDeMembros)+'","'+membro.url+'","'+membro.foto+'");'
 						cvsProcessados.add(idOrientando)
+						print "-Processando o CV do ex-posdoc: "+idOrientando+" "+membro.nomeCompleto.encode('utf8')
 
 
 		if self.grupo.obterParametro('mapa-incluir_alunos_de_doutorado'):
@@ -111,13 +111,13 @@ class MapaDeGeolocalizacao:
 					idOrientando = aluno.idOrientando
 
 					if len(idOrientando)==16 and cvsProcessados.isdisjoint([idOrientando]):
-						print "\n-Processando o CV do ex-aluno de doutorado: "+idOrientando+" "+membro.nomeCompleto.encode('utf8')
 						membro = Membro('', idOrientando, '', '', '', '', '', self.grupo.diretorioCache)
 						membro.carregarDadosCVLattes()
 						membro.obterCoordenadasDeGeolocalizacao()
 						if not membro.enderecoProfissionalLat=='0' and not membro.enderecoProfissionalLon=='0':
 							self.mapa += '\n    setMarker2(map, '+membro.enderecoProfissionalLat+'+0.001*Math.random(), '+membro.enderecoProfissionalLon+'+0.001*Math.random(), "'+membro.nomeCompleto+'","'+membro.enderecoProfissional+'","'+self.obterNomesDosOrientadores(aluno, self.grupo.listaDeMembros)+'","'+membro.url+'","'+membro.foto+'");'
 						cvsProcessados.add(idOrientando)
+						print "-Processando o CV do ex-aluno de doutorado: "+idOrientando+" "+membro.nomeCompleto.encode('utf8')
 
 
 		if self.grupo.obterParametro('mapa-incluir_alunos_de_mestrado'):
@@ -127,14 +127,13 @@ class MapaDeGeolocalizacao:
 					idOrientando = aluno.idOrientando
 
 					if len(idOrientando)==16 and cvsProcessados.isdisjoint([idOrientando]):
-						print "\n-Processando o CV do ex-aluno de mestrado: "+idOrientando+" "+membro.nomeCompleto.encode('utf8')
 						membro = Membro('', idOrientando, '', '', '', '', '', self.grupo.diretorioCache)
 						membro.carregarDadosCVLattes()
 						membro.obterCoordenadasDeGeolocalizacao()
 						if not membro.enderecoProfissionalLat=='0' and not membro.enderecoProfissionalLon=='0':
 							self.mapa += '\n    setMarker3(map, '+membro.enderecoProfissionalLat+'+0.001*Math.random(), '+membro.enderecoProfissionalLon+'+0.001*Math.random(), "'+membro.nomeCompleto+'","'+membro.enderecoProfissional+'","'+self.obterNomesDosOrientadores(aluno, self.grupo.listaDeMembros)+'","'+membro.url+'","'+membro.foto+'");'
 						cvsProcessados.add(idOrientando)
-
+						print "-Processando o CV do ex-aluno de mestrado: "+idOrientando+" "+membro.nomeCompleto.encode('utf8')
 
 		self.mapa+= '\
   } \n\
@@ -144,7 +143,7 @@ class MapaDeGeolocalizacao:
 		#print "--------------------------------------------------------------------"
 		#print self.mapa.encode('utf8','replace')
 		#print "--------------------------------------------------------------------"
-		print "\n[MAPA DE GEOLOCALIZACAO CRIADO]"
+		print "[MAPA DE GEOLOCALIZACAO CRIADO]"
 
 
 	def obterNomesDosOrientadores(self, aluno, listaDeMembros):

@@ -28,7 +28,7 @@ import re
 import sets
 import datetime
 import time
-import os
+
 
 from parserLattes import *
 from parserLattesXML import *
@@ -165,7 +165,7 @@ class Membro:
 		
 
 	def carregarDadosCVLattes(self):
-		cvPath = os.path.join(self.diretorioCache, self.idLattes)
+		cvPath = self.diretorioCache+'/'+self.idLattes
 
 		if 'xml' in cvPath:
 			arquivoX = open(cvPath)
@@ -185,11 +185,12 @@ class Membro:
 			if os.path.exists(cvPath):
 				arquivoH = open(cvPath)
 				cvLattesHTML = arquivoH.read()
-				print "(*) Utilizando CV armazenado no cache: "+cvPath
+				if self.idMembro!='':
+					print "(*) Utilizando CV armazenado no cache: "+cvPath
 			else:
 				cvLattesHTML = ''
 				tentativa = 0
-				while tentativa < 5:
+				while tentativa<5:
 				#while True:
 					try:
 						txdata = None
@@ -211,18 +212,18 @@ class Membro:
 						arquivoH.close()
 						time.sleep(1)
 
-						if len(cvLattesHTML) <= 1000:
+						if len(cvLattesHTML)<=1000:
 							print '[AVISO] O scriptLattes tentará baixar novamente o seguinte CV Lattes: ', self.url
 							time.sleep(30)
-							tentativa += 1
+							tentativa+=1
 							continue
 
-						if not self.diretorioCache == '':
+						if not self.diretorioCache=='':
 							file = open(cvPath, 'w')
 							file.write(cvLattesHTML)
 							file.close()
 							print " (*) O CV está sendo armazenado no Cache"
-							break
+						break
 
 					### except urllib2.URLError: ###, e:
 					except:
@@ -230,7 +231,7 @@ class Membro:
 						print '[AVISO] Certifique-se que o CV existe. O scriptLattes tentará baixar o CV em 30 segundos...'
 						###print '[ERRO] Código de erro: ', e.code
 						time.sleep(30)
-						tentativa += 1
+						tentativa+=1
 						continue
 
 			extended_chars= u''.join(unichr(c) for c in xrange(127, 65536, 1)) # srange(r"[\0x80-\0x7FF]")
@@ -241,9 +242,9 @@ class Membro:
 			
 			p = re.compile('[a-zA-Z]+');
 			if p.match(self.idLattes):
-				self.identificador10 = self.idLattes
-				self.idLattes = parser.identificador16
-				self.url = 'http://lattes.cnpq.br/'+self.idLattes
+			  self.identificador10 = self.idLattes
+			  self.idLattes = parser.identificador16
+			  self.url = 'http://lattes.cnpq.br/'+self.idLattes
 			
 		# -----------------------------------------------------------------------------------------
 		# Obtemos todos os dados do CV Lattes
@@ -367,7 +368,14 @@ class Membro:
 
 		
 	def estaDentroDoPeriodo(self, objeto):
-		if objeto.__module__=='projetoDePesquisa':
+		if objeto.__module__=='orientacaoEmAndamento':
+			objeto.ano = int(objeto.ano)
+			if objeto.ano > self.itemsAteOAno:
+				return 0
+			else:
+				return 1
+
+		elif objeto.__module__=='projetoDePesquisa':
 			if objeto.anoConclusao.lower()=='atual':
 				objeto.anoConclusao = str(datetime.datetime.now().year)
 

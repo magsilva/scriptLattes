@@ -58,9 +58,21 @@ class TrabalhoCompletoEmCongresso:
 			self.doi = doi
 			self.relevante = relevante
 
-			# Dividir o item na suas partes constituintes
+			# Dividir o item na suas partes constituintes (autores e o resto)
 			partes = self.item.partition(" . ")
-			self.autores = partes[0].strip()
+
+			# Verificar quando há um numero de autores > que 25
+			if partes[1]=='': # muitos autores (mais de 25) e o lattes insere etal. termina lista com ;
+				partes = self.item.partition(" ; ")
+				a = partes[0].partition(", et al.") # remocao do et al.
+				a = a[0] + a[2] # estes autores nao estao bem separados pois falta ';'
+				b = a.replace(', ','*') 
+				c = b.replace(' ',' ; ')
+				self.autores = c.replace('*',', ')
+			else:
+				self.autores = partes[0].strip()
+			 
+			# Processando o resto (tudo menos autores)
 			partes = partes[2]
 	
 			partes = partes.rpartition(" p. ")

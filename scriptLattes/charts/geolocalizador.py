@@ -28,8 +28,8 @@ import re
 
 class Geolocalizador:
 	endereco = None
-	lat = None
-	lon = None
+	lat = "0"
+	lon = "0"
 
 	def __init__(self, endereco):
 		self.endereco = endereco
@@ -44,7 +44,7 @@ class Geolocalizador:
 
 
 	def obterCoordenadas(self):
-		print "[ENDEREÇO] " + self.endereco.encode('utf8')
+		#print "\n[ENDEREÇO] " + self.endereco.encode('utf8')
 
 		cidade = ''
 		uf = ''
@@ -73,28 +73,28 @@ class Geolocalizador:
 			if len(aux)>0:
 				(cidade,pais) = aux[0]
 
-		print "  .Pais   = "+pais.encode('utf8')
-		print "  .UF     = "+uf
-		print "  .Cidade = "+cidade.encode('utf8')
-		print "  .CEP    = "+cep
+		#print "  .Pais   = "+pais.encode('utf8')
+		#print "  .UF     = "+uf
+		#print "  .Cidade = "+cidade.encode('utf8')
+		#print "  .CEP    = "+cep
 
-		cep = self.corrigirCEP(cep)
-
+		cep   = self.corrigirCEP(cep)
 		chave = pais+" "+uf+" "+ cidade+" "+ cep
 		chave = re.sub('\s+','+', chave)
-		query = "http://maps.google.com/maps/geo?q="+chave.encode('utf8')+"&output=csv&sensor=false"
-		print "  .Query  = "+query
+		query = "http://maps.googleapis.com/maps/api/geocode/xml?address="+chave.encode('utf8')+"&sensor=false"
 
 		req = urllib2.Request(query)
 		res = urllib2.urlopen(req).read()
-		print "  .Resp.  = "+res
+		res = res.replace("\r","")
+		res = res.replace("\n","")
+		res = re.findall(r'<location>(.+?)</location>', res)
 
-		vars = res.split(",")
-		self.lat = vars[2]
-		self.lon = vars[3]
-
-		print "  .Verif. = http://www.gorissen.info/Pierre/maps/googleMapLocation.php?lat="+self.lat+"&lon="+self.lon+"&setLatLon=Set"
-		# se acha muito útil este trecho código, então me convide um café :-)
+		if len(res)>0:
+			lat = re.findall(r'<lat>(.*)</lat>', res[0])
+			lon = re.findall(r'<lng>(.*)</lng>', res[0])
+			self.lat = lat[0]
+			self.lon = lon[0]
+			#print "  .Verif. = http://www.gorissen.info/Pierre/maps/googleMapLocation.php?lat="+self.lat+"&lon="+self.lon+"&setLatLon=Set"
 
 
 	def obterNomeUF(self, uf):

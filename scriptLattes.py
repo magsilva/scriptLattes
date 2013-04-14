@@ -3,7 +3,7 @@
 #
 #
 #  scriptLattes V8
-#  Copyright 2005-2012: Jesús P. Mena-Chalco e Roberto M. Cesar-Jr.
+#  Copyright 2005-2013: Jesús P. Mena-Chalco e Roberto M. Cesar-Jr.
 #  http://scriptlattes.sourceforge.net/
 #
 #
@@ -36,6 +36,7 @@ sys.path.append('scriptLattes/orientacoes/')
 sys.path.append('scriptLattes/eventos/')
 sys.path.append('scriptLattes/charts/')
 sys.path.append('scriptLattes/internacionalizacao/')
+sys.path.append('scriptLattes/qualis/')
 
 from grupo import *
 
@@ -49,6 +50,8 @@ if __name__ == "__main__":
 	if criarDiretorio(novoGrupo.obterParametro('global-diretorio_de_saida')):
 		novoGrupo.carregarDadosCVLattes() #obrigatorio
 		novoGrupo.compilarListasDeItems() # obrigatorio
+		novoGrupo.identificarQualisEmPublicacoes() # obrigatorio
+		novoGrupo.calcularInternacionalizacao() # obrigatorio
 		novoGrupo.imprimirMatrizesDeFrequencia() 
 
 		novoGrupo.gerarGrafosDeColaboracoes() # obrigatorio
@@ -56,35 +59,48 @@ if __name__ == "__main__":
 		print "- "+str(novoGrupo.listaDeRotulos)
 		print "- "+str(novoGrupo.listaDeRotulosCores)
 
-		novoGrupo.calcularInternacionalizacao() # obrigatorio
 		novoGrupo.gerarGraficosDeBarras() # obrigatorio
 		novoGrupo.gerarMapaDeGeolocalizacao() # obrigatorio
 		novoGrupo.gerarPaginasWeb() # obrigatorio
+
+		novoGrupo.gerarXMLdeGrupo()
+		novoGrupo.gerarCSVdeQualisdeGrupo()
+		novoGrupo.gerarRISdeGrupo()
 
 		# copiar imagens e css
 		copiarArquivos(novoGrupo.obterParametro('global-diretorio_de_saida'))
 
 		# finalizando o processo
-		print '\n[AVISO] scriptLattes executado!'
-		print '[AVISO] Quem vê \'Lattes\', não vê coração! B-)'
-		print '[AVISO] Por favor, cadastre-se na página: http://scriptlattes.sourceforge.net\n'
+		#print '[AVISO] Quem vê \'Lattes\', não vê coração! B-)'
+		#print '[AVISO] Por favor, cadastre-se na página: http://scriptlattes.sourceforge.net\n'
+		print '\n\n\n[COMO REFERENCIAR ESTE TRABALHO]'
+		print '    Jesus P. Mena-Chalco e Roberto M. Cesar-Jr.'
+		print '    scriptLattes: An open-source knowledge extraction system from the Lattes Platform.'
+		print '    Journal of the Brazilian Computer Society, vol.15, n.4, páginas 31-39, 2009.'
+
+		print '\n\nscriptLattes executado!'
 
 # ---------------------------------------------------------------------------- #
-def compararCadeias(str1, str2):
+def compararCadeias(str1, str2, qualis=False):
 	str1 = str1.strip().lower()
 	str2 = str2.strip().lower()
 
 	if len(str1)==0 or len(str2)==0:
 		return 0
 	
-	if len(str1)>=50 and len(str2)>=50 and (str1 in str2 or str2 in str1):
+	if len(str1)>=20 and len(str2)>=20 and (str1 in str2 or str2 in str1):
 		return 1
 
-	# if len(str1)>=10 and len(str2)>=10 and Levenshtein.ratio(str1, str2)>=0.85:
-	if len(str1)>=10 and len(str2)>=10 and Levenshtein.distance(str1, str2)<=5:
-		return 1
+	if qualis:
+		dist = Levenshtein.ratio(str1, str2)
+		if len(str1)>=10 and len(str2)>=10 and dist>=0.80:
+			#return 1
+			return dist
+
 	else:
-		return 0
+		if len(str1)>=10 and len(str2)>=10 and Levenshtein.distance(str1, str2)<=5:
+			return 1
+	return 0
 
 def criarDiretorio(dir):
 	if not os.path.exists(dir):

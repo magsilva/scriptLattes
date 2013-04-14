@@ -60,6 +60,8 @@ class Qualis:
 
 
 	def buscaQualis(self, tipo, nome):
+		dist  = 0
+		indice = 0
 		# Percorrer lista de periodicos tentando casar com nome usando funcao compararCadeias(str1, str2) de scriptLattes.py
 		if tipo=='P':
 			if self.periodicos.get(nome)!=None:
@@ -67,16 +69,24 @@ class Qualis:
 			else:
 				chaves = self.periodicos.keys()
 				for i in range(0,len(chaves)):
-					if compararCadeias( nome, chaves[i], qualis=True ): # comparamos: nome com cada nome de periodico
-						return self.periodicos.get(chaves[i]) , chaves[i]	# Retorna Qualis de nome similar
+					distI = compararCadeias( nome, chaves[i], qualis=True)
+					if distI>dist: # comparamos: nome com cada nome de periodico
+						indice = i
+						dist = distI
+				if indice>0:
+						return self.periodicos.get(chaves[indice]) , chaves[indice]	# Retorna Qualis de nome similar
 		else:
 			if self.congressos.get(nome)!=None:
 				return self.congressos.get(nome) , '' # Retorna Qualis do nome exato encontrado - Casamento perfeito
 			else:
 				chaves = self.congressos.keys()
 				for i in range(0,len(chaves)):
-					if compararCadeias( nome, chaves[i], qualis=True ): # comparamos: nome com cada nome de evento
-						return self.congressos.get(chaves[i]) , chaves[i]	# Retorna Qualis de nome similar
+					distI = compararCadeias( nome, chaves[i], qualis=True)
+					if distI>dist: # comparamos: nome com cada nome de evento
+						indice = i
+						dist = distI
+				if indice>0:
+					return self.congressos.get(chaves[indice]) , chaves[indice]	# Retorna Qualis de nome similar
 		#return 'Qualis nao identificado', ''
 		return 'Qualis nao identificado', nome
 
