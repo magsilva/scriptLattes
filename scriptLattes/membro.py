@@ -210,9 +210,9 @@ class Membro:
 						arquivoH = urllib2.urlopen(req) 
 						cvLattesHTML = arquivoH.read()
 						arquivoH.close()
-						time.sleep(1)
+						time.sleep(10)
 
-						if len(cvLattesHTML)<=1000:
+						if len(cvLattesHTML)<=2000:
 							print '[AVISO] O scriptLattes tentará baixar novamente o seguinte CV Lattes: ', self.url
 							time.sleep(30)
 							tentativa+=1

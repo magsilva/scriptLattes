@@ -121,7 +121,7 @@ class Grupo:
 
 		self.diretorioDoi = self.obterParametro('global-diretorio_de_armazenamento_de_doi')
 		if self.diretorioDoi == '':
-			self.diretorioDoi = os.path.expanduser(os.path.join("~", ".scriptlattes", "cacheDoi"))
+			self.diretorioDoi = os.path.expanduser(os.path.join("~", ".scriptLattes", "cacheDoi"))
 		if not self.diretorioDoi == '':
 			criarDiretorio(self.diretorioDoi)
 
