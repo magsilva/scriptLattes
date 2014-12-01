@@ -46,13 +46,17 @@ class CompiladorDeListas:
 	matrizTrabalhoTecnico = None
 	matrizOutroTipoDeProducaoTecnica = None
 	matrizProducaoArtistica = None
-
+	
+	matrizPatente = None
+	matrizProgramaComputador = None
+	matrizDesenhoIndustrial = None
 	
 	def __init__(self, grupo):
 		self.grupo = grupo
 
 		self.listaCompletaPB = {}
 		self.listaCompletaPT = {}
+		self.listaCompletaPR = {}
 		self.listaCompletaPA = {}
 		self.listaCompletaOA = {}
 		self.listaCompletaOC = {}
@@ -75,6 +79,10 @@ class CompiladorDeListas:
 		self.listaCompletaTrabalhoTecnico = {}
 		self.listaCompletaOutroTipoDeProducaoTecnica = {}
 
+		self.listaCompletaPatente = {}
+		self.listaCompletaProgramaComputador = {}
+		self.listaCompletaDesenhoIndustrial = {}
+						
 		self.listaCompletaProducaoArtistica = {}
 
 		self.listaCompletaOASupervisaoDePosDoutorado = {}
@@ -119,7 +127,12 @@ class CompiladorDeListas:
 			self.listaCompletaProcessoOuTecnica           = self.compilarLista(membro.listaProcessoOuTecnica, self.listaCompletaProcessoOuTecnica)
 			self.listaCompletaTrabalhoTecnico             = self.compilarLista(membro.listaTrabalhoTecnico, self.listaCompletaTrabalhoTecnico)
 			self.listaCompletaOutroTipoDeProducaoTecnica  = self.compilarLista(membro.listaOutroTipoDeProducaoTecnica, self.listaCompletaOutroTipoDeProducaoTecnica)
+			
+			self.listaCompletaPatente          			  = self.compilarLista(membro.listaPatente, self.listaCompletaPatente)
+			self.listaCompletaProgramaComputador		  = self.compilarLista(membro.listaProgramaComputador, self.listaCompletaProgramaComputador)
+			self.listaCompletaDesenhoIndustrial		  	  = self.compilarLista(membro.listaDesenhoIndustrial, self.listaCompletaDesenhoIndustrial)
 
+			
 			self.listaCompletaProducaoArtistica           = self.compilarLista(membro.listaProducaoArtistica, self.listaCompletaProducaoArtistica)
 
 			self.listaCompletaOASupervisaoDePosDoutorado  = self.compilarLista(membro.listaOASupervisaoDePosDoutorado, self.listaCompletaOASupervisaoDePosDoutorado)
@@ -181,6 +194,13 @@ class CompiladorDeListas:
 		if self.grupo.obterParametro('relatorio-incluir_outro_tipo_de_producao_tecnica'):
 			self.listaCompletaPT = self.compilarListasCompletas(self.listaCompletaOutroTipoDeProducaoTecnica, self.listaCompletaPT)
 
+		if self.grupo.obterParametro('relatorio-incluir_patente'):
+			self.listaCompletaPR = self.compilarListasCompletas(self.listaCompletaPatente, self.listaCompletaPR)
+		if self.grupo.obterParametro('relatorio-incluir_programa_computador'):
+			self.listaCompletaPR = self.compilarListasCompletas(self.listaCompletaProgramaComputador, self.listaCompletaPR)
+		if self.grupo.obterParametro('relatorio-incluir_desenho_industrial'):
+			self.listaCompletaPR = self.compilarListasCompletas(self.listaCompletaDesenhoIndustrial, self.listaCompletaPR)
+
 		if self.grupo.obterParametro('relatorio-incluir_producao_artistica'):
 			self.listaCompletaPA = self.compilarListasCompletas(self.listaCompletaProducaoArtistica, self.listaCompletaPA)
 
@@ -218,7 +238,7 @@ class CompiladorDeListas:
 
 	def compilarLista(self, listaDoMembro, listaCompleta):
 		for pub in listaDoMembro: # adicionar 'pub'  em  'listaCompleta'
-			if listaCompleta.get(pub.ano)==None:   # Se o ano nao existe no listaCompleta (lista total)
+			if pub == None or listaCompleta.get(pub.ano)==None:   # Se o ano nao existe no listaCompleta (lista total)
 				listaCompleta[pub.ano] = []        # criamos uma nova entrada vazia
 				listaCompleta[pub.ano].append(pub)
 			else:
@@ -291,6 +311,13 @@ class CompiladorDeListas:
 		if self.grupo.obterParametro('grafo-incluir_outro_tipo_de_producao_tecnica'):
 			self.matrizesOutroTipoDeProducaoTecnica = self.criarMatrizes(self.listaCompletaOutroTipoDeProducaoTecnica)
 
+		if self.grupo.obterParametro('grafo-incluir_patente'):
+			self.matrizesPatente = self.criarMatrizes(self.listaCompletaPatente)
+		if self.grupo.obterParametro('grafo-incluir_programa_computador'):
+			self.matrizesProgramaComputador = self.criarMatrizes(self.listaCompletaProgramaComputador)
+		if self.grupo.obterParametro('grafo-incluir_desenho_industrial'):
+			self.matrizesDesenhoIndustrial = self.criarMatrizes(self.listaCompletaDesenhoIndustrial)
+			
 		if self.grupo.obterParametro('grafo-incluir_producao_artistica'):
 			self.matrizesProducaoArtistica = self.criarMatrizes(self.listaCompletaProducaoArtistica)
 
@@ -395,6 +422,18 @@ class CompiladorDeListas:
 			matriz1 += self.matrizesOutroTipoDeProducaoTecnica[0]
 			matriz2 += self.matrizesOutroTipoDeProducaoTecnica[1]
 
+		if self.grupo.obterParametro('grafo-incluir_patente'):
+			matriz1 += self.matrizesPatente[0]
+			matriz2 += self.matrizesPatente[1]
+
+		if self.grupo.obterParametro('grafo-incluir_programa_computador'):
+			matriz1 += self.matrizesProgramaComputador[0]
+			matriz2 += self.matrizesProgramaComputador[1]
+
+		if self.grupo.obterParametro('grafo-incluir_desenho_industrial'):
+			matriz1 += self.matrizesDesenhoIndustrial[0]
+			matriz2 += self.matrizesDesenhoIndustrial[1]
+			
 		if self.grupo.obterParametro('grafo-incluir_producao_artistica'):
 			matriz1 += self.matrizesProducaoArtistica[0]
 			matriz2 += self.matrizesProducaoArtistica[1]
@@ -437,6 +476,14 @@ class CompiladorDeListas:
 		print self.matrizTrabalhoTecnico
 		print "\nOutro tipo de producao tecnica"
 		print self.matrizOutroTipoDeProducaoTecnica
+
+		print "\nPatente"
+		print self.matrizPatente
+		print "\nPrograma de computador"
+		print self.matrizProgramaComputador
+		print "\nDesenho industrial"
+		print self.matrizDesenhoIndustrial		
+		
 		print "\nProducao artistica"
 		print self.matrizProducaoArtistica
 
@@ -480,6 +527,16 @@ class CompiladorDeListas:
 		self.imprimirListaProducoes(self.listaCompletaOutroTipoDeProducaoTecnica)
 		print "\nTOTAL DE PT" 
 		self.imprimirListaProducoes(self.listaCompletaPT)
+
+		print "\nPatente"
+		self.imprimirListaProducoes(self.listaCompletaPatente)
+		print "\nPrograma de computador"
+		self.imprimirListaProducoes(self.listaCompletaProgramaComputador)
+		print "\nDesenho industrial"
+		self.imprimirListaProducoes(self.listaCompletaDesenhoIndustrial)
+		print "\nTOTAL DE PR" 
+		self.imprimirListaProducoes(self.listaCompletaPR)
+
 
 		print "\nProducao artistica"
 		self.imprimirListaProducoes(self.listaCompletaProducaoArtistica)

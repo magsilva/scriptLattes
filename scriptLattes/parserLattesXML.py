@@ -63,6 +63,9 @@ from producaoArtistica import *
 from orientacaoEmAndamento import *
 from orientacaoConcluida import *
 
+from patente import *
+from programaComputador import *
+from desenhoIndustrial import *
 
 class ParserLattesXML(HTMLParser):
 	item = None

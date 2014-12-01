@@ -45,17 +45,19 @@ class PremioOuTitulo:
 
 
 	def compararCom(self, objeto):
-		if self.idMembro.isdisjoint(objeto.idMembro) and compararCadeias(self.descricao, objeto.descricao):
-			# Os IDs dos membros são agrupados. 
-			# Essa parte é importante para a criação do GRAFO de colaborações
-			self.idMembro.update(objeto.idMembro)
-
-			if len(self.descricao)<len(objeto.descricao):
-				self.descricao = objeto.descricao
-
-			return self
-		else: # nao similares
-			return None
+		return None
+		# Prêmios considerados de forma individual
+		#if self.idMembro.isdisjoint(objeto.idMembro) and compararCadeias(self.descricao, objeto.descricao):
+		#	# Os IDs dos membros são agrupados. 
+		#	# Essa parte é importante para a criação do GRAFO de colaborações
+		#	self.idMembro.update(objeto.idMembro)
+		#
+		#	if len(self.descricao)<len(objeto.descricao):
+		#		self.descricao = objeto.descricao
+		#
+		#	return self
+		#else: # nao similares
+		#	return None
 
 
 	def html(self, listaDeMembros):

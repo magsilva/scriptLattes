@@ -93,6 +93,11 @@ class Membro:
 	listaTrabalhoTecnico = []
 	listaOutroTipoDeProducaoTecnica = []
 
+	# Patentes e registros
+	listaPatente = []
+	listaProgramaComputador = []
+	listaDesenhoIndustrial = []	
+	
 	# Produção artística/cultural
 	listaProducaoArtistica = []
 
@@ -118,6 +123,9 @@ class Membro:
 	listaParticipacaoEmEvento = []
 	listaOrganizacaoDeEvento = []
 
+	rotuloCorFG = ''
+	rotuloCorBG = ''
+
 	###def __init__(self, idMembro, identificador, nome, periodo, rotulo, itemsDesdeOAno, itemsAteOAno, xml=''):
 	def __init__(self, idMembro, identificador, nome, periodo, rotulo, itemsDesdeOAno, itemsAteOAno, diretorioCache):
 		self.idMembro = idMembro
@@ -125,6 +133,8 @@ class Membro:
 		self.nomeInicial = nome
 		self.periodo = periodo
 		self.rotulo = rotulo
+		self.rotuloCorFG = '#000000'
+		self.rotuloCorBG = '#FFFFFF'
 	
 		p = re.compile('[a-zA-Z]+')
 		
@@ -165,36 +175,31 @@ class Membro:
 		
 
 	def carregarDadosCVLattes(self):
-		cvPath = self.diretorioCache+'/'+self.idLattes
+		useCache = False
+		cvFound = False
+		cvPath = os.path.join(self.diretorioCache, self.idLattes)
+		extended_chars = u''.join(unichr(c) for c in xrange(127, 65536, 1)) # srange(r"[\0x80-\0x7FF]")
+		special_chars = ' -'''
 
-		if 'xml' in cvPath:
-			arquivoX = open(cvPath)
-			cvLattesXML = arquivoX.read()
-			arquivoX.close()
-
-			extended_chars= u''.join(unichr(c) for c in xrange(127, 65536, 1)) # srange(r"[\0x80-\0x7FF]")
-			special_chars = ' -'''
-			cvLattesXML   = cvLattesXML.decode('iso-8859-1','replace')+extended_chars+special_chars
-			parser        = ParserLattesXML(self.idMembro, cvLattesXML)
-
-			self.idLattes = parser.idLattes
-			self.url      = parser.url
-			print "(*) Utilizando CV armazenado no cache: "+cvPath
-
-		else:
-			if os.path.exists(cvPath):
-				arquivoH = open(cvPath)
-				cvLattesHTML = arquivoH.read()
-				if self.idMembro!='':
-					print "(*) Utilizando CV armazenado no cache: "+cvPath
+		# Tenta obter CV do cache
+		if os.path.exists(cvPath):
+			mtime = os.path.getmtime(cvPath)
+			currentTime = datetime.datetime.now()
+			currentTimeEpoch = time.mktime(currentTime.timetuple()) + currentTime.microsecond / 1E6
+			if abs(currentTimeEpoch - mtime) < float(60 * 60 * 7):
+				useCache = True
+				print "(*) Utilizando CV armazenado no cache: " + cvPath
 			else:
-				cvLattesHTML = ''
-				tentativa = 0
-				while tentativa<5:
-				#while True:
-					try:
-						txdata = None
-						txheaders = {   
+				print "(*) Ignorando CV armazenado no cache (muito velho) " + cvPath
+
+		# Se não encontrou no cache, tanta obter do sistema Web (CV Lattes)
+		if useCache == False:
+			cvLattesHTML = ''
+			tentativa = 0
+			while tentativa < 5 and cvFound == False:
+				try:
+					txdata = None
+					txheaders = {   
 						'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64; rv:2.0) Gecko/20100101 Firefox/4.0',
 						'Accept-Language': 'en-us,en;q=0.5',
 						'Accept-Encoding': 'deflate',
@@ -202,52 +207,60 @@ class Membro:
 						'Connection': 'keep-alive',
 						'Cache-Control': 'max-age=0',
 						'Cookie': 'style=standard; __utma=140185953.294397416.1313390179.1313390179.1317145115.2; __utmz=140185953.1317145115.2.2.utmccn=(referral)|utmcsr=emailinstitucional.cnpq.br|utmcct=/ei/emailInstitucional.do|utmcmd=referral; JSESSIONID=1B98ABF9642E01597AABA0F7A8807FD1.node2',
-						}
-		
-						print "Baixando CV :"+self.url
+					}
+	
+					print "Baixando CV :"+self.url
+					req = urllib2.Request(self.url, txdata, txheaders) # Young folks by P,B&J!
+					arquivoH = urllib2.urlopen(req) 
+					cvLattesHTML = arquivoH.read()
+					arquivoH.close()
+					if len(cvLattesHTML) <= 2000:
+						print '[AVISO] O scriptLattes tentará baixar novamente o seguinte CV Lattes: ', self.url
+						time.sleep(10)
+						tentativa += 1
+					else:
+						file = open(cvPath, 'w')
+						file.write(cvLattesHTML)
+						file.close()
+						cvFound = True
+						print " (*) O CV está sendo armazenado no Cache"
+				### except urllib2.URLError: ###, e:
+				except:
+					print '[AVISO] Nao é possível obter o CV Lattes: ', self.url
+					print '[AVISO] Certifique-se que o CV existe. O scriptLattes tentará baixar o CV em 30 segundos...'
+					###print '[ERRO] Código de erro: ', e.code
+					time.sleep(30)
+					tentativa += 1
 
-						req = urllib2.Request(self.url, txdata, txheaders) # Young folks by P,B&J!
-						arquivoH = urllib2.urlopen(req) 
-						cvLattesHTML = arquivoH.read()
-						arquivoH.close()
-						time.sleep(1)
 
-						if len(cvLattesHTML)<=1000:
-							print '[AVISO] O scriptLattes tentará baixar novamente o seguinte CV Lattes: ', self.url
-							time.sleep(30)
-							tentativa+=1
-							continue
+		if not cvFound:
+			raise Exception("Error download CV at " + self.url)
 
-						if not self.diretorioCache=='':
-							file = open(cvPath, 'w')
-							file.write(cvLattesHTML)
-							file.close()
-							print " (*) O CV está sendo armazenado no Cache"
-						break
-
-					### except urllib2.URLError: ###, e:
-					except:
-						print '[AVISO] Nao é possível obter o CV Lattes: ', self.url
-						print '[AVISO] Certifique-se que o CV existe. O scriptLattes tentará baixar o CV em 30 segundos...'
-						###print '[ERRO] Código de erro: ', e.code
-						time.sleep(30)
-						tentativa+=1
-						continue
-
+		# CV found, now let's prepare the parser
+		if 'xml' in cvPath:
+			arquivoX = open(cvPath)
+			cvLattesXML = arquivoX.read()
+			arquivoX.close()
 			extended_chars= u''.join(unichr(c) for c in xrange(127, 65536, 1)) # srange(r"[\0x80-\0x7FF]")
 			special_chars = ' -'''
-			#cvLattesHTML  = cvLattesHTML.decode('ascii','replace')+extended_chars+special_chars                                          # Wed Jul 25 16:47:39 BRT 2012
+			cvLattesXML   = cvLattesXML.decode('iso-8859-1','replace')+extended_chars+special_chars
+			parser        = ParserLattesXML(self.idMembro, cvLattesXML)
+			self.idLattes = parser.idLattes
+			self.url      = parser.url
+		else:
+			arquivoH = open(cvPath)
+			cvLattesHTML = arquivoH.read()
+			arquivoH.close()
 			cvLattesHTML  = cvLattesHTML.decode('iso-8859-1','replace')+extended_chars+special_chars
 			parser        = ParserLattes(self.idMembro, cvLattesHTML)
-			
 			p = re.compile('[a-zA-Z]+');
 			if p.match(self.idLattes):
-			  self.identificador10 = self.idLattes
-			  self.idLattes = parser.identificador16
-			  self.url = 'http://lattes.cnpq.br/'+self.idLattes
-			
-		# -----------------------------------------------------------------------------------------
-		# Obtemos todos os dados do CV Lattes
+				self.identificador10 = self.idLattes
+				self.idLattes = parser.identificador16
+				self.url = 'http://lattes.cnpq.br/'+self.idLattes
+				# Obtemos todos os dados do CV Lattes
+
+		# Parser ready to rock!
 		self.nomeCompleto                 = parser.nomeCompleto
 		self.bolsaProdutividade           = parser.bolsaProdutividade
 		self.enderecoProfissional         = parser.enderecoProfissional
@@ -285,6 +298,11 @@ class Membro:
 		self.listaTrabalhoTecnico             = parser.listaTrabalhoTecnico
 		self.listaOutroTipoDeProducaoTecnica  = parser.listaOutroTipoDeProducaoTecnica
 
+		# Patentes e registros	
+		self.listaPatente          			  = parser.listaPatente
+		self.listaProgramaComputador          = parser.listaProgramaComputador
+		self.listaDesenhoIndustrial           = parser.listaDesenhoIndustrial
+				
 		# Produção artística
 		self.listaProducaoArtistica = parser.listaProducaoArtistica
 
@@ -332,6 +350,10 @@ class Membro:
 		self.listaTrabalhoTecnico                  = self.filtrarItems(self.listaTrabalhoTecnico)
 		self.listaOutroTipoDeProducaoTecnica       = self.filtrarItems(self.listaOutroTipoDeProducaoTecnica)
 
+		self.listaPatente			               = self.filtrarItems(self.listaPatente)
+		self.listaProgramaComputador               = self.filtrarItems(self.listaProgramaComputador)
+		self.listaDesenhoIndustrial	               = self.filtrarItems(self.listaDesenhoIndustrial)
+		
 		self.listaProducaoArtistica                = self.filtrarItems(self.listaProducaoArtistica)
 
 		self.listaOASupervisaoDePosDoutorado       = self.filtrarItems(self.listaOASupervisaoDePosDoutorado)
@@ -369,7 +391,7 @@ class Membro:
 		
 	def estaDentroDoPeriodo(self, objeto):
 		if objeto.__module__=='orientacaoEmAndamento':
-			objeto.ano = int(objeto.ano)
+			objeto.ano = int(objeto.ano) if objeto.ano else 0 # Caso
 			if objeto.ano > self.itemsAteOAno:
 				return 0
 			else:
@@ -425,7 +447,7 @@ class Membro:
 		s = ''
 		s+= '\nTY  - MEMBRO'
 		s+= '\nNOME  - '+self.nomeCompleto
-		s+= '\nSEXO  - '+self.sexo
+		#s+= '\nSEXO  - '+self.sexo
 		s+= '\nCITA  - '+self.nomeEmCitacoesBibliograficas
 		s+= '\nBOLS  - '+self.bolsaProdutividade
 		s+= '\nENDE  - '+self.enderecoProfissional
@@ -561,6 +583,18 @@ class Membro:
 				s += pub.__str__()
 
 			s += "\n"
+			for pub in self.listaPatente:
+				s += pub.__str__()
+
+			s += "\n"
+			for pub in self.listaProgramaComputador:
+				s += pub.__str__()
+
+			s += "\n"
+			for pub in self.listaDesenhoIndustrial:
+				s += pub.__str__()
+
+			s += "\n"
 			for pub in self.listaProducaoArtistica:
 				s += pub.__str__()
 		
@@ -582,6 +616,9 @@ class Membro:
 			s += "\n- Processos ou técnicas                       : " + str(len(self.listaProcessoOuTecnica))
 			s += "\n- Trabalhos técnicos                          : " + str(len(self.listaTrabalhoTecnico))
 			s += "\n- Demais tipos de produção técnica            : " + str(len(self.listaOutroTipoDeProducaoTecnica))
+			s += "\n- Patente                                     : " + str(len(self.listaPatente))
+			s += "\n- Programa de computador                      : " + str(len(self.listaProgramaComputador))
+			s += "\n- Desenho industrial                          : " + str(len(self.listaDesenhoIndustrial))									
 			s += "\n- Produção artística/cultural                 : " + str(len(self.listaProducaoArtistica))
 			s += "\n- Orientações em andamento"
 			s += "\n  . Supervições de pos doutorado              : " + str(len(self.listaOASupervisaoDePosDoutorado))

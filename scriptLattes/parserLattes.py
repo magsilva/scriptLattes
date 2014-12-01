@@ -54,6 +54,11 @@ from produtoTecnologico import *
 from processoOuTecnica import *
 from trabalhoTecnico import *
 from outroTipoDeProducaoTecnica import *
+
+from patente import *
+from programaComputador import *
+from desenhoIndustrial import *
+
 from producaoArtistica import *
 
 from orientacaoEmAndamento import *
@@ -114,7 +119,6 @@ class ParserLattes(HTMLParser):
 	recuperarIdentificador16 = None
 
 
-
 	achouGrupo = None
 	achouEnderecoProfissional = None
 	achouSexo = None
@@ -142,6 +146,13 @@ class ParserLattes(HTMLParser):
 	achouProcessoOuTecnica = None
 	achouTrabalhoTecnico = None
 	achouOutroTipoDeProducaoTecnica = None
+
+	achouPatente = None
+	achouProgramaComputador = None
+	achouDesenhoIndustrial = None
+	achouPatenteRegistro = None
+
+	
 	achouProducaoArtistica = None
 
 	achouOrientacoesEmAndamento	= None
@@ -184,6 +195,11 @@ class ParserLattes(HTMLParser):
 	listaProcessoOuTecnica = []
 	listaTrabalhoTecnico = []
 	listaOutroTipoDeProducaoTecnica = []
+
+	listaPatente = []
+	listaProgramaComputador = []
+	listaDesenhoIndustrial = []
+		
 	listaProducaoArtistica = []
 
 	# Orientaççoes em andamento (OA)
@@ -213,6 +229,8 @@ class ParserLattes(HTMLParser):
 	relevante = 0
 	umaUnidade = 0
 	idOrientando = None
+	citado = 0
+	complemento = ''
 
 	# ------------------------------------------------------------------------ #
 	def __init__(self, idMembro, cvLattesHTML):
@@ -221,6 +239,7 @@ class ParserLattes(HTMLParser):
 		# inicializacao obrigatoria
 		self.idMembro = idMembro
 		self.sexo = 'Masculino'
+		self.nomeCompleto = u'[Nome-nao-identificado]'
 
 		self.item = ''
 		self.listaIDLattesColaboradores = []
@@ -247,6 +266,11 @@ class ParserLattes(HTMLParser):
 		self.listaProcessoOuTecnica = []
 		self.listaTrabalhoTecnico = []
 		self.listaOutroTipoDeProducaoTecnica = []
+
+		self.listaPatente = []
+		self.listaProgramaComputador = []
+		self.listaDesenhoIndustrial = []
+				
 		self.listaProducaoArtistica = []
 
 		self.listaOASupervisaoDePosDoutorado = []
@@ -277,10 +301,13 @@ class ParserLattes(HTMLParser):
 		self.doi = ''
 		self.relevante = 0
 		self.idOrientando = ''
+		self.complemento = ''
 
 		# contornamos alguns erros do HTML da Plataforma Lattes
 		cvLattesHTML = cvLattesHTML.replace("<![CDATA[","")
 		cvLattesHTML = cvLattesHTML.replace("]]>","")
+		cvLattesHTML = cvLattesHTML.replace("<x<","&lt;x&lt;")
+		cvLattesHTML = cvLattesHTML.replace("<X<","&lt;X&lt;")
 
 		# feed it!
 		cvLattesHTML, errors = tidy_document(cvLattesHTML, options={'numeric-entities':1})
@@ -323,6 +350,8 @@ class ParserLattes(HTMLParser):
 			self.item = ''
 
 		if tag=='div':
+			self.citado = 0
+
 			for name, value in attributes:
 				if name=='class' and value=='title-wrapper':
 					self.umaUnidade = 1	
@@ -354,6 +383,13 @@ class ParserLattes(HTMLParser):
 						if not self.salvarParte3:
 							self.partesDoItem = []
 
+				if name=='class' and (value=='citacoes' or value=='citado'):
+					self.citado = 1
+
+				if name=='cvuri' and self.citado:
+					self.citado = 0
+					self.complemento = value.replace("/buscatextual/servletcitacoes?","")
+
 
 		if tag=='h1' and self.umaUnidade: 
 			self.procurarCabecalho = 1
@@ -377,7 +413,7 @@ class ParserLattes(HTMLParser):
 			self.achouOrientacoes = 0
 			self.achouOutrasInformacoesRelevantes = 0
 			self.salvarItem = 0
-
+			self.achouPatenteRegistro = 0
 
 		if tag=='img':
 			if self.salvarFoto: 
@@ -506,13 +542,27 @@ class ParserLattes(HTMLParser):
 						iessimoPremio = PremioOuTitulo(self.idMembro, self.partesDoItem) # criamos um objeto com a lista correspondentes às celulas da linha
 						self.listaPremioOuTitulo.append(iessimoPremio) # acrescentamos o objeto de PremioOuTitulo
 
+
+					if self.achouPatenteRegistro:
+						#print "===>>>> PROCESSANDO PATENTE e REGISTRO"
+						if self.achouPatente:
+ 							iessimoItem = Patente(self.idMembro, self.partesDoItem, self.relevante)
+							self.listaPatente.append(iessimoItem)    
+						if self.achouProgramaComputador:
+ 							iessimoItem = ProgramaComputador(self.idMembro, self.partesDoItem, self.relevante)
+							self.listaProgramaComputador.append(iessimoItem)
+						if self.achouDesenhoIndustrial:
+ 							iessimoItem = DesenhoIndustrial(self.idMembro, self.partesDoItem, self.relevante)
+							self.listaDesenhoIndustrial.append(iessimoItem)
+
 					if self.achouProducoes:
 						if self.achouProducaoEmCTA:
 							if self.achouArtigoEmPeriodico:
- 	 							iessimoItem = ArtigoEmPeriodico(self.idMembro, self.partesDoItem, self.doi, self.relevante)
+ 	 							iessimoItem = ArtigoEmPeriodico(self.idMembro, self.partesDoItem, self.doi, self.relevante, self.complemento)
 								self.listaArtigoEmPeriodico.append(iessimoItem)
 								self.doi = ''
 								self.relevante = 0
+								self.complemento = ''
     
 							if self.achouLivroPublicado:
 	 	 						iessimoItem = LivroPublicado(self.idMembro, self.partesDoItem, self.relevante)
@@ -591,6 +641,7 @@ class ParserLattes(HTMLParser):
 							if self.achouOutraProducaoArtisticaCultural:
  								iessimoItem = ProducaoArtistica(self.idMembro, self.partesDoItem, self.relevante)
 								self.listaProducaoArtistica.append(iessimoItem)
+
 
 					#if self.achouBancas:
 
@@ -702,10 +753,12 @@ class ParserLattes(HTMLParser):
 				self.achouEventos = 1
 			if u'Orientações'==dado:
 				self.achouOrientacoes = 1
+			if u'Patentes e registros'== dado:
+				self.achouPatenteRegistro = 1
+				#print "0==>>>>ACHOU PATENTE e REGISTRO"	
 			if u'Outras informações relevantes'==dado:
 				self.achouOutrasInformacoesRelevantes = 1
-			self.umaUnidade = 0
-			
+			self.umaUnidade = 0	
 		if self.achouIdentificacao:
 			if u'Nome em citações bibliográficas'==dado:
 				self.achouNomeEmCitacoes = 1
@@ -716,6 +769,25 @@ class ParserLattes(HTMLParser):
 			if u'Endereço Profissional'==dado:
 				self.achouEnderecoProfissional = 1
 
+		if self.achouPatenteRegistro:
+			if u'Patente'==dado:
+				self.salvarItem = 1
+				self.achouPatente = 1
+				self.achouProgramaComputador = 0
+				self.achouDesenhoIndustrial = 0					
+				#print "1==>>>>ACHOU PATENTE e REGISTRO"				
+			if u'Programa de computador'==dado:
+				self.salvarItem = 1
+				self.achouPatente = 0
+				self.achouProgramaComputador = 1
+				self.achouDesenhoIndustrial = 0	
+				#print "2==>>>>ACHOU PATENTE e REGISTRO"
+			if u'Desenho industrial'==dado:
+				self.salvarItem = 1
+				self.achouPatente = 0
+				self.achouProgramaComputador = 0
+				self.achouDesenhoIndustrial = 1			
+			
 		if self.achouProducoes:
 			if u'Produção bibliográfica'==dado:
 				self.achouProducaoEmCTA = 1
@@ -859,6 +931,7 @@ class ParserLattes(HTMLParser):
 					self.achouArtigoAceito = 0
 					self.achouApresentacaoDeTrabalho = 0
 					self.achouOutroTipoDeProducaoBibliografica = 1
+
 
 			if self.achouProducaoTecnica:
 				#if u'Softwares com registro de patente'==dado:

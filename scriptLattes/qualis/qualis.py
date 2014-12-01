@@ -59,12 +59,16 @@ class Qualis:
 		return qtd
 
 
-	def buscaQualis(self, tipo, nome):
+	def buscaQualis(self, tipo, nome, sigla=''):
 		dist  = 0
 		indice = 0
 		# Percorrer lista de periodicos tentando casar com nome usando funcao compararCadeias(str1, str2) de scriptLattes.py
 		if tipo=='P':
-			if self.periodicos.get(nome)!=None:
+			if self.periodicos.get(sigla)!=None:
+				# print "CASOU ISSN: ", nome, sigla
+				return self.periodicos.get(sigla) , ''	# Retorna Qualis do issn/sigla exato encontrado - Casamento perfeito
+			elif self.periodicos.get(nome)!=None:
+				#print "CASOU NOME: ", nome, sigla
 				return self.periodicos.get(nome) , ''	# Retorna Qualis do nome exato encontrado - Casamento perfeito
 			else:
 				chaves = self.periodicos.keys()
@@ -96,7 +100,7 @@ class Qualis:
 		# Percorrer lista de publicacoes buscando e contabilizando os qualis
 		if (not grupo.obterParametro('global-arquivo_qualis_de_periodicos')==''):
 			for pub in membro.listaArtigoEmPeriodico:
-				qualis, similar = self.buscaQualis('P', pub.revista)
+				qualis, similar = self.buscaQualis('P', pub.revista, pub.issn)
 				pub.qualis = qualis
 				pub.qualissimilar = similar
 
@@ -143,20 +147,23 @@ class Qualis:
 				nome   = campos[1].rstrip().decode("utf8")	# Nome do periodico ou evento
 				qualis = campos[2].rstrip()	# Estrato Qualis
 
-				nome   = self.padronizarNome(nome)
-				sigla  = self.padronizarNome(sigla)
+				#nome   = self.padronizarNome(nome)
+				#sigla  = self.padronizarNome(sigla)
+				sigla = sigla.replace("-","")
 
 				lista[nome]  = qualis
 				lista[sigla] = qualis	# Armazena a sigla/issn do evento/periodico
-	
 			print "[QUALIS]: "+str(len(lista))+" itens adicionados de "+arquivo
 		return lista
 
 
 	def padronizarNome(self, nome):
-		nome = nome.replace(u"\u00A0", " ")
-		nome = nome.replace(u"\u2010", " ")
-		nome = nome.replace(u"-"," ")
+		#nome = nome.replace(u"\u00A0", " ")
+		#nome = nome.replace(u"\u2010", " ")
+		#nome = nome.replace(u"-"," ")
+		nome = nome.replace(u"\u00A0", "")
+		nome = nome.replace(u"\u2010", "")
+		nome = nome.replace(u"-","")
 
 		#nome = re.sub(r"\(.*\)", " ", nome)
 		#nome = re.sub(r"\(", " ", nome)

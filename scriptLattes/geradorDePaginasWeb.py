@@ -26,6 +26,7 @@
 import datetime
 import re
 import math
+import unicodedata
 from graficoDeInternacionalizacao import *
 from qualis import * # Qualis
 
@@ -38,7 +39,7 @@ class GeradorDePaginasWeb:
 
 	def __init__(self, grupo):
 		self.grupo = grupo
-		self.version = 'V8.08'
+		self.version = 'V8.09'
 		self.dir = self.grupo.obterParametro('global-diretorio_de_saida')
 		
 		if self.grupo.obterParametro('global-criar_paginas_jsp'):
@@ -50,17 +51,20 @@ class GeradorDePaginasWeb:
 			self.html1 = '<html>'
 			self.html2 = '</html>'
 
-
+		# geracao de arquivo RIS com as publicacoes
 		if self.grupo.obterParametro('relatorio-salvar_publicacoes_em_formato_ris'): 
 			prefix = self.grupo.obterParametro('global-prefixo')+'-' if not self.grupo.obterParametro('global-prefixo')=='' else ''
 			self.arquivoRis = open(self.dir+"/"+prefix+"publicacoes.ris", 'w')
 
 		self.gerarPaginaDeMembros()
-
 		self.gerarPaginasDeProducoesBibliograficas()
 		self.gerarPaginasDeProducoesTecnicas()
 		self.gerarPaginasDeProducoesArtisticas()
-
+		
+		# wonder. Ainda o script esta falhando na geracao de relatorios
+		# por isso estou desativando essa funcao
+		self.gerarPaginasDePatentes()
+		
 		if self.grupo.obterParametro('relatorio-mostrar_orientacoes'):
 			self.gerarPaginasDeOrientacoes()
 
@@ -177,6 +181,17 @@ class GeradorDePaginasWeb:
 			s+= '<li> <a href="PT-0'+self.extensaoPagina+'">Total de produção técnica</a> '.decode("utf8")+'('+str(self.nPT)+')'
 		else:
 			s+= '<i>Nenhum item achado nos currículos Lattes</i>'.decode("utf8")
+
+
+		#s+='</ul> <h3 id="patenteRegistro">Patente e Registro</h3> <ul>'.decode("utf8")
+		#if self.nPR0>0:
+		#	s+= '<li> <a href="PR0-0'+self.extensaoPagina+'">Patente</a> '.decode("utf8")+'('+str(self.nPR0)+')'
+		# if self.nPR1>0:
+		#	s+= '<li> <a href="PR1-0'+self.extensaoPagina+'">Programa de computador</a> '.decode("utf8")+'('+str(self.nPR1)+')'
+		#if self.nPR2>0:
+		#	s+= '<li> <a href="PR2-0'+self.extensaoPagina+'">Desenho industrial</a> '.decode("utf8")+'('+str(self.nPR2)+')'
+		#if self.nPR0 == 0 and self.nPR1 == 0 and self.nPR2 == 0:
+		#	s+= '<i>Nenhum item achado nos currículos Lattes</i>'.decode("utf8")
 
 
 		s+='</ul> <h3 id="producaoArtistica">Produção artística</h3> <ul>'.decode("utf8")
@@ -372,6 +387,21 @@ class GeradorDePaginasWeb:
 			self.nPA0 = self.gerarPaginaDeProducoes(self.grupo.compilador.listaCompletaProducaoArtistica, "Produção artística/cultural", "PA0")
 		# Total de produções técnicas
 		self.nPA = self.gerarPaginaDeProducoes(self.grupo.compilador.listaCompletaPA, "Total de produção artística", "PA")
+
+
+	def gerarPaginasDePatentes(self):
+		self.nPR0 =0
+		self.nPR1 =0
+		self.nPR2 =0
+		self.nPR  =0
+
+		#if self.grupo.obterParametro('relatorio-incluir_patente'):
+		#	self.nPR0 = self.gerarPaginaDeProducoes(self.grupo.compilador.listaCompletaPatente, "Patente", "PR0")
+		#	self.nPR1 = self.gerarPaginaDeProducoes(self.grupo.compilador.listaCompletaProgramaComputador, "Programa de computador", "PR1")
+		#	self.nPR2 = self.gerarPaginaDeProducoes(self.grupo.compilador.listaCompletaDesenhoIndustrial, "Desenho industrial", "PR2")
+
+		# Total de produções técnicas
+		#self.nPR = self.gerarPaginaDeProducoes(self.grupo.compilador.listaCompletaPR, "Total de patentes e registros", "PR")
 
 
 	def gerarPaginasDeOrientacoes(self):
@@ -615,7 +645,7 @@ class GeradorDePaginasWeb:
         gerando os seguintes grafos de colabora&ccedil;&otilde;es encontradas com base nas produ&ccedil;&otilde;es: <i>'+lista+'</i>. <br><p>'.decode("utf8")
 
 		prefix = self.grupo.obterParametro('global-prefixo')+'-' if not self.grupo.obterParametro('global-prefixo')=='' else ''
-		s+='Veja <a href="grafoDeColaboracoesInterativo'+self.extensaoPagina+'?entradaScriptLattes=./'+prefix+'matrizDeAdjacencia.xml">na seguinte página</a> uma versão interativa do grafo de colabora&ccedil;&otilde;es.<br><p><br><p>'.decode("utf8")
+		# s+='Veja <a href="grafoDeColaboracoesInterativo'+self.extensaoPagina+'?entradaScriptLattes=./'+prefix+'matrizDeAdjacencia.xml">na seguinte página</a> uma versão interativa do grafo de colabora&ccedil;&otilde;es.<br><p><br><p>'.decode("utf8")
 
 		s+='\nClique no nome dentro do vértice para visualizar o currículo Lattes. Para cada nó: o valor entre colchetes indica o número \
         de produ&ccedil;&otilde;es feitas em colabora&ccedil;&atilde;o apenas com os outros membros do próprio grupo. <br>'.decode("utf8")
@@ -623,7 +653,7 @@ class GeradorDePaginasWeb:
 		if self.grupo.obterParametro('grafo-considerar_rotulos_dos_membros_do_grupo'):
 			s+='As cores representam os seguintes rótulos: '.decode("utf8")
 			for i in range(0, len(self.grupo.listaDeRotulos)):
-				rot = self.grupo.listaDeRotulos[i].decode("utf8")
+				rot = self.grupo.listaDeRotulos[i].decode("utf8","ignore")
 				cor = self.grupo.listaDeRotulosCores[i].decode("utf8")
 				if rot=='':
 					rot = '[Sem rótulo]'.decode("utf8")
@@ -661,7 +691,7 @@ class GeradorDePaginasWeb:
 				for i in range(0, len(self.grupo.listaDeRotulos)): 
 					somaAuthorRank = 0
 
-					rot = self.grupo.listaDeRotulos[i].decode("utf8")
+					rot = self.grupo.listaDeRotulos[i].decode("utf8","ignore")
 					cor = self.grupo.listaDeRotulosCores[i].decode("utf8")
 					s+='<b><span style="background-color:'+cor+'">&nbsp;&nbsp;&nbsp;&nbsp;</span>'+rot+'</b><br>'
 
@@ -694,16 +724,47 @@ class GeradorDePaginasWeb:
 			elemento += 1
 			bolsa = '('+membro.bolsaProdutividade+')' if not membro.bolsaProdutividade=='' else ''
 			rotulo=  membro.rotulo if not membro.rotulo=='[sem rotulo]' else ''
+			rotulo = rotulo.decode('iso-8859-1','replace')
+
+			if "-grp[" in rotulo:
+				multirotulos = rotulo.split("::")
+				rotulo = ""
+				for r in multirotulos:
+					grupoURL = "http://dgp.cnpq.br/buscaoperacional/detalhegrupo.jsp?grupo="+ re.search('\[(.*)\]', r.strip()).group(1) 
+					rotulo = rotulo + "<a href=" + grupoURL + ">" + r.strip() + "</a><br>"
+			
+
+			nomeCompleto = unicodedata.normalize('NFKD', membro.nomeCompleto).encode('ASCII', 'ignore')
+
+			#print " --------------------------------------------"
+			#print membro.nomeCompleto
+			#print type(membro.nomeCompleto)
+			#print " "
+			#nomeCompleto = membro.nomeCompleto.decode('utf8','replace')
+			#print nomeCompleto
+			#print type(nomeCompleto)
+			#print " --------------------------------------------"
+			#nomeCompleto = membro.nomeCompleto.decode('iso-8859-1','replace')
+			
+			#print str(elemento)
+			#print membro.foto
+			#print membro.url
+			#print nomeCompleto
+			#print rotulo
+			#print bolsa
+			#print membro.periodo
+			#print membro.atualizacaoCV
+
 			s+= '\n<tr> \
                      <td valign="center" height="40px">'+str(elemento)+'.</td> \
                      <td valign="top" height="40px"><img src="'+membro.foto+'" width="40px"></td> \
-                     <td><a href="'+membro.url+'">'+membro.nomeCompleto+'</a></td> \
+                     <td><a href="'+membro.url+'">'+nomeCompleto+'</a></td> \
                      <td class="centered"><font size=-1>'+rotulo+'</font></td> \
                      <td class="centered"><font size=-1>'+bolsa+'</font></td> \
                      <td class="centered"><font size=-1>'+membro.periodo+'</font></td> \
                      <td class="centered"><font size=-1>'+membro.atualizacaoCV+'</font></td> \
-                     <td class="centered"><a href="http://scholar.google.com.br/citations?view_op=search_authors&mauthors='+membro.nomeCompleto+'"><font size=-1>[ Cita&ccedil;&otilde;es em Google Acad&ecirc;mico | </font></a></td> \
-                     <td class="centered"><a href="http://academic.research.microsoft.com/Search?query=author:('+membro.nomeCompleto+')"><font size=-1>Cita&ccedil;&otilde;es em Microsoft Acad&ecirc;mico ]</font></a></td> \
+                     <td class="centered"><a href="http://scholar.google.com.br/citations?view_op=search_authors&mauthors='+nomeCompleto+'"><font size=-1>[ Cita&ccedil;&otilde;es em Google Acad&ecirc;mico | </font></a></td> \
+                     <td class="centered"><a href="http://academic.research.microsoft.com/Search?query=author:('+nomeCompleto+')"><font size=-1>Cita&ccedil;&otilde;es em Microsoft Acad&ecirc;mico ]</font></a></td> \
                  </tr>'
 		s+='\n</table>'
 		s+= self.paginaBottom()
@@ -752,9 +813,9 @@ class GeradorDePaginasWeb:
 
 		s+='\n<br>Data de processamento: '+data+'<br> \
         <div id="footer"> \
-        Este arquivo foi gerado automaticamente por <a href="http://scriptlattes.sourceforge.net/">scriptLattes '+self.version+'</a> \
-        (desenvolvido no <a href="http://cmcc.ufabc.edu.br/">CMCC-UFABC</a> e \
-        no <a href="http://ccsl.ime.usp.br/">CCSL-IME/USP</a> por <a href="http://professor.ufabc.edu.br/~jesus.mena/">Jesús P. Mena-Chalco</a> e <a href="http://www.ime.usp.br/~cesar">Roberto M. Cesar-Jr</a>). \
+        Este arquivo foi gerado automaticamente por <a href="http://scriptlattes.sourceforge.net/">scriptLattes '+self.version+'</a>. \
+		(desenvolvido no <a href="http://pesquisa.ufabc.edu.br/nuvem/">NUVEM/UFABC</a> e \
+		no <a href="http://ccsl.ime.usp.br/">CCSL-IME/USP</a> por <a href="http://professor.ufabc.edu.br/~jesus.mena/">Jesús P. Mena-Chalco</a> e <a href="http://www.ime.usp.br/~cesar">Roberto M. Cesar-Jr</a>). \
         Os resultados estão sujeitos a falhas devido a inconsistências no preenchimento dos currículos Lattes. Caso note alguma falha, por favor, contacte o responsável por esta página: <a href="mailto:'+self.grupo.obterParametro('global-email_do_admin')+'">'+self.grupo.obterParametro('global-email_do_admin')+'</a> \
         </div> \
         <script type="text/javascript">\
@@ -773,7 +834,7 @@ class GeradorDePaginasWeb:
 
 	def salvarPagina(self, nome, conteudo):
 		file = open(self.dir+"/"+nome, 'w')
- 		file.write(conteudo.encode('utf8'))
+ 		file.write(conteudo.encode('utf8','replace'))
 		file.close()
 
 

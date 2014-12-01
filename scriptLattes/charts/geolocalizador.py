@@ -236,5 +236,7 @@ class Geolocalizador:
 			return '01246000'  # Av. Dr. Arnaldo 715
 		if cep=='70770901':
 			return '70770200'  # Brasília
+		if cep=='13565905':
+			return 'DEMa Departamento de Engenharia de Materiais'  # Dema
 
 		return cep

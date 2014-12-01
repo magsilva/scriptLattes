@@ -81,6 +81,10 @@ class GeradorDeXML:
 		xmlTemp += self.getLlistaProcessoOuTecnica(registro)
 		xmlTemp += self.getListaTrabalhoTecnico(registro)
 		xmlTemp += self.getListaOutroTipoDeProducaoTecnica(registro)
+
+		xmlTemp += self.getListaPatente(registro)
+		xmlTemp += self.getListaRegistroSoftware(registro)
+		
 		xmlTemp += self.getListaProducaoArtistica(registro)
 		xmlTemp += self.getListaOASupervisaoDePosDoutorado(registro)
 		xmlTemp += self.getListaOATeseDeDoutorado(registro)
@@ -394,7 +398,32 @@ class GeradorDeXML:
 	    xmlTemp += '    </supervisao_pos_doutorado_em_andamento>\n'
 	  return xmlTemp
 
-	
+	def getListaPatente(self, registro):
+	  xmlTemp = ''
+	  if registro.listaPatente:
+	    xmlTemp += '    <patente_registro>\n'
+	    for patente in registro.listaPatente:
+	      xmlTemp += '        <patente>\n'
+	      xmlTemp += '          <titulo>' + patente.titulo + '</titulo>\n'
+	      xmlTemp += '          <autores>' + patente.autores + '</autores>\n'
+	      xmlTemp += '          <ano>' + str(patente.ano) + '</ano>\n'
+	      xmlTemp += '        </patente>\n'
+	    xmlTemp += '    </patente_registro>\n'
+	  return xmlTemp
+
+	def getListaRegistroSoftware(self, registro):
+	  xmlTemp = ''
+	  if registro.listaRegistroSoftware:
+	    xmlTemp += '    <patente_registro>\n'
+	    for patente in registro.listaRegistroSoftware:
+	      xmlTemp += '        <registro_software>\n'
+	      xmlTemp += '          <titulo>' + patente.titulo + '</titulo>\n'
+	      xmlTemp += '          <autores>' + patente.autores + '</autores>\n'
+	      xmlTemp += '          <ano>' + str(patente.ano) + '</ano>\n'
+	      xmlTemp += '        </registro_software>\n'
+	    xmlTemp += '    </patente_registro>\n'
+	  return xmlTemp
+		
 	def getListaProducaoArtistica(self, registro):
 	  xmlTemp = ''
 	  if registro.listaProducaoArtistica:
