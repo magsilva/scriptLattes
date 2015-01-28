@@ -84,7 +84,14 @@ class MapaDeGeolocalizacao:
 				membro.obterCoordenadasDeGeolocalizacao()
 				nomeCompleto = unicodedata.normalize('NFKD', membro.nomeCompleto).encode('ASCII', 'ignore')
 		 		if not membro.enderecoProfissionalLat=='0' and not membro.enderecoProfissionalLon=='0':
-					print "-", nomeCompleto , membro.url , membro.enderecoProfissionalLat , membro.enderecoProfissionalLon
+					print "-------------------------------"
+					print nomeCompleto
+					print membro.enderecoProfissional
+					print membro.enderecoProfissionalLat
+					print membro.enderecoProfissionalLon
+					print membro.url
+					print membro.foto
+
 					enderecoProfissional = unicodedata.normalize('NFKD', membro.enderecoProfissional).encode('ASCII', 'ignore')
 					self.mapa += '\n    setMarker0(map, '+membro.enderecoProfissionalLat+'+0.001*Math.random(), '+membro.enderecoProfissionalLon+'+0.001*Math.random(), "'+nomeCompleto+'", "'+enderecoProfissional+'", "'+membro.url+'", "'+membro.foto+'");'
 
@@ -152,7 +159,7 @@ class MapaDeGeolocalizacao:
 		#print "--------------------------------------------------------------------"
 		
 		self.mapa = re.sub("\'", '', self.mapa)
-		print "\n[MAPA DE GEOLOCALIZACAO CRIADO]"
+		print "[MAPA DE GEOLOCALIZACAO CRIADO]"
 
 
 	def obterNomesDosOrientadores(self, aluno, listaDeMembros):

@@ -47,7 +47,7 @@ if __name__ == "__main__":
 	arquivoConfiguracao = sys.argv[1]
 
 	novoGrupo = Grupo(arquivoConfiguracao)
-	#novoGrupo.imprimirListaDeParametros()
+	novoGrupo.imprimirListaDeParametros()
 	novoGrupo.imprimirListaDeRotulos()
 
 	if criarDiretorio(novoGrupo.obterParametro('global-diretorio_de_saida')):
@@ -55,13 +55,20 @@ if __name__ == "__main__":
 		novoGrupo.compilarListasDeItems() # obrigatorio
 		novoGrupo.identificarQualisEmPublicacoes() # obrigatorio
 		novoGrupo.calcularInternacionalizacao() # obrigatorio
-		#novoGrupo.imprimirMatrizesDeFrequencia() 
+		novoGrupo.imprimirMatrizesDeFrequencia() 
 
 		novoGrupo.gerarGrafosDeColaboracoes() # obrigatorio
+		print "[ROTULOS]"
+		print "- "+str(novoGrupo.listaDeRotulos)
+		print "- "+str(novoGrupo.listaDeRotulosCores)
+
 		novoGrupo.gerarGraficosDeBarras() # obrigatorio
 		novoGrupo.gerarMapaDeGeolocalizacao() # obrigatorio
 		novoGrupo.gerarPaginasWeb() # obrigatorio
-		novoGrupo.gerarArquivosTemporarios() # obrigatorio
+
+		#novoGrupo.gerarXMLdeGrupo()
+		novoGrupo.gerarCSVdeQualisdeGrupo()
+		novoGrupo.gerarRISdeGrupo()
 
 		# copiar imagens e css
 		copiarArquivos(novoGrupo.obterParametro('global-diretorio_de_saida'))
@@ -69,11 +76,11 @@ if __name__ == "__main__":
 		# finalizando o processo
 		#print '[AVISO] Quem vê \'Lattes\', não vê coração! B-)'
 		#print '[AVISO] Por favor, cadastre-se na página: http://scriptlattes.sourceforge.net\n'
-		print '\n\n\n[PARA REFERENCIAR ESTE SOFTWARE]'
-		print '    Jesus P. Mena-Chalco & Roberto M. Cesar-Jr.'
+		print '\n\n\n[COMO REFERENCIAR ESTE TRABALHO]'
+		print '    Jesus P. Mena-Chalco e Roberto M. Cesar-Jr.'
 		print '    scriptLattes: An open-source knowledge extraction system from the Lattes Platform.'
 		print '    Journal of the Brazilian Computer Society, vol.15, n.4, páginas 31-39, 2009.'
-		print '    http://dx.doi.org/10.1007/BF03194511'
+
 		print '\n\nscriptLattes executado!'
 
 # ---------------------------------------------------------------------------- #
@@ -89,7 +96,7 @@ def compararCadeias(str1, str2, qualis=False):
 
 	if qualis:
 		dist = Levenshtein.ratio(str1, str2)
-		if len(str1)>=10 and len(str2)>=10 and dist>=0.90:
+		if len(str1)>=10 and len(str2)>=10 and dist>=0.80:
 			#return 1
 			return dist
 

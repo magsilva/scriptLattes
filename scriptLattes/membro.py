@@ -123,9 +123,6 @@ class Membro:
 	listaParticipacaoEmEvento = []
 	listaOrganizacaoDeEvento = []
 
-	rotuloCorFG = ''
-	rotuloCorBG = ''
-
 	###def __init__(self, idMembro, identificador, nome, periodo, rotulo, itemsDesdeOAno, itemsAteOAno, xml=''):
 	def __init__(self, idMembro, identificador, nome, periodo, rotulo, itemsDesdeOAno, itemsAteOAno, diretorioCache):
 		self.idMembro = idMembro
@@ -133,8 +130,6 @@ class Membro:
 		self.nomeInicial = nome
 		self.periodo = periodo
 		self.rotulo = rotulo
-		self.rotuloCorFG = '#000000'
-		self.rotuloCorBG = '#FFFFFF'
 	
 		p = re.compile('[a-zA-Z]+')
 		
@@ -276,7 +271,7 @@ class Membro:
 						arquivoH = urllib2.urlopen(req) 
 						cvLattesHTML = arquivoH.read()
 						arquivoH.close()
-						time.sleep(10)
+						time.sleep(1)
 
 						if len(cvLattesHTML)<=2000:
 							print '[AVISO] O scriptLattes tentará baixar novamente o seguinte CV Lattes: ', self.url
@@ -305,14 +300,15 @@ class Membro:
 			#cvLattesHTML  = cvLattesHTML.decode('ascii','replace')+extended_chars+special_chars                                          # Wed Jul 25 16:47:39 BRT 2012
 			cvLattesHTML  = cvLattesHTML.decode('iso-8859-1','replace')+extended_chars+special_chars
 			parser        = ParserLattes(self.idMembro, cvLattesHTML)
+			
 			p = re.compile('[a-zA-Z]+');
 			if p.match(self.idLattes):
-				self.identificador10 = self.idLattes
-				self.idLattes = parser.identificador16
-				self.url = 'http://lattes.cnpq.br/'+self.idLattes
-				# Obtemos todos os dados do CV Lattes
-
-		# Parser ready to rock!
+			  self.identificador10 = self.idLattes
+			  self.idLattes = parser.identificador16
+			  self.url = 'http://lattes.cnpq.br/'+self.idLattes
+			
+		# -----------------------------------------------------------------------------------------
+		# Obtemos todos os dados do CV Lattes
 		self.nomeCompleto                 = parser.nomeCompleto
 		self.bolsaProdutividade           = parser.bolsaProdutividade
 		self.enderecoProfissional         = parser.enderecoProfissional
@@ -351,9 +347,9 @@ class Membro:
 		self.listaOutroTipoDeProducaoTecnica  = parser.listaOutroTipoDeProducaoTecnica
 
 		# Patentes e registros	
-		self.listaPatente          			  = parser.listaPatente
-		self.listaProgramaComputador          = parser.listaProgramaComputador
-		self.listaDesenhoIndustrial           = parser.listaDesenhoIndustrial
+		self.listaPatente          = parser.listaPatente
+		self.listaProgramaComputador = parser.listaProgramaComputador
+		self.listaDesenhoIndustrial = parser.listaDesenhoIndustrial
 				
 		# Produção artística
 		self.listaProducaoArtistica = parser.listaProducaoArtistica

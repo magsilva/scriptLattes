@@ -66,20 +66,16 @@ class ProgramaComputador:
 
 		partes = partes[2]
 		partes = partes.split(".");
-		#print partes
+		print partes
 		
-		# wonder: Para o CV 7628786577802962 
-		# partes tem apenas 1 elemento, por isso
-		# inseri a seguinte condicao  
-		if len(partes)==3:
-			self.tipoPatente = partes[0].split(":")[1].strip();
-			self.numeroRegistro = partes[1].split(":")[1].split(",")[0].strip();
-			self.dataDeposito = partes[1].split(":")[2].split(",")[0].strip();
+		self.tipoPatente = partes[0].split(":")[1].strip();
+		self.numeroRegistro = partes[1].split(":")[1].split(",")[0].strip();
+		self.dataDeposito = partes[1].split(":")[2].split(",")[0].strip();
 
 				
 		self.chave = self.autores # chave de comparação entre os objetos
 		
-		#print self.__str__()
+		print self.__str__()
 
 	def compararCom(self, objeto):
 		if self.idMembro.isdisjoint(objeto.idMembro) and compararCadeias(self.titulo, objeto.titulo):

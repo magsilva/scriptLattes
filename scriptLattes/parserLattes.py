@@ -229,8 +229,6 @@ class ParserLattes(HTMLParser):
 	relevante = 0
 	umaUnidade = 0
 	idOrientando = None
-	citado = 0
-	complemento = ''
 
 	# ------------------------------------------------------------------------ #
 	def __init__(self, idMembro, cvLattesHTML):
@@ -301,7 +299,6 @@ class ParserLattes(HTMLParser):
 		self.doi = ''
 		self.relevante = 0
 		self.idOrientando = ''
-		self.complemento = ''
 
 		# contornamos alguns erros do HTML da Plataforma Lattes
 		cvLattesHTML = cvLattesHTML.replace("<![CDATA[","")
@@ -350,8 +347,6 @@ class ParserLattes(HTMLParser):
 			self.item = ''
 
 		if tag=='div':
-			self.citado = 0
-
 			for name, value in attributes:
 				if name=='class' and value=='title-wrapper':
 					self.umaUnidade = 1	
@@ -382,13 +377,6 @@ class ParserLattes(HTMLParser):
 						self.salvarParte2 = 0
 						if not self.salvarParte3:
 							self.partesDoItem = []
-
-				if name=='class' and (value=='citacoes' or value=='citado'):
-					self.citado = 1
-
-				if name=='cvuri' and self.citado:
-					self.citado = 0
-					self.complemento = value.replace("/buscatextual/servletcitacoes?","")
 
 
 		if tag=='h1' and self.umaUnidade: 
@@ -558,11 +546,10 @@ class ParserLattes(HTMLParser):
 					if self.achouProducoes:
 						if self.achouProducaoEmCTA:
 							if self.achouArtigoEmPeriodico:
- 	 							iessimoItem = ArtigoEmPeriodico(self.idMembro, self.partesDoItem, self.doi, self.relevante, self.complemento)
+ 	 							iessimoItem = ArtigoEmPeriodico(self.idMembro, self.partesDoItem, self.doi, self.relevante)
 								self.listaArtigoEmPeriodico.append(iessimoItem)
 								self.doi = ''
 								self.relevante = 0
-								self.complemento = ''
     
 							if self.achouLivroPublicado:
 	 	 						iessimoItem = LivroPublicado(self.idMembro, self.partesDoItem, self.relevante)

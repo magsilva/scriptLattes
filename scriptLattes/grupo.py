@@ -43,7 +43,6 @@ class Grupo:
 	listaDeParametros = []
 	listaDeMembros = []
 	listaDeRotulos = []
-	listaDeRotulosCores = []
 	listaDePublicacoesEinternacionalizacao = []
 
 	arquivoConfiguracao = None
@@ -304,7 +303,7 @@ class Grupo:
 		return s
 
 
-	def gerarRISdeMembros(self):
+	def gerarRISdeGrupo(self):
 		prefix = self.obterParametro('global-prefixo')+'-' if not self.obterParametro('global-prefixo')=='' else ''
 		s = ""
 		for membro in self.listaDeMembros:
@@ -335,6 +334,13 @@ class Grupo:
 	def gerarPaginasWeb(self):
 		paginasWeb = GeradorDePaginasWeb(self)
 		
+		# Salvamos alguns dados para análise posterior (com outras ferramentas)
+		prefix = self.obterParametro('global-prefixo')+'-' if not self.obterParametro('global-prefixo')=='' else ''
+		self.geolocalizacoes = list([])
+		for membro in self.listaDeMembros:
+			self.geolocalizacoes.append(str(membro.enderecoProfissionalLat)+","+str(membro.enderecoProfissionalLon))
+		print self.geolocalizacoes
+		self.salvarListaTXT(self.geolocalizacoes, prefix+"listaDeGeolocalizacoes.txt")
 			
 
 	def compilarListasDeItems(self):
@@ -355,7 +361,16 @@ class Grupo:
 		authorRank = AuthorRank(self.matrizDeFrequenciaNormalizada, 100)
 		self.vectorRank = authorRank.vectorRank
 
-		# listas de nomes, rotulos e IDs
+		# Salvamos alguns dados para análise posterior (com outras ferramentas)
+		prefix = self.obterParametro('global-prefixo')+'-' if not self.obterParametro('global-prefixo')=='' else ''
+
+		# (1) matrizes 
+		self.salvarMatrizTXT(self.matrizDeAdjacencia, prefix+"matrizDeAdjacencia.txt")
+		self.salvarMatrizTXT(self.matrizDeFrequencia, prefix+"matrizDeFrequencia.txt")
+		self.salvarMatrizTXT(self.matrizDeFrequenciaNormalizada, prefix+"matrizDeFrequenciaNormalizada.txt")
+		# self.salvarMatrizXML(self.matrizDeAdjacencia, prefix+"matrizDeAdjacencia.xml")
+	
+		# (2) listas de nomes, rótulos, ids
 		self.nomes = list([]) 
 		self.rotulos = list([])
 		self.ids = list([])
@@ -363,6 +378,22 @@ class Grupo:
 			self.nomes.append(membro.nomeCompleto)
 			self.rotulos.append(membro.rotulo)
 			self.ids.append(membro.idLattes)
+		self.salvarListaTXT(self.nomes, prefix+"listaDeNomes.txt")
+		self.salvarListaTXT(self.rotulos, prefix+"listaDeRotulos.txt")
+		self.salvarListaTXT(self.ids, prefix+"listaDeIDs.txt")
+
+		# (3) medidas de authorRanks 
+		self.salvarListaTXT(self.vectorRank, prefix+"authorRank.txt")
+
+		# (4) lista unica de colaboradores (orientadores, ou qualquer outro tipo de parceiros...)
+		rawColaboradores = list([])
+		for membro in self.listaDeMembros:
+			for idColaborador in membro.listaIDLattesColaboradoresUnica:
+				rawColaboradores.append(idColaborador)
+		rawColaboradores = list(set(rawColaboradores))
+		self.salvarListaTXT(rawColaboradores, prefix+"colaboradores.txt")
+
+		
 
 
 	def identificarQualisEmPublicacoes(self):
@@ -468,7 +499,6 @@ class Grupo:
 		arquivo.close()
 
 	def gerarGraficosDeBarras(self):
-		print "\n[CRIANDO GRAFICOS DE BARRAS]"
 		gBarra = GraficoDeBarras(self.obterParametro('global-diretorio_de_saida'))
 
 		gBarra.criarGrafico(self.compilador.listaCompletaArtigoEmPeriodico, 'PB0', 'Numero de publicacoes')
@@ -530,9 +560,6 @@ class Grupo:
 	def gerarGrafosDeColaboracoes(self):
 		if self.obterParametro('grafo-mostrar_grafo_de_colaboracoes'):
 			self.grafosDeColaboracoes = GrafoDeColaboracoes(self, self.obterParametro('global-diretorio_de_saida'))
-		print "\n[ROTULOS]"
-		print "- "+str(self.listaDeRotulos)
-		print "- "+str(self.listaDeRotulosCores)
 
 	def gerarGraficoDeProporcoes(self):
 		if self.obterParametro('relatorio-incluir_grafico_de_proporcoes_bibliograficas'):
