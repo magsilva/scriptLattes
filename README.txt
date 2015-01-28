@@ -4,27 +4,21 @@ scriptLattes V8.09
 SINOPSIS
 	scriptLattes.py <nome_arquivo_de_configuracao>
 
-
 REQUISITOS
-	Para a compilação precisam-se de alguns módulos Python. Para instalar esses
-    módulos execute como root (admin):
+	Para a compilação precisam-se de alguns módulos Python. Para instalar esses módulos execute como root:
 	# apt-get install python-all python-setuptools python-utidylib python-matplotlib python-levenshtein python-pygraphviz python-numpy tidy python-scipy python-imaging
 	# easy_install pytidylib
 
-	Em Ubuntu pode executar as seguintes instruções no terminal (linha de comandos):
-	sudo apt-get install python-all python-setuptools python-utidylib python-matplotlib python-levenshtein python-pygraphviz python-numpy tidy python-scipy python-imaging
-	sudo easy_install pytidylib
-
-
 EXECUÇÃO
-	Teste o scriptLattes com os seguintes dois exemplos (linha de comandos):
+	Teste o scriptLattes com os seguintes exemplos de compilação na linha de comando:
+
 
 	(*) EXEMPLO 01:
-	cd <nome_diretorio_scriptLattes>
-	python scriptLattes.py ./exemplo/teste-01.config
+	$ cd <nome_diretorio_scriptLattes>
+	$ ./scriptLattes.py ./exemplo/teste-01.config
 
 	Nesse exemplo consideram-se todas as produções cujos anos de publicações
-	estão entre 2006 e 2014. Nenhum rótulo foi considerado para os membros. 
+	estão entre 2006 e 2012. Nenhum rótulo foi considerado para os membros. 
 	
 	Os IDs Lattes dos 3 membros está listada em:
 	./exemplo/teste-01.list
@@ -33,21 +27,26 @@ EXECUÇÃO
 	./exemplo/teste-01/
 
 
+
 	(*) EXEMPLO 02:
-	cd <nome_diretorio_scriptLattes>
-	python scriptLattes.py ./exemplo/teste-02.config
+	$ cd <nome_diretorio_scriptLattes>
+	$ ./scriptLattes.py ./exemplo/teste-02.config
 
 	Nesse exemplo consideram-se todas as produções cadastradas nos CVs Lattes.
 	São considerados rótulos para os membros do grupo (professor, colaborador, aluno)
 	Adicionalmente também são apresentadas as informações de Qualis para os
-	artigos publicados (congressos e journals).
+	artigos publicados (congressos e periodicos), e uma medida de
+	internacionalização.
 
-	Os IDs Lattes dos membros está listada em:
+	Os IDs Lattes dos 10 membros está listada em:
 	./exemplo/teste-02.list
 
 	O resultado da execução estará disponível em:
 	./exemplo/teste-02/
 
+IDEALIZADORES DO PROJETO
+	Jesús P. Mena-Chalco <jesus.mena@ufabc.edu.br>
+	Roberto M. Cesar-Jr <cesar@vision.ime.usp.br>
 
 URL DO PROJETO
 	http://scriptlattes.sourceforge.net/
@@ -56,23 +55,10 @@ URL DO PROJETO
 =========================================================================================
 LOG
 
-Seg Abr 21 22:05:40 BRT 2014
--- Foram melhorados/corrigidos alguns procedimentos com a identificação dos nomes das
-   revistas.
-
-Seg Mar  3 08:42:28 BRT 2014
--- A identificação de Qualis foi melhorada. Os ISSN para os artigos completos
-  em periódicos agora estão sendo identificados. Também foi modificado o parser
-  para identificar melhor o título da publicação e nome da revista.
-
-Dom Mar  2 18:31:39 BRT 2014
--- A rede de coautoria armazenada em formato GDF (gephi). 
-   Veja o arquivo 'rede.gdf' (automaticamente gerado)
--- Foram melhorados alguns procedimentos de criação dos grafos.
 
 Seg Ago 26 03:09:50 BRT 2013
--- Algumas melhoras no parser (<x<).
--- Armazenamento das geolocalizações.
+-- Algumas melhoras no parser (<x<)
+-- Armazenamento das geolocalizações
 
 Sex Jun 28 17:04:13 BRT 2013
 -- Um bug na criação do mapa de geolocalização foi consertado.
@@ -87,6 +73,7 @@ Qui Mai  2 22:03:37 BRT 2013
 Dom Abr 14 12:32:54 BRST 2013
 -- Foi corrigida a função de localização geográfica.
 
+
 Sáb Fev 16 17:08:53 BRST 2013
 -- Foi melhorada a função de busca/associação de Qualis em publicações.
 -- Melhora do parser de internacionalização.
@@ -95,7 +82,6 @@ Sáb Fev 16 17:08:53 BRST 2013
 -- A identificação das partes constituintes de uma publicação foi melhorada
    para as publicações com grande número de coautores (mais do que 10).
 -- Os períodos para as orientações em andamento foram corrigidas.
-
 
 
 Sáb Jan 19 10:18:29 BRST 2013
