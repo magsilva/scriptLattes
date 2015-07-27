@@ -167,145 +167,101 @@ class Membro:
 				else:
 					print "\n[AVISO IMPORTANTE] Periodo nao válido: "+lista[i]+". (periodo desconsiderado na lista)"
 					print "[AVISO IMPORTANTE] CV Lattes: "+self.idLattes+". Membro: "+self.nomeInicial.encode('utf8')+"\n"
-		
+	
+	def descarregarCVLattes(self):
+		tentativa = 0
+		cvFound = False
+		while tentativa < 5 and cvFound == False:
+			cvLattesHTML = ''
+			try:
+				# http://stackoverflow.com/questions/9541677/urllib2-post-request 
+				# http://diegoqueiroz.com.br/evitando-o-captcha-do-lattes-novo-metodo/
+				txdata = {
+					'metodo' = 'apresentar',
+					'id' = identificador  # TODO: usar search id
+				}
+				txheaders = {   
+					'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64; rv:2.0) Gecko/20100101 Firefox/4.0',
+					'Accept-Language': 'en-us,en;q=0.5',
+					'Accept-Encoding': 'deflate',
+					'Keep-Alive': '115',
+					'Connection': 'keep-alive',
+					'Cache-Control': 'max-age=0',
+					'Cookie': 'style=standard; __utma=140185953.294397416.1313390179.1313390179.1317145115.2; __utmz=140185953.1317145115.2.2.utmccn=(referral)|utmcsr=emailinstitucional.cnpq.br|utmcct=/ei/emailInstitucional.do|utmcmd=referral; JSESSIONID=1B98ABF9642E01597AABA0F7A8807FD1.node2',
+					'Content-type': 'application/x-www-form-urlencoded',
+				}
+				print "Baixando CV :"+self.url
+				req = urllib2.Request(self.url, urllib.urlencode(txdata), txheaders) # Young folks by P,B&J!
+				arquivoH = urllib2.urlopen(req) 
+				cvLattesHTML = arquivoH.read()
+				arquivoH.close()
+				if len(cvLattesHTML) <= 2000:
+					print '[AVISO] O scriptLattes tentará baixar novamente o seguinte CV Lattes: ', self.url
+					time.sleep(10)
+					tentativa += 1
+				else:
+					print " (*) O CV está sendo armazenado no Cache"
+					file = open(cvPath, 'w')
+					file.write(cvLattesHTML)
+					file.close()
+					return cvLattesHTML
+
+			### except urllib2.URLError: ###, e:
+			except:
+				print '[AVISO] Nao é possível obter o CV Lattes: ', self.url
+				print '[AVISO] Certifique-se que o CV existe. O scriptLattes tentará baixar o CV em 30 segundos...'
+				###print '[ERRO] Código de erro: ', e.code
+				time.sleep(30)
+				tentativa += 1
+	
+		return ''
+
 
 	def carregarDadosCVLattes(self):
-		useCache = False
-		cvFound = False
 		cvPath = os.path.join(self.diretorioCache, self.idLattes)
+		cvFound = os.path.exists(cvPath)
 		extended_chars = u''.join(unichr(c) for c in xrange(127, 65536, 1)) # srange(r"[\0x80-\0x7FF]")
 		special_chars = ' -'''
 
+		if 'xml' in cvPath:
+			cvType = 'xml'
+		else:
+			cvType = 'html'
+
 		# Tenta obter CV do cache
-		if os.path.exists(cvPath):
+		if cvFound and cvType == 'html':
 			mtime = os.path.getmtime(cvPath)
 			currentTime = datetime.datetime.now()
 			currentTimeEpoch = time.mktime(currentTime.timetuple()) + currentTime.microsecond / 1E6
-			if abs(currentTimeEpoch - mtime) < float(60 * 60 * 7):
-				useCache = True
-				print "(*) Utilizando CV armazenado no cache: " + cvPath
-			else:
+			if not abs(currentTimeEpoch - mtime) < float(60 * 60 * 7):
 				print "(*) Ignorando CV armazenado no cache (muito velho) " + cvPath
-
-		# Se não encontrou no cache, tanta obter do sistema Web (CV Lattes)
-		if useCache == False:
-			cvLattesHTML = ''
-			tentativa = 0
-			while tentativa < 5 and cvFound == False:
-				try:
-					txdata = None
-					txheaders = {   
-						'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64; rv:2.0) Gecko/20100101 Firefox/4.0',
-						'Accept-Language': 'en-us,en;q=0.5',
-						'Accept-Encoding': 'deflate',
-						'Keep-Alive': '115',
-						'Connection': 'keep-alive',
-						'Cache-Control': 'max-age=0',
-						'Cookie': 'style=standard; __utma=140185953.294397416.1313390179.1313390179.1317145115.2; __utmz=140185953.1317145115.2.2.utmccn=(referral)|utmcsr=emailinstitucional.cnpq.br|utmcct=/ei/emailInstitucional.do|utmcmd=referral; JSESSIONID=1B98ABF9642E01597AABA0F7A8807FD1.node2',
-					}
-	
-					print "Baixando CV :"+self.url
-					req = urllib2.Request(self.url, txdata, txheaders) # Young folks by P,B&J!
-					arquivoH = urllib2.urlopen(req) 
-					cvLattesHTML = arquivoH.read()
-					arquivoH.close()
-					if len(cvLattesHTML) <= 2000:
-						print '[AVISO] O scriptLattes tentará baixar novamente o seguinte CV Lattes: ', self.url
-						time.sleep(10)
-						tentativa += 1
-					else:
-						file = open(cvPath, 'w')
-						file.write(cvLattesHTML)
-						file.close()
-						cvFound = True
-						print " (*) O CV está sendo armazenado no Cache"
-				### except urllib2.URLError: ###, e:
-				except:
-					print '[AVISO] Nao é possível obter o CV Lattes: ', self.url
-					print '[AVISO] Certifique-se que o CV existe. O scriptLattes tentará baixar o CV em 30 segundos...'
-					###print '[ERRO] Código de erro: ', e.code
-					time.sleep(30)
-					tentativa += 1
-
+				cvFound = False
 
 		if not cvFound:
-			raise Exception("Error download CV at " + self.url)
+			cvType = 'html' # If we could not find an XML file, we fallback to HTML
+			cvLattes = self.descarregarCVLattes()
+			if cvLattes == '':
+				raise Exception("Error downloading CV at " + self.url)
 
-		# CV found, now let's prepare the parser
-		if 'xml' in cvPath:
-			arquivoX = open(cvPath)
-			cvLattesXML = arquivoX.read()
-			arquivoX.close()
-			extended_chars= u''.join(unichr(c) for c in xrange(127, 65536, 1)) # srange(r"[\0x80-\0x7FF]")
-			special_chars = ' -'''
-			cvLattesXML   = cvLattesXML.decode('iso-8859-1','replace')+extended_chars+special_chars
-			parser        = ParserLattesXML(self.idMembro, cvLattesXML)
+		arquivo = open(cvPath)
+		cvLattes = arquivo.read()
+		arquivo.close()
+		if cvType == 'xml':
+			cvLattes      = cvLattesXML.decode('iso-8859-1','replace')+extended_chars+special_chars
+			parser        = ParserLattesXML(self.idMembro, cvLattes)
 			self.idLattes = parser.idLattes
 			self.url      = parser.url
 		else:
-			if os.path.exists(cvPath):
-				arquivoH = open(cvPath)
-				cvLattesHTML = arquivoH.read()
-				if self.idMembro!='':
-					print "(*) Utilizando CV armazenado no cache: "+cvPath
-			else:
-				cvLattesHTML = ''
-				tentativa = 0
-				while tentativa<5:
-				#while True:
-					try:
-						txdata = None
-						txheaders = {   
-						'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64; rv:2.0) Gecko/20100101 Firefox/4.0',
-						'Accept-Language': 'en-us,en;q=0.5',
-						'Accept-Encoding': 'deflate',
-						'Keep-Alive': '115',
-						'Connection': 'keep-alive',
-						'Cache-Control': 'max-age=0',
-						'Cookie': 'style=standard; __utma=140185953.294397416.1313390179.1313390179.1317145115.2; __utmz=140185953.1317145115.2.2.utmccn=(referral)|utmcsr=emailinstitucional.cnpq.br|utmcct=/ei/emailInstitucional.do|utmcmd=referral; JSESSIONID=1B98ABF9642E01597AABA0F7A8807FD1.node2',
-						}
-		
-						print "Baixando CV :"+self.url
-
-						req = urllib2.Request(self.url, txdata, txheaders) # Young folks by P,B&J!
-						arquivoH = urllib2.urlopen(req) 
-						cvLattesHTML = arquivoH.read()
-						arquivoH.close()
-						time.sleep(1)
-
-						if len(cvLattesHTML)<=2000:
-							print '[AVISO] O scriptLattes tentará baixar novamente o seguinte CV Lattes: ', self.url
-							time.sleep(30)
-							tentativa+=1
-							continue
-
-						if not self.diretorioCache=='':
-							file = open(cvPath, 'w')
-							file.write(cvLattesHTML)
-							file.close()
-							print " (*) O CV está sendo armazenado no Cache"
-						break
-
-					### except urllib2.URLError: ###, e:
-					except:
-						print '[AVISO] Nao é possível obter o CV Lattes: ', self.url
-						print '[AVISO] Certifique-se que o CV existe. O scriptLattes tentará baixar o CV em 30 segundos...'
-						###print '[ERRO] Código de erro: ', e.code
-						time.sleep(30)
-						tentativa+=1
-						continue
-
-			extended_chars= u''.join(unichr(c) for c in xrange(127, 65536, 1)) # srange(r"[\0x80-\0x7FF]")
-			special_chars = ' -'''
 			#cvLattesHTML  = cvLattesHTML.decode('ascii','replace')+extended_chars+special_chars                                          # Wed Jul 25 16:47:39 BRT 2012
-			cvLattesHTML  = cvLattesHTML.decode('iso-8859-1','replace')+extended_chars+special_chars
-			parser        = ParserLattes(self.idMembro, cvLattesHTML)
-			
+			cvLattes      = cvLattesHTML.decode('iso-8859-1','replace')+extended_chars+special_chars
+			parser        = ParserLattes(self.idMembro, cvLattes)
 			p = re.compile('[a-zA-Z]+');
 			if p.match(self.idLattes):
 			  self.identificador10 = self.idLattes
 			  self.idLattes = parser.identificador16
 			  self.url = 'http://lattes.cnpq.br/'+self.idLattes
+	
+
 			
 		# -----------------------------------------------------------------------------------------
 		# Obtemos todos os dados do CV Lattes
