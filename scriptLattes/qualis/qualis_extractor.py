@@ -15,7 +15,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
-import urllib2, requests
+import urllib2, requests, ssl
 from BeautifulSoup import BeautifulSoup
 import codecs
 import pickle
@@ -138,23 +138,26 @@ class qualis_extractor(object):
         que exibe a avaliacao dos artigos.
         """
         urlBase = "http://qualis.capes.gov.br/webqualis/"
-        acessoInicial = requests.get(urlBase+'principal.seam')
+        acessoInicial = requests.get(urlBase+'principal.seam', verify=False)
         jid = acessoInicial.cookies['JSESSIONID']
         print 'Iniciando sessão qualis...\n ID da Sessão: ',jid
         url1 = urlBase + "publico/pesquisaPublicaClassificacao.seam;jsessionid=" + jid + "?conversationPropagation=begin"
+
+	# This disables all verification
+	context = ssl._create_unverified_context()
         req1 = urllib2.Request(url1)
-        arq1 = urllib2.urlopen(req1)
-        
+        arq1 = urllib2.urlopen(req1, context=context)
+       
         
         self.url2 = urlBase + "publico/pesquisaPublicaClassificacao.seam;jsessionid=" + jid
         
         if not self.online:
             req2 = urllib2.Request(self.url2, 'AJAXREQUEST=_viewRoot&consultaPublicaClassificacaoForm=consultaPublicaClassificacaoForm&consultaPublicaClassificacaoForm%3Aissn=&javax.faces.ViewState=j_id2&consultaPublicaClassificacaoForm%3Aj_id192=consultaPublicaClassificacaoForm%3Aj_id192')
-            arq2 = urllib2.urlopen(req2)
+            arq2 = urllib2.urlopen(req2, context=context)
             #get all the areas of qualis
             self.getAreas(arq2.read())
             req3 = urllib2.Request(self.url2, 'consultaPublicaClassificacaoForm=consultaPublicaClassificacaoForm&consultaPublicaClassificacaoForm%3AsomAreaAvaliacao=0&consultaPublicaClassificacaoForm%3AsomEstrato=org.jboss.seam.ui.NoSelectionConverter.noSelectionValue&consultaPublicaClassificacaoForm%3AbtnPesquisarTituloPorArea=Pesquisar&javax.faces.ViewState=j_id2')
-            arq3 = urllib2.urlopen (req3)
+            arq3 = urllib2.urlopen(req3, context=context)
         
     def parse_areas_file(self,afile):
         f = open(afile,'r')
