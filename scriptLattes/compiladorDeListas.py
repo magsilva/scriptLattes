@@ -24,6 +24,7 @@
 
 
 import operator
+import re
 from scipy import sparse
 #import numpy
 
@@ -234,6 +235,65 @@ class CompiladorDeListas:
 		if self.grupo.obterParametro('relatorio-incluir_orientacao_concluida_outro_tipo'):
 			self.listaCompletaOC = self.compilarListasCompletas(self.listaCompletaOCOutroTipoDeOrientacao, self.listaCompletaOC)
 
+		for membro in grupo.listaDeMembros:
+			if membro.idLattes=='0000000000000000':
+				print ":: Processando coautor sem CV-Lattes" + membro.nomeInicial
+
+				self.adicionarCoautorNaLista(self.listaCompletaArtigoEmPeriodico, membro) 
+				self.adicionarCoautorNaLista(self.listaCompletaArtigoEmPeriodico, membro) 
+
+				self.adicionarCoautorNaLista(self.listaCompletaLivroPublicado, membro)
+				self.adicionarCoautorNaLista(self.listaCompletaCapituloDeLivroPublicado, membro)
+				self.adicionarCoautorNaLista(self.listaCompletaTextoEmJornalDeNoticia, membro)
+				self.adicionarCoautorNaLista(self.listaCompletaTrabalhoCompletoEmCongresso, membro)
+				self.adicionarCoautorNaLista(self.listaCompletaResumoExpandidoEmCongresso, membro)
+				self.adicionarCoautorNaLista(self.listaCompletaResumoEmCongresso, membro)
+				self.adicionarCoautorNaLista(self.listaCompletaArtigoAceito, membro)
+				self.adicionarCoautorNaLista(self.listaCompletaApresentacaoDeTrabalho, membro) 
+				self.adicionarCoautorNaLista(self.listaCompletaOutroTipoDeProducaoBibliografica, membro) 
+	
+				self.adicionarCoautorNaLista(self.listaCompletaSoftwareComPatente, membro)
+				self.adicionarCoautorNaLista(self.listaCompletaSoftwareSemPatente, membro)
+				self.adicionarCoautorNaLista(self.listaCompletaProdutoTecnologico, membro)
+				self.adicionarCoautorNaLista(self.listaCompletaProcessoOuTecnica, membro)
+				self.adicionarCoautorNaLista(self.listaCompletaTrabalhoTecnico, membro)
+				self.adicionarCoautorNaLista(self.listaCompletaOutroTipoDeProducaoTecnica, membro)
+				
+				self.adicionarCoautorNaLista(self.listaCompletaPatente, membro)
+				self.adicionarCoautorNaLista(self.listaCompletaProgramaComputador, membro)
+				self.adicionarCoautorNaLista(self.listaCompletaDesenhoIndustrial, membro)
+	
+				self.adicionarCoautorNaLista(self.listaCompletaProducaoArtistica, membro)
+
+	def adicionarCoautorNaLista(self, listaCompleta, membro):
+		keys = listaCompleta.keys()
+		for ano in keys:
+			for pub in listaCompleta[ano]:
+				if self.procuraNomeEmPublicacao(membro.nomeInicial, pub.autores):
+					pub.idMembro.add(membro.idMembro)
+					#print ">>>" + membro.nomeInicial
+					#print ">>>" + pub.autores
+
+	def procuraNomeEmPublicacao(self, nomesAbreviados, nomesDosCoautores):
+		nomesAbreviados   = nomesAbreviados.lower()
+		nomesDosCoautores = nomesDosCoautores.lower()
+
+		nomesAbreviados   = nomesAbreviados.replace("."," ")
+		nomesDosCoautores = nomesDosCoautores.replace("."," ")
+		nomesDosCoautores = nomesDosCoautores.replace(","," ")
+		nomesAbreviados   = re.sub( '\s+', ' ', nomesAbreviados ).strip()
+		nomesDosCoautores = re.sub( '\s+', ' ', nomesDosCoautores ).strip()
+
+		listaNomesAbreviados   = nomesAbreviados.split(";")
+		listaNomesDosCoautores = nomesDosCoautores.split(";")
+
+		for abrev1 in listaNomesAbreviados:
+			abrev1 = abrev1.strip()
+			for abrev2 in listaNomesDosCoautores:
+				abrev2 = abrev2.strip()
+				if abrev1==abrev2 and len(abrev1)>0 and len(abrev2)>0:
+					return True
+		return False
 
 
 	def compilarLista(self, listaDoMembro, listaCompleta):
@@ -324,7 +384,7 @@ class CompiladorDeListas:
 
 	# Criamos as matrizes de: 
 	#  - (1) adjacência
-    #  - (2) frequencia
+	#  - (2) frequencia
 	def criarMatrizes(self, listaCompleta):
 		# matriz1 = numpy.zeros((self.grupo.numeroDeMembros(), self.grupo.numeroDeMembros()), dtype=numpy.int32)
 		# matriz2 = numpy.zeros((self.grupo.numeroDeMembros(), self.grupo.numeroDeMembros()), dtype=numpy.float32)
@@ -490,7 +550,7 @@ class CompiladorDeListas:
 
 	def imprimirListasCompletas(self):
 		print "\n\n[LISTA COMPILADA DE PRODUÇÕES]"
- 		print "\nArtigo em periodico"
+		print "\nArtigo em periodico"
 		self.imprimirListaProducoes(self.listaCompletaArtigoEmPeriodico)
 		print "\nLivro publicado"
 		self.imprimirListaProducoes(self.listaCompletaLivroPublicado)

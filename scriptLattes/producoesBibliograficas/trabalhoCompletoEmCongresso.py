@@ -24,8 +24,9 @@
 
 
 from scriptLattes import *
-from geradorDePaginasWeb import *
+from scriptLattes.geradorDePaginasWeb import *
 import re
+from scriptLattes.util import compararCadeias
 
 class TrabalhoCompletoEmCongresso:
 	item = None # dado bruto
@@ -177,7 +178,7 @@ class TrabalhoCompletoEmCongresso:
 		if not self.doi=='':
 			s+= ' <a href="'+self.doi+'" target="_blank" style="PADDING-RIGHT:4px;"><img border=0 src="doi.png"></a>' 
 
- 		s+= menuHTMLdeBuscaPB(self.titulo)
+		s+= menuHTMLdeBuscaPB(self.titulo)
 		s+= formataQualis(self.qualis, self.qualissimilar)
 		return s
 
@@ -205,6 +206,10 @@ class TrabalhoCompletoEmCongresso:
 	
 
 	def csv(self, nomeCompleto=""):
+		if self.qualis==None:
+			self.qualis=''
+		if self.qualissimilar==None:
+			self.qualissimilar=''
 		s  = "trabalhoCompletoEmCongresso\t"
 		if nomeCompleto=="": # tratamento grupal
 			s +=  str(self.ano) +"\t"+ self.doi +"\t"+ self.titulo +"\t"+ self.nomeDoEvento +"\t"+ self.autores +"\t"+ self.qualis +"\t"+ self.qualissimilar

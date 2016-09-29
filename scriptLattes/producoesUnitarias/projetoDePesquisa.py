@@ -24,8 +24,9 @@
 
 
 from scriptLattes import *
-from geradorDePaginasWeb import *
+from scriptLattes.geradorDePaginasWeb import *
 import datetime
+from scriptLattes.util import compararCadeias
 
 class ProjetoDePesquisa:
 	idMembro = None
@@ -44,9 +45,9 @@ class ProjetoDePesquisa:
 		self.idMembro = list([])
 		self.idMembro.append(idMembro)
 
-		anos =  partesDoItem[0].partition(" - ")
-		self.anoInicio = anos[0]
-		self.anoConclusao = anos[2]
+		anos =  partesDoItem[0].partition("-")
+		self.anoInicio = anos[0].strip()
+		self.anoConclusao = anos[2].strip()
 
 		# detalhe = partesDoItem[1].rpartition(":")
 		#self.cargo = detalhe[0].strip()

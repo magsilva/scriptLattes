@@ -24,8 +24,9 @@
 
 
 from scriptLattes import *
-from geradorDePaginasWeb import *
+from scriptLattes.geradorDePaginasWeb import *
 import re
+from scriptLattes.util import compararCadeias
 
 class ResumoExpandidoEmCongresso:
 	item = None # dado bruto
@@ -179,6 +180,10 @@ class ResumoExpandidoEmCongresso:
 
 
 	def csv(self, nomeCompleto=""):
+		if self.qualis==None:
+			self.qualis=''
+		if self.qualissimilar==None:
+			self.qualissimilar=''
 		s  = "resumoExpandidoEmCongresso\t"
 		if nomeCompleto=="": # tratamento grupal
 			s +=  str(self.ano) +"\t"+ self.titulo +"\t"+ self.nomeDoEvento +"\t"+ self.autores +"\t"+ self.qualis +"\t"+ self.qualissimilar

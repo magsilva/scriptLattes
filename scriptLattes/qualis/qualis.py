@@ -23,29 +23,125 @@
 #
 
 import re
-
+import sys
 
 from scriptLattes import *
+import fileinput
+from scriptLattes.util import compararCadeias, buscarArquivo
+from qualis_extractor import *
 
 class Qualis:
 	periodicos = {}
 	congressos = {}
-	qtdPB0     = {}	# Total de artigos em periodicos por Qualis
-	qtdPB4     = {}	# Total de trabalhos completos em congressos por Qualis
-	qtdPB5     = {} # Total de resumos expandidos em congressos por Qualis
+	qtdPB0	 = {}	# Total de artigos em periodicos por Qualis
+	qtdPB4	 = {}	# Total de trabalhos completos em congressos por Qualis
+	qtdPB5	 = {}	# Total de resumos expandidos em congressos por Qualis
+	anoInicio = 0
+	anoFim = 0
 	
 
 	def __init__(self, grupo):
+
+		self.anoInicio = int(grupo.obterParametro('global-itens_desde_o_ano'))
+		self.anoFim = int(grupo.obterParametro('global-itens_ate_o_ano'))
+
 		if grupo.obterParametro('global-identificar_publicacoes_com_qualis'):
-			self.periodicos = self.carregarQualis(grupo.obterParametro('global-arquivo_qualis_de_periodicos'))
+			#self.periodicos = self.carregarQualis(grupo.obterParametro('global-arquivo_qualis_de_periodicos'))
+			#qualis extractor -> extrai qualis diretamente da busca online do qualis
+			self.extrair_qualis_online = grupo.obterParametro('global-extrair_qualis_online')
+			self.qextractor = qualis_extractor(self.extrair_qualis_online)
+			
+			if self.extrair_qualis_online == 0:
+				print "\n**************************************************\n"
+				self.qextractor.load_data()
+				arqareas = grupo.obterParametro('global-arquivo_areas_qualis')
+				self.qextractor.parse_areas_file(arqareas)
+				self.qextractor.extract_qualis()
+				self.periodicos = self.qextractor.publicacao
+				self.qextractor.save_data()
+				
 			self.congressos = self.carregarQualis(grupo.obterParametro('global-arquivo_qualis_de_congressos'))
 	
+
+	def qualisPorAno(self, membro):
+
+		tabelaDosAnos = [{}]
+		tabelaDosTipos = {}
+
+		listaDeArtigos = membro.listaArtigoEmPeriodico
+		self.inicializaTabelaDosAnos(tabelaDosAnos)
+		self.inicializaTabelaDosTipos(tabelaDosTipos)
+
+		if(len(listaDeArtigos) > 0):
+			for publicacao in listaDeArtigos:
+				ano = publicacao.ano
+				tiposQualis = publicacao.qualis.values()
+				for tipo in tiposQualis:
+					valorAtual = self.getTiposPeloAno(ano, tabelaDosAnos)[tipo]
+					self.setValorPeloAnoTipo(ano, tipo, valorAtual+1, tabelaDosAnos)
+					tabelaDosTipos[tipo] += 1
+
+		return [tabelaDosAnos, tabelaDosTipos]
+
+
+	def inicializaTabelaDosAnos(self, tabelaDosAnos):
+		fim = self.anoFim-self.anoInicio
+		for i in range(fim+1):
+			tabelaDosAnos.append({})
+			self.inicializaListaQualis(tabelaDosAnos[i])
+			
+
+	def inicializaTabelaDosTipos(self, tabelaDosTipos):
+		self.inicializaListaQualis(tabelaDosTipos)
+
+
+	def getTiposPeloAno(self, ano, tabelaDosAnos):
+		if ano >= self.anoInicio and ano <= self.anoFim:
+			return tabelaDosAnos[ano-self.anoInicio]
+		else:
+			raise Exception("Ano fora do limite" "O ano "+str(ano)+" nao esta no limite determinado nas configuracoes")
+
+
+	def setValorPeloAnoTipo(self, ano, tipo, valor, tabelaDosAnos):
+		if ano >= self.anoInicio and ano <= self.anoFim:
+			tabelaDosAnos[ano-self.anoInicio][tipo] = valor
+		else:
+			raise Exception("Ano fora do limite" "O ano "+str(ano)+" nao esta no limite determinado nas configuracoes")
+
+
+
+	def printTabelas(self, tabelaDosAnos, tabelaDosTipos):
+		print "\n**************************************************\n"
+		print "\nTABELAS DOS QUALIS:\n\n"
+
+		for i in range(len(tabelaDosAnos)):
+			print str(self.anoInicio+i)+":"
+			print "------"
+			print tabelaDosAnos[i]
+			print "\n\n"
+		
+		print "\nTOTAIS POR TIPO:\n"
+		print tabelaDosTipos
+		print "\n\n"
+
+		self.parar()
+
+
+	def parar(self):
+		sys.stdin.read(1)
+
+	
+
 	def calcularTotaisDosQualis(self, grupo):
-		if (not grupo.obterParametro('global-arquivo_qualis_de_periodicos')==''):
-			self.qtdPB0 = self.calcularTotaisDosQualisPorTipo(self.qtdPB0, grupo.compilador.listaCompletaArtigoEmPeriodico)
+
+		#if (not grupo.obterParametro('global-arquivo_qualis_de_periodicos')==''):
+			#self.qtdPB0 = self.calcularTotaisDosQualisPorTipo(self.qtdPB0, grupo.compilador.listaCompletaArtigoEmPeriodico)
+		
 		if (not grupo.obterParametro('global-arquivo_qualis_de_congressos')==''):
 			self.qtdPB4 = self.calcularTotaisDosQualisPorTipo(self.qtdPB4, grupo.compilador.listaCompletaTrabalhoCompletoEmCongresso)
 			self.qtdPB5 = self.calcularTotaisDosQualisPorTipo(self.qtdPB5, grupo.compilador.listaCompletaResumoExpandidoEmCongresso)
+
+
 
 	def calcularTotaisDosQualisPorTipo(self, qtd, listaCompleta):
 		self.inicializaListaQualis(qtd)
@@ -57,6 +153,9 @@ class Qualis:
 					pub = elementos[index]
 					qtd[pub.qualis] += 1
 		return qtd
+
+
+
 
 
 	def buscaQualis(self, tipo, nome):
@@ -75,6 +174,7 @@ class Qualis:
 						dist = distI
 				if indice>0:
 						return self.periodicos.get(chaves[indice]) , chaves[indice]	# Retorna Qualis de nome similar
+			return None,None
 		else:
 			if self.congressos.get(nome)!=None:
 				return self.congressos.get(nome) , '' # Retorna Qualis do nome exato encontrado - Casamento perfeito
@@ -94,12 +194,19 @@ class Qualis:
 
 	def analisarPublicacoes(self, membro, grupo):
 		# Percorrer lista de publicacoes buscando e contabilizando os qualis
-		if (not grupo.obterParametro('global-arquivo_qualis_de_periodicos')==''):
-			for pub in membro.listaArtigoEmPeriodico:
+		for pub in membro.listaArtigoEmPeriodico:
+			#qualis, similar = self.buscaQualis('P', pub.revista)
+			#pub.qualis = qualis
+			if pub.issn != '' and self.qextractor.get_qualis_by_issn(pub.issn):			
+				pub.qualis = self.qextractor.get_qualis_by_issn(pub.issn)
+			elif not self.extrair_qualis_online:
 				qualis, similar = self.buscaQualis('P', pub.revista)
 				pub.qualis = qualis
 				pub.qualissimilar = similar
-
+			else:
+				pub.qualis = None
+				pub.qualissimilar = None
+		
 		if (not grupo.obterParametro('global-arquivo_qualis_de_congressos')==''):
 			for pub in membro.listaTrabalhoCompletoEmCongresso:
 				qualis, similar = self.buscaQualis('C', pub.nomeDoEvento)
@@ -134,6 +241,8 @@ class Qualis:
 	def carregarQualis(self, arquivo):
 		lista = {}
 		if (not arquivo==''):
+			arquivo = buscarArquivo(arquivo)
+			
 			for linha in fileinput.input(arquivo):
 				linha = linha.replace("\r","")
 				linha = linha.replace("\n","")

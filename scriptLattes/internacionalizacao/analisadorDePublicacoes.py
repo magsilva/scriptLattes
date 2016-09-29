@@ -445,7 +445,10 @@ class AnalisadorDePublicacoes:
 				if len(parserData)==6:
 					print "**caso -- " + parserData[0]
 					caso = genericParser(parserData)
-					caso.feed(rawDOIhtml)
+					try:
+						caso.feed(rawDOIhtml)  ####
+					except:
+						caso.data = ""
 					doihtml = str(caso.data)
 					dataDoi.append(doihtml)
 					dataDoi.append(parserData)
@@ -453,7 +456,10 @@ class AnalisadorDePublicacoes:
 			elif urlDOI.find("10.1134")>-1:
 				print "**caso - 10.1134"
 				casoUrl = parser101007()
-				casoUrl.feed(rawDOIhtml)
+				try:
+					casoUrl.feed(rawDOIhtml) ###
+				except:
+					casoUrl.data = ""
 				doihtml = str(casoUrl.data)
 				parserData = ["10.1134",'','','','authoraddress=.*\+','.*&contentid']
 				dataDoi.append(doihtml)
@@ -480,7 +486,10 @@ class AnalisadorDePublicacoes:
 			elif urlDOI.find("10.1590")>-1:
 				print "**caso -- 10.1590"
 				caso = parser101590()
-				caso.feed(rawDOIhtml)
+				try:
+					caso.feed(rawDOIhtml)
+				except:
+					caso.data = ""
 				doihtml = str(caso.data)
 				#print doihtml
 				parserData = ["10.1590",'','','',',.*,\s*','[\s*|,|;|-|\.|\'|\"]']

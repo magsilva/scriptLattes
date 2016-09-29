@@ -40,28 +40,19 @@ class GrafoDeColaboracoes:
 
 	def __init__(self, grupo, diretorioDeSaida):
 		self.grupo = grupo
-		self.cores =[ 
-					['#FFFFFF','#000099'], # azul
-					['#FFFFFF','#006600'], # verde
-					['#FFFFFF','#990000'], # vermelho
-					['#FFFFFF','#FF3300'], # laranja
-					['#FFFFFF','#009999'], # esmeralda legal
-					['#000000','#FF33CC'], # pink
-					['#FFFFFF','#333333'], # cinza
-					['#000000','#FFFF00'], # amarelo
-					['#FFFFFF','#0033FF'], # azul eletric
-					['#FFFFFF','#330000'], # marrom
-					['#FFFFFF','#330099'], # roxo
-					['#000000','#CC9999'], 
-					['#000000','#FF99CC'], 
-					['#000000','#FFCCFF'], 
-					['#000000','#999933'], 
-					['#FFFFFF','#339966'], 
-					['#FFFFFF','#660033'], 
-					['#000000','#00CC99'], 
-					['#000000','#99FFCC'], # esmeralda
-					['#FFFFFF','#330033'], # roxo escuro
-					['#000000','#FFFFFF'] ]
+
+		# atribuicao de cores nos vértices
+		for membro in self.grupo.listaDeMembros:
+			corDoNoFG = '#FFFFFF'
+			corDoNoBG = '#17272B'
+			if self.grupo.obterParametro('grafo-considerar_rotulos_dos_membros_do_grupo'):
+				indice = self.grupo.listaDeRotulos.index(membro.rotulo)
+				cor = self.atribuirCorLegal(indice)
+				corDoNoFG = cor[0]
+				corDoNoBG = cor[1]
+				self.grupo.atribuirCoNoRotulo(indice, corDoNoBG)
+			membro.rotuloCorFG = corDoNoFG
+			membro.rotuloCorBG = corDoNoBG
 		
 		self.grafoDeCoAutoriaSemPesos = self.criarGrafoDeCoAutoriaSemPesos()
 		self.grafoDeCoAutoriaSemPesos.draw(path=diretorioDeSaida+'/grafoDeColaboracoesSemPesos.png', format='png')
@@ -83,7 +74,6 @@ class GrafoDeColaboracoes:
 #		self.grafoDeCoAutoriaCompleta.draw(path='grafoDeColaboracoesCompleto.dot', format='dot')
 #		self.grafoDeCoAutoriaCompletaCMAPX = self.grafoDeCoAutoriaCompleta.draw(format='cmapx')
 
-
 		# Criamos um thumbnail do grafo sem pesos
 		im = Image.open(diretorioDeSaida+'/grafoDeColaboracoesSemPesos.png')
 		im.thumbnail((400,400))
@@ -102,22 +92,11 @@ class GrafoDeColaboracoes:
 		for m in range(0,self.grupo.numeroDeMembros()):
 			membro = self.grupo.listaDeMembros[m]
 			nome = self.abreviarNome(membro.nomeCompleto)+" ["+str(int(self.grupo.vetorDeCoAutoria[m]))+"]"
-			
-			if self.grupo.obterParametro('grafo-considerar_rotulos_dos_membros_do_grupo'):
-				indice = self.grupo.listaDeRotulos.index(membro.rotulo)
-				cor = self.atribuirCorLegal(indice)
-				corDoNoFG = cor[0]
-				corDoNoBG = cor[1]
-				self.grupo.atribuirCoNoRotulo(indice, corDoNoBG)
-			else:
-				corDoNoFG = '#FFFFFF'
-				corDoNoBG = '#003399'
-
 			if self.grupo.vetorDeCoAutoria[m]>0 or self.grupo.obterParametro('grafo-mostrar_todos_os_nos_do_grafo'):
 				try:
-					grafo.add_node(membro.idMembro, label=nome, fontcolor=corDoNoFG, color=corDoNoBG, height="0.2", URL=membro.url)
+					grafo.add_node(membro.idMembro, label=nome, fontcolor=membro.rotuloCorFG, color=membro.rotuloCorBG, height="0.2", URL=membro.url)
 				except:
-					grafo.add_node(membro.idMembro, label=nome.encode('utf8'), fontcolor=corDoNoFG, color=corDoNoBG, height="0.2", URL=membro.url)
+					grafo.add_node(membro.idMembro, label=nome.encode('utf8'), fontcolor=membro.rotuloCorFG, color=membro.rotuloCorBG, height="0.2", URL=membro.url)
 
 		# Inserimos as arestas
 		for i in range(0, self.grupo.numeroDeMembros()-1):
@@ -141,22 +120,11 @@ class GrafoDeColaboracoes:
 		for m in range(0,self.grupo.numeroDeMembros()):
 			membro = self.grupo.listaDeMembros[m]
 			nome = self.abreviarNome(membro.nomeCompleto)+" ["+str(int(self.grupo.vetorDeCoAutoria[m]))+"]"
-
-			if self.grupo.obterParametro('grafo-considerar_rotulos_dos_membros_do_grupo'):
-				indice = self.grupo.listaDeRotulos.index(membro.rotulo)
-				cor = self.atribuirCorLegal(indice)
-				corDoNoFG = cor[0]
-				corDoNoBG = cor[1]
-				self.grupo.atribuirCoNoRotulo(indice, corDoNoBG)
-			else:
-				corDoNoFG = '#FFFFFF'
-				corDoNoBG = '#003399'
-
 			if self.grupo.vetorDeCoAutoria[m]>0 or self.grupo.obterParametro('grafo-mostrar_todos_os_nos_do_grafo'):
 				try:
-					grafo.add_node(membro.idMembro, label=nome, fontcolor=corDoNoFG, color=corDoNoBG, height="0.2", URL=membro.url)
+					grafo.add_node(membro.idMembro, label=nome, fontcolor=membro.rotuloCorFG, color=membro.rotuloCorBG, height="0.2", URL=membro.url)
 				except:
-					grafo.add_node(membro.idMembro, label=nome.encode('utf8'), fontcolor=corDoNoFG, color=corDoNoBG, height="0.2", URL=membro.url)
+					grafo.add_node(membro.idMembro, label=nome.encode('utf8'), fontcolor=membro.rotuloCorFG, color=membro.rotuloCorBG, height="0.2", URL=membro.url)
 
 		# Inserimos as arestas
 		for i in range(0, self.grupo.numeroDeMembros()-1):
@@ -180,23 +148,11 @@ class GrafoDeColaboracoes:
 		for m in range(0,self.grupo.numeroDeMembros()):
 			membro = self.grupo.listaDeMembros[m]
 			nome = self.abreviarNome(membro.nomeCompleto)+" ["+str(int(self.grupo.vetorDeCoAutoria[m]))+"]"
-
-			if self.grupo.obterParametro('grafo-considerar_rotulos_dos_membros_do_grupo'):
-				indice = self.grupo.listaDeRotulos.index(membro.rotulo)
-				cor = self.atribuirCorLegal(indice)
-				corDoNoFG = cor[0]
-				corDoNoBG = cor[1]
-				self.grupo.atribuirCoNoRotulo(indice, corDoNoBG)
-			else:
-				corDoNoFG = '#FFFFFF'
-				corDoNoBG = '#003399'
-
 			if self.grupo.vetorDeCoAutoria[m]>0 or self.grupo.obterParametro('grafo-mostrar_todos_os_nos_do_grafo'):
 				try:
-					grafo.add_node(membro.idMembro, label=nome, fontcolor=corDoNoFG, color=corDoNoBG, height="0.2", URL=membro.url)
+					grafo.add_node(membro.idMembro, label=nome, fontcolor=membro.rotuloCorFG, color=membro.rotuloCorBG, height="0.2", URL=membro.url)
 				except:
-					grafo.add_node(membro.idMembro, label=nome.encode('utf8'), fontcolor=corDoNoFG, color=corDoNoBG, height="0.2", URL=membro.url)
-					
+					grafo.add_node(membro.idMembro, label=nome.encode('utf8'), fontcolor=membro.rotuloCorFG, color=membro.rotuloCorBG, height="0.2", URL=membro.url)
 
 		# Inserimos as arestas
 		for i in range(0, self.grupo.numeroDeMembros()):
@@ -264,6 +220,29 @@ class GrafoDeColaboracoes:
 
 	
 	def atribuirCorLegal(self, indice):
+		self.cores =[ 
+					['#FFFFFF','#000099'], # azul
+					['#FFFFFF','#006600'], # verde
+					['#FFFFFF','#990000'], # vermelho
+					['#FFFFFF','#FF3300'], # laranja
+					['#FFFFFF','#009999'], # esmeralda legal
+					['#000000','#FF33CC'], # pink
+					['#FFFFFF','#333333'], # cinza
+					['#000000','#FFFF00'], # amarelo
+					['#FFFFFF','#0033FF'], # azul eletric
+					['#FFFFFF','#330000'], # marrom
+					['#FFFFFF','#330099'], # roxo
+					['#000000','#CC9999'], 
+					['#000000','#FF99CC'], 
+					['#000000','#FFCCFF'], 
+					['#000000','#999933'], 
+					['#FFFFFF','#339966'], 
+					['#FFFFFF','#660033'], 
+					['#000000','#00CC99'], 
+					['#000000','#99FFCC'], # esmeralda
+					['#FFFFFF','#330033'], # roxo escuro
+					['#000000','#FFFFFF'] ]
+
 		if indice < len(self.cores):
 			return self.cores[indice]
 		else:

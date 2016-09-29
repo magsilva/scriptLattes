@@ -24,7 +24,8 @@
 
 
 from scriptLattes import *
-from geradorDePaginasWeb import *
+from scriptLattes.geradorDePaginasWeb import *
+from scriptLattes.util import compararCadeias
 
 class LivroPublicado:
 	item = None # dado bruto
@@ -37,6 +38,7 @@ class LivroPublicado:
 	ano = None
 	volume = None
 	paginas = None
+	editora = None
 	chave = None
 
 	def __init__(self, idMembro, partesDoItem='', relevante=''):
@@ -54,7 +56,7 @@ class LivroPublicado:
 			self.autores = partes[0].strip()
 			partes = partes[2]
 
-			partes = partes.rpartition(" p.")
+			partes = partes.rpartition("p .") # <---modificacao na P.Lattes
 			if partes[1]=='': # se nao existem paginas
 				self.paginas = ''
 				partes = partes[2]
@@ -76,6 +78,8 @@ class LivroPublicado:
 			partes = partes[0]
 
 			partes = partes.rpartition(". ed. ")
+			self.editora = partes[2]
+
 			if partes[1]=='': # se nao existe edicao
 				self.edicao = ''
 				partes = partes[2]
@@ -84,9 +88,11 @@ class LivroPublicado:
 				self.edicao = partes[2]
 				partes = partes[0]
 
+
 			self.titulo = partes.strip().rstrip(".")
 
 			self.chave = self.autores # chave de comparação entre os objetos
+
 
 		else:
 			relevante = ''
@@ -96,6 +102,7 @@ class LivroPublicado:
 			ano = ''
 			volume = ''
 			paginas = ''
+			editora = ''
 
 
 	def compararCom(self, objeto):
@@ -103,22 +110,22 @@ class LivroPublicado:
 			# Os IDs dos membros são agrupados. 
 			# Essa parte é importante para a criação do GRAFO de colaborações
 			self.idMembro.update(objeto.idMembro)
-
+			
 			if len(self.autores)<len(objeto.autores):
 				self.autores = objeto.autores
-
+			
 			if len(self.titulo)<len(objeto.titulo):
 				self.titulo = objeto.titulo
-
+			
 			if len(self.edicao)<len(objeto.edicao):
 				self.edicao = objeto.edicao
-
+			
 			if len(self.volume)<len(objeto.volume):
 				self.volume = objeto.volume
-
+			
 			if len(self.paginas)<len(objeto.paginas):
 				self.paginas = objeto.paginas
-
+			
 			return self
 		else: # nao similares
 			return None
@@ -127,12 +134,13 @@ class LivroPublicado:
 	def html(self, listaDeMembros):
 		s = self.autores + '. <b>' + self.titulo + '</b>. '
 		s+= self.edicao + ' ed. '       if not self.edicao==''  else ''
-		s+= str(self.ano) + '. '         if str(self.ano).isdigit() else ''
+		s+= self.editora + ', '        if not self.editora==''  else ''
+		s+= str(self.ano) + '. '        if str(self.ano).isdigit() else ''
 
 		s+= 'v. ' + self.volume + ', '  if not self.volume== '' else ''
 		s+= 'p. ' + self.paginas + '. ' if not self.paginas=='' else '.'
 
- 		s+= menuHTMLdeBuscaPB(self.titulo)
+		s+= menuHTMLdeBuscaPB(self.titulo)
 		return s
 
 
@@ -164,6 +172,7 @@ class LivroPublicado:
 		s += "+AUTORES     : " + self.autores.encode('utf8','replace') + "\n"
 		s += "+TITULO      : " + self.titulo.encode('utf8','replace') + "\n"
 		s += "+EDICAO      : " + self.edicao.encode('utf8','replace') + "\n"
+		s += "+EDITORES    : " + self.editora.encode('utf8','replace') + "\n"
 		s += "+ANO         : " + str(self.ano) + "\n"
 		s += "+VOLUME      : " + self.volume.encode('utf8','replace') + "\n"
 		s += "+PAGINAS     : " + self.paginas.encode('utf8','replace') + "\n"

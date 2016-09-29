@@ -24,7 +24,7 @@
 
 
 from scriptLattes import *
-from geradorDePaginasWeb import *
+from scriptLattes.geradorDePaginasWeb import *
 
 class PublicacaoEinternacionalizacao:
 	publicacao = None

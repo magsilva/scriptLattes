@@ -24,8 +24,9 @@
 
 
 from scriptLattes import *
-from geradorDePaginasWeb import *
+from scriptLattes.geradorDePaginasWeb import *
 import re
+from scriptLattes.util import compararCadeias
 
 class OutroTipoDeProducaoTecnica:
 	item = None # dado bruto

@@ -27,8 +27,9 @@ import datetime
 import re
 import math
 import unicodedata
-from graficoDeInternacionalizacao import *
+from charts.graficoDeInternacionalizacao import *
 from qualis import * # Qualis
+from highcharts import * # highcharts
 
 class GeradorDePaginasWeb:
 	grupo = None
@@ -39,7 +40,7 @@ class GeradorDePaginasWeb:
 
 	def __init__(self, grupo):
 		self.grupo = grupo
-		self.version = 'V8.09'
+		self.version = 'V8.10'
 		self.dir = self.grupo.obterParametro('global-diretorio_de_saida')
 		
 		if self.grupo.obterParametro('global-criar_paginas_jsp'):
@@ -51,13 +52,12 @@ class GeradorDePaginasWeb:
 			self.html1 = '<html>'
 			self.html2 = '</html>'
 
-
+		# geracao de arquivo RIS com as publicacoes
 		if self.grupo.obterParametro('relatorio-salvar_publicacoes_em_formato_ris'): 
 			prefix = self.grupo.obterParametro('global-prefixo')+'-' if not self.grupo.obterParametro('global-prefixo')=='' else ''
 			self.arquivoRis = open(self.dir+"/"+prefix+"publicacoes.ris", 'w')
 
 		self.gerarPaginaDeMembros()
-
 		self.gerarPaginasDeProducoesBibliograficas()
 		self.gerarPaginasDeProducoesTecnicas()
 		self.gerarPaginasDeProducoesArtisticas()
@@ -110,7 +110,6 @@ class GeradorDePaginasWeb:
 		s+='[ <a href=membros'+self.extensaoPagina+'>Membros</a> \
             | <a href=#producaoBibliografica>Produção bibliográfica</a> \
             | <a href=#producaoTecnica>Produção técnica</a> \
-            | <a href=#patenteRegistro>Patente e Registro</a> \
             | <a href=#producaoArtistica>Produção artística</a> '.decode("utf8")
 
 		if self.grupo.obterParametro('relatorio-mostrar_orientacoes'):
@@ -182,15 +181,15 @@ class GeradorDePaginasWeb:
 			s+= '<i>Nenhum item achado nos currículos Lattes</i>'.decode("utf8")
 
 
-		s+='</ul> <h3 id="patenteRegistro">Patente e Registro</h3> <ul>'.decode("utf8")
-		if self.nPR0>0:
-			s+= '<li> <a href="PR0-0'+self.extensaoPagina+'">Patente</a> '.decode("utf8")+'('+str(self.nPR0)+')'
-		if self.nPR1>0:
-			s+= '<li> <a href="PR1-0'+self.extensaoPagina+'">Programa de computador</a> '.decode("utf8")+'('+str(self.nPR1)+')'
-		if self.nPR2>0:
-			s+= '<li> <a href="PR2-0'+self.extensaoPagina+'">Desenho industrial</a> '.decode("utf8")+'('+str(self.nPR2)+')'
-		if self.nPR0 == 0 and self.nPR1 == 0 and self.nPR2 == 0:
-			s+= '<i>Nenhum item achado nos currículos Lattes</i>'.decode("utf8")
+		#s+='</ul> <h3 id="patenteRegistro">Patente e Registro</h3> <ul>'.decode("utf8")
+		#if self.nPR0>0:
+		#	s+= '<li> <a href="PR0-0'+self.extensaoPagina+'">Patente</a> '.decode("utf8")+'('+str(self.nPR0)+')'
+		# if self.nPR1>0:
+		#	s+= '<li> <a href="PR1-0'+self.extensaoPagina+'">Programa de computador</a> '.decode("utf8")+'('+str(self.nPR1)+')'
+		#if self.nPR2>0:
+		#	s+= '<li> <a href="PR2-0'+self.extensaoPagina+'">Desenho industrial</a> '.decode("utf8")+'('+str(self.nPR2)+')'
+		#if self.nPR0 == 0 and self.nPR1 == 0 and self.nPR2 == 0:
+		#	s+= '<i>Nenhum item achado nos currículos Lattes</i>'.decode("utf8")
 
 
 		s+='</ul> <h3 id="producaoArtistica">Produção artística</h3> <ul>'.decode("utf8")
@@ -394,13 +393,13 @@ class GeradorDePaginasWeb:
 		self.nPR2 =0
 		self.nPR  =0
 
-		if self.grupo.obterParametro('relatorio-incluir_patente'):
-			self.nPR0 = self.gerarPaginaDeProducoes(self.grupo.compilador.listaCompletaPatente, "Patente", "PR0")
-			self.nPR1 = self.gerarPaginaDeProducoes(self.grupo.compilador.listaCompletaProgramaComputador, "Programa de computador", "PR1")
-			self.nPR2 = self.gerarPaginaDeProducoes(self.grupo.compilador.listaCompletaDesenhoIndustrial, "Desenho industrial", "PR2")
+		#if self.grupo.obterParametro('relatorio-incluir_patente'):
+		#	self.nPR0 = self.gerarPaginaDeProducoes(self.grupo.compilador.listaCompletaPatente, "Patente", "PR0")
+		#	self.nPR1 = self.gerarPaginaDeProducoes(self.grupo.compilador.listaCompletaProgramaComputador, "Programa de computador", "PR1")
+		#	self.nPR2 = self.gerarPaginaDeProducoes(self.grupo.compilador.listaCompletaDesenhoIndustrial, "Desenho industrial", "PR2")
 
 		# Total de produções técnicas
-		self.nPR = self.gerarPaginaDeProducoes(self.grupo.compilador.listaCompletaPR, "Total de patentes e registros", "PR")
+		#self.nPR = self.gerarPaginaDeProducoes(self.grupo.compilador.listaCompletaPR, "Total de patentes e registros", "PR")
 
 
 	def gerarPaginasDeOrientacoes(self):
@@ -508,7 +507,7 @@ class GeradorDePaginasWeb:
 
 			for ano in keys:
 				anoRotulo = str(ano) if not ano==0 else '*itens sem ano'
-				s+= '<h3 class="year">'+anoRotulo+'</h3> <table>'
+				s+= '<div id="dv-year-%s"><h3 class="year">%s</h3> <table>' % (str(ano),anoRotulo)
 				elementos = listaCompleta[ano]
 				elementos.sort(key = lambda x: x.chave.lower())	# Ordenamos a lista em forma ascendente (hard to explain!)
 
@@ -522,7 +521,34 @@ class GeradorDePaginasWeb:
 				
 					if numeroDeItem%maxElementos==0 or numeroDeItem==numeroTotalDeProducoes:
 						st = self.paginaTop()
-						st+= '\n<h3>'+tituloPagina.decode("utf8")+'</h3> <br> <img src="'+prefixo+'.png"> <br>'
+						
+						cmdhs = """function(event){
+						    dv = document.getElementById("dv-year-"+this.name);
+						    dv.style.display = '%s';
+						}"""
+												
+						jshidediv = {'series':{
+                            'events': {                                       
+                                'show':jscmd(cmdhs % ('block'))
+                                ,
+                                'hide':jscmd(cmdhs % ('none'))
+                                
+                                    }
+                             }
+                        }
+						
+						chart = highchart()
+						chart.settitle(u'Número total de produções/publicações')
+						chart.setYtitle(u'Número de produções/publicações')
+						chart.setXtitle(u'Ano')
+						chart.setcharttype(charttype.column)
+						chart['plotOptions'] = jshidediv
+						chart.listaCompleta(listaCompleta)
+						
+						st+= chart.html()
+						
+						st+= '\n<h3>'+tituloPagina.decode("utf8")+'</h3> <br>' #'<img src="'+prefixo+'.png"> <br>'
+						st+= '<div id="container" style="min-width: 310px; max-width: 800px; height: 400px; margin: 0"></div>'
 						st+= 'Número total de itens: '.decode("utf8")+str(numeroTotalDeProducoes)+'<br>'
 						st+= sQualis
 						st+= self.gerarIndiceDePaginas(numeroDePaginas, numeroDePaginaAtual, prefixo)
@@ -534,12 +560,12 @@ class GeradorDePaginasWeb:
 						numeroDePaginaAtual += 1
 
 						if (index+1)<len(elementos):
-							s = '<h3 class="year">'+anoRotulo+'</h3> <table>'
+							s = '<div id="dv-year-%s"><h3 class="year">%s</h3> <table>' % (str(ano),anoRotulo)
 						else:
 							s = '' 
 					numeroDeItem += 1
 
-				s+= '</table>' 
+				s+= '</table></div>' 
 		return numeroTotalDeProducoes 
 
 	def gerarIndiceDePaginas(self, numeroDePaginas, numeroDePaginaAtual, prefixo):
@@ -575,6 +601,7 @@ class GeradorDePaginasWeb:
 
 			for ano in keys:
 				anoRotulo = str(ano) if not ano==0 else '*itens sem ano'
+				
 				s+= '<h3 class="year">'+anoRotulo+'</h3> <table>'
 
 				elementos = listaCompleta[ano]
@@ -644,7 +671,7 @@ class GeradorDePaginasWeb:
         gerando os seguintes grafos de colabora&ccedil;&otilde;es encontradas com base nas produ&ccedil;&otilde;es: <i>'+lista+'</i>. <br><p>'.decode("utf8")
 
 		prefix = self.grupo.obterParametro('global-prefixo')+'-' if not self.grupo.obterParametro('global-prefixo')=='' else ''
-		s+='Veja <a href="grafoDeColaboracoesInterativo'+self.extensaoPagina+'?entradaScriptLattes=./'+prefix+'matrizDeAdjacencia.xml">na seguinte página</a> uma versão interativa do grafo de colabora&ccedil;&otilde;es.<br><p><br><p>'.decode("utf8")
+		# s+='Veja <a href="grafoDeColaboracoesInterativo'+self.extensaoPagina+'?entradaScriptLattes=./'+prefix+'matrizDeAdjacencia.xml">na seguinte página</a> uma versão interativa do grafo de colabora&ccedil;&otilde;es.<br><p><br><p>'.decode("utf8")
 
 		s+='\nClique no nome dentro do vértice para visualizar o currículo Lattes. Para cada nó: o valor entre colchetes indica o número \
         de produ&ccedil;&otilde;es feitas em colabora&ccedil;&atilde;o apenas com os outros membros do próprio grupo. <br>'.decode("utf8")
@@ -652,7 +679,7 @@ class GeradorDePaginasWeb:
 		if self.grupo.obterParametro('grafo-considerar_rotulos_dos_membros_do_grupo'):
 			s+='As cores representam os seguintes rótulos: '.decode("utf8")
 			for i in range(0, len(self.grupo.listaDeRotulos)):
-				rot = self.grupo.listaDeRotulos[i].decode("utf8")
+				rot = self.grupo.listaDeRotulos[i].decode("utf8","ignore")
 				cor = self.grupo.listaDeRotulosCores[i].decode("utf8")
 				if rot=='':
 					rot = '[Sem rótulo]'.decode("utf8")
@@ -690,7 +717,7 @@ class GeradorDePaginasWeb:
 				for i in range(0, len(self.grupo.listaDeRotulos)): 
 					somaAuthorRank = 0
 
-					rot = self.grupo.listaDeRotulos[i].decode("utf8")
+					rot = self.grupo.listaDeRotulos[i].decode("utf8","ignore")
 					cor = self.grupo.listaDeRotulosCores[i].decode("utf8")
 					s+='<b><span style="background-color:'+cor+'">&nbsp;&nbsp;&nbsp;&nbsp;</span>'+rot+'</b><br>'
 
@@ -714,11 +741,11 @@ class GeradorDePaginasWeb:
 		
 	def gerarPaginaDeMembros(self):
 		s= self.paginaTop()
-		s+='\n<h3>Lista de membros</h3> <table> \
-              <tr><td></td> <td></td> <td></td> <td></td> <td class="centered"><b><font size=-1>Bolsa de produtividade</font></b></td> <td class="centered"><b><font size=-1>Período de</font></b></td>           <td class="centered"><b><font size=-1>Data de          </font><b></td>  <td class="centered"></td></tr> \
-              <tr><td></td> <td></td> <td></td> <td></td> <td class="centered"><b><font size=-1>em pesquisa do CNPq</font></b></td>    <td class="centered"><b><font size=-1>análise individual</font></b></td> <td class="centered"><b><font size=-1>atualização do CV</font><b></td>  <td class="centered"></td></tr>'.decode("utf8")
+		s+='\n<h3>Lista de membros</h3> <table class="collapse-box"> \
+			<tr><th></th> <th></th> <th></th> <th></th> <th class="centered"><b><font size=-1>Bolsa de produtividade<br>em pesquisa</font></b></th> <th class="centered"><b><font size=-1>Período de<br>análise individual</font></b></th><th class="centered"><b><font size=-1>Data de<br>atualização do CV</font><b></th>  <th class="centered"></th></tr>'.decode("utf8")
 
 		elemento = 0
+		tabela = {}
 		for membro in self.grupo.listaDeMembros:
 			elemento += 1
 			bolsa = '('+membro.bolsaProdutividade+')' if not membro.bolsaProdutividade=='' else ''
@@ -729,7 +756,7 @@ class GeradorDePaginasWeb:
 				multirotulos = rotulo.split("::")
 				rotulo = ""
 				for r in multirotulos:
-					grupoURL = "http://dgp.cnpq.br/buscaoperacional/detalhegrupo.jsp?grupo="+ re.search('\[(.*)\]', r.strip()).group(1) 
+					grupoURL = "http://dgp.cnpq.br/dgp/espelhogrupo/"+ re.search('\[(.*)\]', r.strip()).group(1)
 					rotulo = rotulo + "<a href=" + grupoURL + ">" + r.strip() + "</a><br>"
 			
 
@@ -754,7 +781,71 @@ class GeradorDePaginasWeb:
 			#print membro.periodo
 			#print membro.atualizacaoCV
 
-			s+= '\n<tr> \
+			anoInicio = int(self.grupo.obterParametro('global-itens_desde_o_ano'))
+			anoFim = int(self.grupo.obterParametro('global-itens_ate_o_ano'))
+			tabelaDosAnos = membro.tabelaQualisDosAnos
+			tabelaDosTipos = membro.tabelaQualisDosTipos
+
+			tabAno = '<br><span style="font-size:14px;"><b>Qualis por ano:</b></span><br><br>'
+			tabTipo = '<br><span style="font-size:14px;"><b>Qualis por tipo:</b></span><br><br>'
+			i = 0
+
+			for conteudo in tabelaDosAnos:
+
+				if(anoInicio+i > anoFim):
+					break
+
+				display = "block"
+				if(i > 0):
+					display = "none"
+
+				anoAtual = str(anoInicio+i)
+				esquerda = '<a class="ano_esquerda" rel="'+anoAtual+'" rev="'+str(elemento)+'" style="cursor:pointer; padding:2px; border:1px solid #C3FDB8;">«</a>'.decode("utf8")
+				direita = '<a class="ano_direita" rel="'+anoAtual+'" rev="'+str(elemento)+'" style="cursor:pointer; padding:2px; border:1px solid #C3FDB8;">»</a>'.decode("utf8")
+				tabAno += '<div id="ano_'+anoAtual+'_'+str(elemento)+'" style="display:'+display+'">'+esquerda+' <b> '+anoAtual+' </b> '+direita+'<br><br>'
+				chaves = ''
+				valores = ''
+
+				for chave, valor in conteudo.items():
+
+					if(chave == "Qualis nao identificado"):
+						chave = '<span title="Qualis nao identificado">QNI</span>'
+
+					chaves += '<div style="float:left; width:70px; border:1px solid #000; margin-left:-1px; margin-top:-1px; background:#CCC; padding:4px 6px;"><b>'+chave+'</b></div>'
+					valores += '<div style="float:left; width:70px; border:1px solid #000; margin-left:-1px; margin-top:-1px; background:#EAEAEA; padding:4px 6px;">'+str(valor)+'</div>'
+				
+				
+				tabAno += '<div>'+chaves+'</div>'
+				tabAno += '<div style="clear:both"></div>'
+				tabAno += '<div>'+valores+'</div>'
+				tabAno += '<div style="clear:both"></div>'
+				tabAno += "<br><br></div>"
+				i+=1
+			
+
+			tabTipo += '<div>'
+			chaves = ''
+			valores = ''
+
+			for chave, valor in tabelaDosTipos.items():
+					
+					if(chave == "Qualis nao identificado"):
+						chave = "QNI"
+
+					chaves += '<div style="float:left; width:70px; border:1px solid #000; margin-left:-1px; margin-top:-1px; background:#CCC; padding:4px 6px;"><b>'+chave+'</b></div>'
+					valores += '<div style="float:left; width:70px; border:1px solid #000; margin-left:-1px; margin-top:-1px; background:#EAEAEA; padding:4px 6px;">'+str(valor)+'</div>'
+
+			
+			tabTipo += '<div>'+chaves+'</div>'
+			tabTipo += '<div style="clear:both"></div>'
+			tabTipo += '<div>'+valores+'</div>'
+			tabTipo += '<div style="clear:both"></div>'
+			tabTipo += "<br><br></div><br><br>"
+
+
+
+
+			s+= '\n<tr class="testetabela"> \
                      <td valign="center" height="40px">'+str(elemento)+'.</td> \
                      <td valign="top" height="40px"><img src="'+membro.foto+'" width="40px"></td> \
                      <td><a href="'+membro.url+'">'+nomeCompleto+'</a></td> \
@@ -764,9 +855,43 @@ class GeradorDePaginasWeb:
                      <td class="centered"><font size=-1>'+membro.atualizacaoCV+'</font></td> \
                      <td class="centered"><a href="http://scholar.google.com.br/citations?view_op=search_authors&mauthors='+nomeCompleto+'"><font size=-1>[ Cita&ccedil;&otilde;es em Google Acad&ecirc;mico | </font></a></td> \
                      <td class="centered"><a href="http://academic.research.microsoft.com/Search?query=author:('+nomeCompleto+')"><font size=-1>Cita&ccedil;&otilde;es em Microsoft Acad&ecirc;mico ]</font></a></td> \
-                 </tr>'
+                 </tr> \
+                 <tr><td colspan="9"> \
+                 '+tabAno+' \
+                 '+tabTipo+' \
+                 </td></tr>'
+
 		s+='\n</table>'
+
+		#add jquery and plugins
+		s+='\
+		<script src="../../js/jquery.min.js"></script>\
+		<script src="../../js/jexpand/jExpand.js"></script>\
+		<script>\
+		$(document).ready(function(){\
+			$(".collapse-box").jExpand();\
+			$(".ano_esquerda").live("click", function(e){\
+				var anoAtual = parseInt($(this).attr("rel"));\
+				var contador = $(this).attr("rev");\
+				if(anoAtual > '+str(anoInicio)+'){\
+					$("#ano_"+anoAtual+"_"+contador).css("display", "none");\
+					$("#ano_"+(anoAtual-1)+"_"+contador).css("display", "block");\
+				}\
+			});\
+			$(".ano_direita").live("click", function(e){\
+				var anoAtual = parseInt($(this).attr("rel"));\
+				var contador = $(this).attr("rev");\
+				if(anoAtual < '+str(anoFim)+'){\
+					$("#ano_"+anoAtual+"_"+contador).css("display", "none");\
+					$("#ano_"+(anoAtual+1)+"_"+contador).css("display", "block");\
+				}\
+			});\
+		});\
+		\
+		</script>'
 		s+= self.paginaBottom()
+
+
 
 		self.salvarPagina("membros"+self.extensaoPagina, s)
 
@@ -812,9 +937,9 @@ class GeradorDePaginasWeb:
 
 		s+='\n<br>Data de processamento: '+data+'<br> \
         <div id="footer"> \
-        Este arquivo foi gerado automaticamente por <a href="http://scriptlattes.sourceforge.net/">scriptLattes '+self.version+'</a> \
-        (desenvolvido no <a href="http://cmcc.ufabc.edu.br/">CMCC-UFABC</a> e \
-        no <a href="http://ccsl.ime.usp.br/">CCSL-IME/USP</a> por <a href="http://professor.ufabc.edu.br/~jesus.mena/">Jesús P. Mena-Chalco</a> e <a href="http://www.ime.usp.br/~cesar">Roberto M. Cesar-Jr</a>). \
+        Este arquivo foi gerado automaticamente por <a href="http://scriptlattes.sourceforge.net/">scriptLattes '+self.version+'</a>. \
+		(desenvolvido no <a href="http://nuvem.ufabc.edu.br/">NUVEM/UFABC</a> e \
+		no <a href="http://ccsl.ime.usp.br/">CCSL-IME/USP</a> por <a href="http://professor.ufabc.edu.br/~jesus.mena/">Jesús P. Mena-Chalco</a> e <a href="http://www.ime.usp.br/~cesar">Roberto M. Cesar-Jr</a>). \
         Os resultados estão sujeitos a falhas devido a inconsistências no preenchimento dos currículos Lattes. Caso note alguma falha, por favor, contacte o responsável por esta página: <a href="mailto:'+self.grupo.obterParametro('global-email_do_admin')+'">'+self.grupo.obterParametro('global-email_do_admin')+'</a> \
         </div> \
         <script type="text/javascript">\
@@ -833,7 +958,7 @@ class GeradorDePaginasWeb:
 
 	def salvarPagina(self, nome, conteudo):
 		file = open(self.dir+"/"+nome, 'w')
- 		file.write(conteudo.encode('utf8','replace'))
+		file.write(conteudo.encode('utf8','replace'))
 		file.close()
 
 
@@ -842,6 +967,7 @@ class GeradorDePaginasWeb:
 
 		
 	def formatarTotaisQualis(self, qtd):
+		"""
 		st = '(<b>A1</b>: '+str(qtd['A1'])+', <b>A2</b>: '+str(qtd['A2'])+', <b>B1</b>: '+str(qtd['B1'])+', <b>B2</b>: '+str(qtd['B2'])
 		st+= ', <b>B3</b>: '+str(qtd['B3'])+', <b>B4</b>: '+str(qtd['B4'])+', <b>B5</b>: '+str(qtd['B5'])+', <b>C</b>: '+str(qtd['C'])
 		st+= ', <b>Qualis n&atilde;o identificado</b>: '+str(qtd['Qualis nao identificado'])+')'
@@ -851,6 +977,8 @@ class GeradorDePaginasWeb:
 		st+= '<li> Publica&ccedil;&atilde;o para a qual nenhum nome do Qualis foi identificado: <font color="#8B0000"><b>Qualis n&atilde;o identificado</b></font> (nome usado na busca)'
 		st+= '</ul>'
 		return st
+		"""
+		return 'Sem totais qualis ainda...'
 
 
 def menuHTMLdeBuscaPB(titulo):
@@ -885,12 +1013,12 @@ def menuHTMLdeBuscaPA(titulo):
          </font><br>'
 	return s
 
-def formataQualis(qualis, qualissimilar):
+"""def formataQualis(qualis, qualissimilar):
 	s = ''
 	if not qualis==None:
 		if qualis=='':
 			qualis = 'Qualis nao identificado'
-	
+		
 		if qualis=='Qualis nao identificado':
 			# Qualis nao identificado - imprime em vermelho
 			s += '<font color="#8B0000"><b>Qualis: N&atilde;o identificado</b></font> ('+qualissimilar+')'
@@ -902,5 +1030,18 @@ def formataQualis(qualis, qualissimilar):
 				# Similar - imprime em laranja
 				s += '<font color="#FF9933"><b>Qualis: ' + qualis + '</b></font> ('+qualissimilar+')' 
 	return s
+	"""
+def formataQualis(qualis, qualissimilar):
+	s = ''
 
+	if qualis == None:
+		s += '<font color="#8B0000"><b>Qualis: N&atilde;o identificado</b></font>'
+	else:
+		s += '<font color="#336600"><b>Qualis: </b></font> '
+		if type(qualis) is str:
+			s+= '<font color="#ADD8E6"><b>SEM_AREA</b></font> - <b>'+qualis+'</b>&nbsp'
+		else:
+			for area,q in sorted(qualis.items(), key = lambda x: x[1]):
+				s+= '<font color="#ADD8E6"><b>'+area+'</b></font> - <b>'+q+'</b>&nbsp'
+	return s
 

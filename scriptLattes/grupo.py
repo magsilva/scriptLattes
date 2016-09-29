@@ -26,23 +26,26 @@
 import fileinput
 import sets
 import operator
+import os
 
 from membro import *
 from compiladorDeListas import *
-from grafoDeColaboracoes import *
-from graficoDeBarras import *
-from mapaDeGeolocalizacao import *
+from charts.grafoDeColaboracoes import *
+from charts.graficoDeBarras import *
+from charts.mapaDeGeolocalizacao import *
 from geradorDePaginasWeb import *
 from authorRank import *
-from analisadorDePublicacoes import *
-from qualis import *
+from internacionalizacao.analisadorDePublicacoes import *
+from qualis.qualis import *
 from geradorDeXML import *
-	
+from scriptLattes.util import *
+
 class Grupo:
 	compilador = None
 	listaDeParametros = []
 	listaDeMembros = []
 	listaDeRotulos = []
+	listaDeRotulosCores = []
 	listaDePublicacoesEinternacionalizacao = []
 
 	arquivoConfiguracao = None
@@ -118,20 +121,20 @@ class Grupo:
 		self.itemsAteOAno = int(ano2)
 
 		self.diretorioCache = self.obterParametro('global-diretorio_de_armazenamento_de_cvs')
-		if self.diretorioCache == '':
+		if self.diretorioCache=='':
 			self.diretorioCache = os.path.expanduser(os.path.join("~", ".scriptLattes", "cacheCV"))
-		if not os.path.exists(self.diretorioCache):
-			criarDiretorio(self.diretorioCache)
+		util.criarDiretorio(self.diretorioCache)
 
 		self.diretorioDoi = self.obterParametro('global-diretorio_de_armazenamento_de_doi')
 		if self.diretorioDoi == '':
 			self.diretorioDoi = os.path.expanduser(os.path.join("~", ".scriptLattes", "cacheDoi"))
-		if not self.diretorioDoi == '':
-			criarDiretorio(self.diretorioDoi)
+		util.criarDiretorio(self.diretorioDoi)
 
 		# carregamos a lista de membros
+		entrada = buscarArquivo(self.obterParametro('global-arquivo_de_entrada'))
+			
 		idSequencial = 0
-		for linha in fileinput.input(self.obterParametro('global-arquivo_de_entrada')):
+		for linha in fileinput.input(entrada):
 			linha = linha.replace("\r","") 
 			linha = linha.replace("\n","")
 			
@@ -161,6 +164,7 @@ class Grupo:
 
 		self.qualis = Qualis(self) # carregamos Qualis a partir de arquivos definidos no arquivo de configuração
 
+
 	
 	def gerarXMLdeGrupo(self):
 		if self.obterParametro('global-salvar_informacoes_em_formato_xml'):
@@ -173,6 +177,24 @@ class Grupo:
 			 		print "- [ID Lattes: " + item + "]"
 
 	def gerarCSVdeQualisdeGrupo(self):
+		prefix = self.obterParametro('global-prefixo')+'-' if not self.obterParametro('global-prefixo')=='' else ''
+
+		# Salvamos a lista individual
+		s = ""
+		for membro in self.listaDeMembros:
+			s += self.imprimeCSVListaIndividual(membro.nomeCompleto, membro.listaArtigoEmPeriodico)
+			s += self.imprimeCSVListaIndividual(membro.nomeCompleto, membro.listaTrabalhoCompletoEmCongresso)
+			s += self.imprimeCSVListaIndividual(membro.nomeCompleto, membro.listaResumoExpandidoEmCongresso)
+		self.salvarArquivoGenerico(s, prefix+'publicacoesPorMembro.csv')
+
+		# Salvamos a lista total (publicações do grupo)
+		s = ""
+		s += self.imprimeCSVListaGrupal(self.compilador.listaCompletaArtigoEmPeriodico)
+		s += self.imprimeCSVListaGrupal(self.compilador.listaCompletaTrabalhoCompletoEmCongresso)
+		s += self.imprimeCSVListaGrupal(self.compilador.listaCompletaResumoExpandidoEmCongresso)
+		self.salvarArquivoGenerico(s, prefix+'publicacoesDoGrupo.csv')
+                        
+	def gerarCSVdeQualisdeGrupoOld(self):
 		if self.obterParametro('global-identificar_publicacoes_com_qualis'):
 			prefix = self.obterParametro('global-prefixo')+'-' if not self.obterParametro('global-prefixo')=='' else ''
 
@@ -194,6 +216,92 @@ class Grupo:
 				s += self.imprimeCSVListaGrupal(self.compilador.listaCompletaTrabalhoCompletoEmCongresso)
 				s += self.imprimeCSVListaGrupal(self.compilador.listaCompletaResumoExpandidoEmCongresso)
 			self.salvarArquivoGenerico(s, prefix+'qualisGrupal.csv')
+
+	def gerarArquivosTemporarios(self):
+		print "\n[CRIANDO ARQUIVOS TEMPORARIOS: CSV, RIS, TXT, GDF]"
+		
+		self.gerarRISdeMembros()
+		self.gerarCSVdeQualisdeGrupo()
+		self.gerarXMLdeGrupo()
+		
+		# Salvamos alguns dados para análise posterior (com outras ferramentas)
+		prefix = self.obterParametro('global-prefixo')+'-' if not self.obterParametro('global-prefixo')=='' else ''
+
+		# (1) matrizes 
+		self.salvarMatrizTXT(self.matrizDeAdjacencia, prefix+"matrizDeAdjacencia.txt")
+		self.salvarMatrizTXT(self.matrizDeFrequencia, prefix+"matrizDeFrequencia.txt")
+		self.salvarMatrizTXT(self.matrizDeFrequenciaNormalizada, prefix+"matrizDeFrequenciaNormalizada.txt")
+		#self.salvarMatrizXML(self.matrizDeAdjacencia, prefix+"matrizDeAdjacencia.xml")
+	
+		# (2) listas de nomes, rótulos, ids
+		self.salvarListaTXT(self.nomes, prefix+"listaDeNomes.txt")
+		self.salvarListaTXT(self.rotulos, prefix+"listaDeRotulos.txt")
+		self.salvarListaTXT(self.ids, prefix+"listaDeIDs.txt")
+
+		# (3) medidas de authorRanks 
+		self.salvarListaTXT(self.vectorRank, prefix+"authorRank.txt")
+
+		# (4) lista unica de colaboradores (orientadores, ou qualquer outro tipo de parceiros...)
+		rawColaboradores = list([])
+		for membro in self.listaDeMembros:
+			for idColaborador in membro.listaIDLattesColaboradoresUnica:
+				rawColaboradores.append(idColaborador)
+		rawColaboradores = list(set(rawColaboradores))
+		self.salvarListaTXT(rawColaboradores, prefix+"colaboradores.txt")
+
+		# (5) Geolocalizacoes
+		self.geolocalizacoes = list([])
+		for membro in self.listaDeMembros:
+			self.geolocalizacoes.append(str(membro.enderecoProfissionalLat)+","+str(membro.enderecoProfissionalLon))
+		self.salvarListaTXT(self.geolocalizacoes, prefix+"listaDeGeolocalizacoes.txt")
+
+		# (6) arquivo GDF
+		self.gerarArquivoGDF(prefix+"rede.gdf")
+
+
+	def gerarArquivoGDF(self, nomeArquivo):
+		# Vêrtices
+		N = len(self.listaDeMembros)
+		string = "nodedef> name VARCHAR, idLattes VARCHAR, label VARCHAR, rotulo VARCHAR, lat DOUBLE, lon DOUBLE, collaborationRank DOUBLE, producaoBibliografica DOUBLE, artigoEmPeriodico DOUBLE, livro DOUBLE, capituloDeLivro DOUBLE, trabalhoEmCongresso DOUBLE, resumoExpandido DOUBLE, resumo DOUBLE, color VARCHAR"
+		i = 0
+		for membro in self.listaDeMembros:
+			nomeCompleto = unicodedata.normalize('NFKD', membro.nomeCompleto).encode('ASCII', 'ignore')
+			string += "\n"+str(i)+","+membro.idLattes+","+nomeCompleto+","+membro.rotulo+","+membro.enderecoProfissionalLat+","+membro.enderecoProfissionalLon+","
+			string += str(self.vectorRank[i])+","
+			string += str(len(membro.listaArtigoEmPeriodico)+len(membro.listaLivroPublicado)+len(membro.listaCapituloDeLivroPublicado)+len(membro.listaTrabalhoCompletoEmCongresso)+len(membro.listaResumoExpandidoEmCongresso)+len(membro.listaResumoEmCongresso))+","
+			string += str(len(membro.listaArtigoEmPeriodico))+","
+			string += str(len(membro.listaLivroPublicado))+","
+			string += str(len(membro.listaCapituloDeLivroPublicado))+","
+			string += str(len(membro.listaTrabalhoCompletoEmCongresso))+","
+			string += str(len(membro.listaResumoExpandidoEmCongresso))+","
+			string += str(len(membro.listaResumoEmCongresso))+","
+			string += "'"+self.HTMLColorToRGB(membro.rotuloCorBG)+"'"
+			i+=1
+
+		# Arestas
+		matriz = self.matrizDeAdjacencia
+
+		string += "\nedgedef> node1 VARCHAR, node2 VARCHAR, weight DOUBLE"
+		for i in range(0,N):
+			for j in range(i+1,N):
+				if (i!=j) and (matriz[i,j]>0):
+					string +='\n'+str(i)+','+str(j)+','+str(matriz[i,j])
+
+
+		# gerando o arquivo GDF
+		dir = self.obterParametro('global-diretorio_de_saida')
+		arquivo = open(dir+"/"+nomeArquivo, 'w')
+		arquivo.write(string) # .encode("utf8","ignore"))
+		arquivo.close()
+
+
+	def HTMLColorToRGB(self, colorstring):
+		colorstring = colorstring.strip()
+		if colorstring[0] == '#': colorstring = colorstring[1:]
+		r, g, b = colorstring[:2], colorstring[2:4], colorstring[4:]
+		r, g, b = [int(n, 16) for n in (r, g, b)]
+		#return (r, g, b)
+		return str(r)+","+str(g)+","+str(b)
 
 	
 	def imprimeCSVListaIndividual(self, nomeCompleto, lista):
@@ -217,7 +325,7 @@ class Grupo:
 		return s
 
 
-	def gerarRISdeGrupo(self):
+	def gerarRISdeMembros(self):
 		prefix = self.obterParametro('global-prefixo')+'-' if not self.obterParametro('global-prefixo')=='' else ''
 		s = ""
 		for membro in self.listaDeMembros:
@@ -234,10 +342,11 @@ class Grupo:
 
 	def carregarDadosCVLattes(self):
 		indice = 1
+		cvMaxAge = self.obterParametro('global-tempo-expiracao-cache')
 		for membro in self.listaDeMembros:
 			print "\n[LENDO REGISTRO LATTES: " + str(indice) + "o. DA LISTA]"
 			indice += 1
-			membro.carregarDadosCVLattes()
+			membro.carregarDadosCVLattes(cvMaxAge)
 			membro.filtrarItemsPorPeriodo()
 			print membro
 
@@ -248,13 +357,6 @@ class Grupo:
 	def gerarPaginasWeb(self):
 		paginasWeb = GeradorDePaginasWeb(self)
 		
-		# Salvamos alguns dados para análise posterior (com outras ferramentas)
-		prefix = self.obterParametro('global-prefixo')+'-' if not self.obterParametro('global-prefixo')=='' else ''
-		self.geolocalizacoes = list([])
-		for membro in self.listaDeMembros:
-			self.geolocalizacoes.append(str(membro.enderecoProfissionalLat)+","+str(membro.enderecoProfissionalLon))
-		print self.geolocalizacoes
-		self.salvarListaTXT(self.geolocalizacoes, prefix+"listaDeGeolocalizacoes.txt")
 			
 
 	def compilarListasDeItems(self):
@@ -275,16 +377,7 @@ class Grupo:
 		authorRank = AuthorRank(self.matrizDeFrequenciaNormalizada, 100)
 		self.vectorRank = authorRank.vectorRank
 
-		# Salvamos alguns dados para análise posterior (com outras ferramentas)
-		prefix = self.obterParametro('global-prefixo')+'-' if not self.obterParametro('global-prefixo')=='' else ''
-
-		# (1) matrizes 
-		self.salvarMatrizTXT(self.matrizDeAdjacencia, prefix+"matrizDeAdjacencia.txt")
-		self.salvarMatrizTXT(self.matrizDeFrequencia, prefix+"matrizDeFrequencia.txt")
-		self.salvarMatrizTXT(self.matrizDeFrequenciaNormalizada, prefix+"matrizDeFrequenciaNormalizada.txt")
-		# self.salvarMatrizXML(self.matrizDeAdjacencia, prefix+"matrizDeAdjacencia.xml")
-	
-		# (2) listas de nomes, rótulos, ids
+		# listas de nomes, rotulos e IDs
 		self.nomes = list([]) 
 		self.rotulos = list([])
 		self.ids = list([])
@@ -292,22 +385,6 @@ class Grupo:
 			self.nomes.append(membro.nomeCompleto)
 			self.rotulos.append(membro.rotulo)
 			self.ids.append(membro.idLattes)
-		self.salvarListaTXT(self.nomes, prefix+"listaDeNomes.txt")
-		self.salvarListaTXT(self.rotulos, prefix+"listaDeRotulos.txt")
-		self.salvarListaTXT(self.ids, prefix+"listaDeIDs.txt")
-
-		# (3) medidas de authorRanks 
-		self.salvarListaTXT(self.vectorRank, prefix+"authorRank.txt")
-
-		# (4) lista unica de colaboradores (orientadores, ou qualquer outro tipo de parceiros...)
-		rawColaboradores = list([])
-		for membro in self.listaDeMembros:
-			for idColaborador in membro.listaIDLattesColaboradoresUnica:
-				rawColaboradores.append(idColaborador)
-		rawColaboradores = list(set(rawColaboradores))
-		self.salvarListaTXT(rawColaboradores, prefix+"colaboradores.txt")
-
-		
 
 
 	def identificarQualisEmPublicacoes(self):
@@ -316,7 +393,16 @@ class Grupo:
 			for membro in self.listaDeMembros:
 				self.qualis.analisarPublicacoes(membro, self) # Qualis - Adiciona Qualis as publicacoes dos membros
 			self.qualis.calcularTotaisDosQualis(self)
-	
+
+			self.separarQualisPorAno()
+
+
+	def separarQualisPorAno(self):
+		for membro in self.listaDeMembros:
+			tabelas = self.qualis.qualisPorAno(membro)
+			membro.tabelaQualisDosAnos = tabelas[0]
+			membro.tabelaQualisDosTipos = tabelas[1]
+
 
 	def salvarListaTXT(self, lista, nomeArquivo):
 		dir = self.obterParametro('global-diretorio_de_saida')
@@ -413,6 +499,7 @@ class Grupo:
 		arquivo.close()
 
 	def gerarGraficosDeBarras(self):
+		print "\n[CRIANDO GRAFICOS DE BARRAS]"
 		gBarra = GraficoDeBarras(self.obterParametro('global-diretorio_de_saida'))
 
 		gBarra.criarGrafico(self.compilador.listaCompletaArtigoEmPeriodico, 'PB0', 'Numero de publicacoes')
@@ -474,6 +561,9 @@ class Grupo:
 	def gerarGrafosDeColaboracoes(self):
 		if self.obterParametro('grafo-mostrar_grafo_de_colaboracoes'):
 			self.grafosDeColaboracoes = GrafoDeColaboracoes(self, self.obterParametro('global-diretorio_de_saida'))
+		print "\n[ROTULOS]"
+		print "- "+str(self.listaDeRotulos)
+		print "- "+str(self.listaDeRotulosCores)
 
 	def gerarGraficoDeProporcoes(self):
 		if self.obterParametro('relatorio-incluir_grafico_de_proporcoes_bibliograficas'):
@@ -558,8 +648,10 @@ class Grupo:
 		self.listaDeParametros.append(['global-salvar_informacoes_em_formato_xml', 'nao'])
 
 		self.listaDeParametros.append(['global-identificar_publicacoes_com_qualis', 'nao'])
-		self.listaDeParametros.append(['global-arquivo_qualis_de_periodicos', ''])
+		self.listaDeParametros.append(['global-extrair_qualis_online','sim'])
+		self.listaDeParametros.append(['global-arquivo_areas_qualis',''])
 		self.listaDeParametros.append(['global-arquivo_qualis_de_congressos', ''])
+		self.listaDeParametros.append(['global-arquivo_qualis_de_periodicos', ''])
 
 		self.listaDeParametros.append(['relatorio-salvar_publicacoes_em_formato_ris', 'nao'])
 		self.listaDeParametros.append(['relatorio-incluir_artigo_em_periodico', 'sim'])

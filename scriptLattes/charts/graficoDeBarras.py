@@ -23,7 +23,7 @@
 #
 
 import matplotlib
-matplotlib.use("Agg")
+#matplotlib.use("Agg")
 
 
 import numpy as np
@@ -62,10 +62,7 @@ class GraficoDeBarras:
 			vetorDeQuantidades.append( len(self.listaCompleta[k]) )
 
 		if len(vetorDeAnos)>0: # Apenas para listas com elemtos
-			print "\n[CRIANDO GRAFICO DE BARRAS]"
-			print self.prefixo + ": "
-			print vetorDeAnos
-			print vetorDeQuantidades
+			print self.prefixo + ": " , vetorDeAnos , vetorDeQuantidades
 
 			ind = np.arange(len(vetorDeAnos)) 
 			bar_width = 0.20

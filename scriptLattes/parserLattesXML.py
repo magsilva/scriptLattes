@@ -36,36 +36,38 @@ from tidylib import tidy_document
 from htmlentitydefs import name2codepoint
 
 from HTMLParser import HTMLParser
-from formacaoAcademica import *
-from areaDeAtuacao import *
-from idioma import *
-from premioOuTitulo import *
-from projetoDePesquisa import *
+from producoesUnitarias.formacaoAcademica import *
+from producoesUnitarias.areaDeAtuacao import *
+from producoesUnitarias.idioma import *
+from producoesUnitarias.premioOuTitulo import *
+from producoesUnitarias.projetoDePesquisa import *
 
-from artigoEmPeriodico import *
-from livroPublicado import *
-from capituloDeLivroPublicado import *
-from textoEmJornalDeNoticia import *
-from trabalhoCompletoEmCongresso import *
-from resumoExpandidoEmCongresso import *
-from resumoEmCongresso import *
-from artigoAceito import *
-from apresentacaoDeTrabalho import *
-from outroTipoDeProducaoBibliografica import *
+from producoesBibliograficas.artigoEmPeriodico import *
+from producoesBibliograficas.livroPublicado import *
+from producoesBibliograficas.capituloDeLivroPublicado import *
+from producoesBibliograficas.textoEmJornalDeNoticia import *
+from producoesBibliograficas.trabalhoCompletoEmCongresso import *
+from producoesBibliograficas.resumoExpandidoEmCongresso import *
+from producoesBibliograficas.resumoEmCongresso import *
+from producoesBibliograficas.artigoAceito import *
+from producoesBibliograficas.apresentacaoDeTrabalho import *
+from producoesBibliograficas.outroTipoDeProducaoBibliografica import *
 
-from softwareComPatente import *
-from softwareSemPatente import *
-from produtoTecnologico import *
-from processoOuTecnica import *
-from trabalhoTecnico import *
-from outroTipoDeProducaoTecnica import *
-from producaoArtistica import *
-from orientacaoEmAndamento import *
-from orientacaoConcluida import *
+from producoesTecnicas.softwareComPatente import *
+from producoesTecnicas.softwareSemPatente import *
+from producoesTecnicas.produtoTecnologico import *
+from producoesTecnicas.processoOuTecnica import *
+from producoesTecnicas.trabalhoTecnico import *
+from producoesTecnicas.outroTipoDeProducaoTecnica import *
 
-from patente import *
-from programaComputador import *
-from desenhoIndustrial import *
+from patentesRegistros.patente import *
+from patentesRegistros.programaComputador import *
+from patentesRegistros.desenhoIndustrial import *
+
+from producoesArtisticas.producaoArtistica import *
+
+from orientacoes.orientacaoEmAndamento import *
+from orientacoes.orientacaoConcluida import *
 
 class ParserLattesXML(HTMLParser):
 	item = None

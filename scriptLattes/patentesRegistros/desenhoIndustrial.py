@@ -24,8 +24,9 @@
 
 
 from scriptLattes import *
-from geradorDePaginasWeb import *
+from scriptLattes.geradorDePaginasWeb import *
 import re
+from scriptLattes.util import compararCadeias
 
 class DesenhoIndustrial:
 	item = None # dado bruto
@@ -62,14 +63,19 @@ class DesenhoIndustrial:
 
 		partes = partes[2].split(".");
 		self.pais = partes[0];
-		self.tipoPatente = partes[1].split(":")[1].strip();
-		self.numeroRegistro = partes[2].split(":")[1].split(",")[0].strip();
-		self.dataDeposito = partes[2].split(":")[2].split(",")[0].strip();
+
+		# wonder: Para o CV 7628786577802962 
+		# partes tem apenas 1 elemento, por isso
+		# inseri a seguinte condicao  
+		if len(partes)==3:
+			self.tipoPatente = partes[1].split(":")[1].strip();
+			self.numeroRegistro = partes[2].split(":")[1].split(",")[0].strip();
+			self.dataDeposito = partes[2].split(":")[2].split(",")[0].strip();
 
 				
 		self.chave = self.autores # chave de comparação entre os objetos
 		
-		print self.__str__()
+		#print self.__str__()
 
 	def compararCom(self, objeto):
 		if self.idMembro.isdisjoint(objeto.idMembro) and compararCadeias(self.titulo, objeto.titulo):
@@ -92,7 +98,7 @@ class DesenhoIndustrial:
 		s = self.autores + '. <b>' + self.titulo + '</b>. '
 		s+= str(self.ano) + '. ' + str(self.pais) + '. '
 		s+= str(self.numeroRegistro) + '. ' + str(self.dataDeposito) + '.'
- 		s+= menuHTMLdeBuscaPT(self.titulo)
+		s+= menuHTMLdeBuscaPT(self.titulo)
 		return s
 
 
