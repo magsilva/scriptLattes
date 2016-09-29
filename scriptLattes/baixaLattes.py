@@ -67,7 +67,7 @@ def __get_data(id_lattes):
 
 def baixaCVLattes(id_lattes, debug=True):
  	tentativa = 5
-	while tentativa > 0 and:
+	while tentativa > 0:
 		try:
 			data = __get_data(id_lattes)
 			if 'infpessoa' not in data:

@@ -229,12 +229,14 @@ class Membro:
 			else:
 				cvType = 'html' # If we could not find an XML file, we fallback to HTML
 				cvLattesHTML = baixaCVLattes(self.idLattes)
+				cvFound = True
 				if os.path.exists(self.diretorioCache):
 					file = open(cvPath, 'w')
 					file.write(cvLattesHTML)
 					file.close()
 					print " (*) O CV foi armazenado no Cache"
 
+		if cvFound and cvType == 'html':
 			extended_chars= u''.join(unichr(c) for c in xrange(127, 65536, 1)) # srange(r"[\0x80-\0x7FF]")
 			special_chars = ' -'''
 			#cvLattesHTML  = cvLattesHTML.decode('ascii','replace')+extended_chars+special_chars                                          # Wed Jul 25 16:47:39 BRT 2012
@@ -243,9 +245,9 @@ class Membro:
 			
 			p = re.compile('[a-zA-Z]+');
 			if p.match(self.idLattes):
-			  self.identificador10 = self.idLattes
-			  self.idLattes = parser.identificador16
-			  self.url = 'http://lattes.cnpq.br/'+self.idLattes
+				self.identificador10 = self.idLattes
+				self.idLattes = parser.identificador16
+				self.url = 'http://lattes.cnpq.br/'+self.idLattes
 			
 		# -----------------------------------------------------------------------------------------
 		# Obtemos todos os dados do CV Lattes

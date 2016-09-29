@@ -342,7 +342,7 @@ class Grupo:
 
 	def carregarDadosCVLattes(self):
 		indice = 1
-		cvMaxAge = self.obterParametro('global-tempo-expiracao-cache')
+		cvMaxAge = self.obterParametro('global-tempo_expiracao_cache')
 		for membro in self.listaDeMembros:
 			print "\n[LENDO REGISTRO LATTES: " + str(indice) + "o. DA LISTA]"
 			indice += 1
@@ -645,6 +645,7 @@ class Grupo:
 		self.listaDeParametros.append(['global-prefixo', ''])
 		self.listaDeParametros.append(['global-diretorio_de_armazenamento_de_cvs', ''])
 		self.listaDeParametros.append(['global-diretorio_de_armazenamento_de_doi', ''])
+		self.listaDeParametros.append(['global-tempo_expiracao_cache', ''])
 		self.listaDeParametros.append(['global-salvar_informacoes_em_formato_xml', 'nao'])
 
 		self.listaDeParametros.append(['global-identificar_publicacoes_com_qualis', 'nao'])
