@@ -194,7 +194,7 @@ class Membro:
 		else:
 			cvType = 'html'
 
-		if cvFound
+		if cvFound:
 			if cvType == 'xml':
 				arquivoX = open(cvPath)
 				cvLattesXML = arquivoX.read()
@@ -226,7 +226,7 @@ class Membro:
 				# sera procurada a coautoria endogena com os outros membro.
 				# para isso é necessario indicar o nome abreviado no arquivo .list
 				return 
-			else
+			else:
 				cvType = 'html' # If we could not find an XML file, we fallback to HTML
 				cvLattesHTML = baixaCVLattes(self.idLattes)
 				if os.path.exists(self.diretorioCache):

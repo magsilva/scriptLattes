@@ -4,22 +4,23 @@ body {
     color: #000000;
     margin-left: 2%; 
     margin-right: 2%;
-    font-family: Arial, Verdana, Sans-Serif;
+	font-family: "Century Gothic", CenturyGothic, AppleGothic, sans-serif;
 	font-size: 0.9em;
     text-align: justify; 
 }
 
 td {
-    font-family: Arial, Verdana, Sans-Serif;
+	font-family: "Century Gothic", CenturyGothic, AppleGothic, sans-serif;
 	font-size: 0.9em;
     text-align: justify; 
 }
 
 td.centered {
-    font-family: Arial, Verdana, Sans-Serif;
+	font-family: "Century Gothic", CenturyGothic, AppleGothic, sans-serif;
 	font-size: 0.9em;
     text-align: center; 
 }
+
 
 h1,h2,h3,h4,h5,h6 {
     color: #000000;
@@ -48,12 +49,12 @@ a:visited {
 }
 
 a:hover {
-    background-color: #C3FDB8;
+    background-color: #B2C9DB;
 }
 
 #footer {
     clear: both;
-    background: #D6D6F1;
+    background: #D4E5F5;
     color: #000000;
     font-size: 0.9em;
     text-align: justify;
@@ -63,7 +64,7 @@ a:hover {
 
 #header {
     clear: both;
-    background: #D6D6F1;
+    background: #D4E5F5;
     color: #000000;
     margin:0 auto;
 	text-align: center;
@@ -72,7 +73,7 @@ a:hover {
 
 #header2 {
     clear: both;
-    background: #D6D6F1;
+    background: #D4E5F5;
     color: #000000;
     margin:0 auto;
 	text-align: left;
