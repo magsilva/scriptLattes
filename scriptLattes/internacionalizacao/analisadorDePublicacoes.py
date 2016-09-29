@@ -313,7 +313,8 @@ class AnalisadorDePublicacoes:
 
 	def identificarPaisesEmPublicacao(self, urlDOI, ano):
 		listaDePaisesIdentificados = None
-		dataDoi = self.obterDadosAtravesDeDOI(urlDOI)
+		# dataDoi = self.obterDadosAtravesDeDOI(urlDOI)
+		dataDoi = False
 		
 		if dataDoi:	
 			listaDePaisesIdentificados = []
@@ -396,8 +397,8 @@ class AnalisadorDePublicacoes:
 		}
 
 		doiNumber = urlDOI
-		doiNumber = doiNumber.replace('http://dx.doi.org/','');
-		doiNumber = doiNumber.replace('/','-');
+		doiNumber = doiNumber.replace('http://dx.doi.org/','')
+		doiNumber = doiNumber.replace('/','-')
 		doiPath   = self.grupo.diretorioDoi+'/'+doiNumber
 
 		if (os.path.isfile(doiPath)):
