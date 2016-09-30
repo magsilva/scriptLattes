@@ -63,14 +63,19 @@ def __get_data(id_lattes):
 	br.form.set_all_readonly(False)
 	br.form['metodo'] = 'visualizarCV'	
 	r = br.submit()
-	return r.read()
+	response = r.read()
+	if 'infpessoa' in response:
+		return response
+
+	return False
+
 
 def baixaCVLattes(id_lattes, debug=True):
  	tentativa = 5
 	while tentativa > 0:
 		try:
 			data = __get_data(id_lattes)
-			if 'infpessoa' not in data:
+			if data == False:
 				tentativa -= 1
 			else:
 				return data
