@@ -187,7 +187,7 @@ class Membro:
 		
 
 	def carregarDadosCVLattes(self, cvMaxAge):
-		cvPath = os.path.join(self.diretorioCache, self.idLattes)
+		cvPath = os.path.join(self.diretorioCache, self.idLattes + ".html")
 		cvFound = os.path.exists(cvPath)
 		if 'xml' in cvPath:
 			cvType = 'xml'
@@ -239,8 +239,9 @@ class Membro:
 		if cvFound and cvType == 'html':
 			extended_chars= u''.join(unichr(c) for c in xrange(127, 65536, 1)) # srange(r"[\0x80-\0x7FF]")
 			special_chars = ' -'''
-			#cvLattesHTML  = cvLattesHTML.decode('ascii','replace')+extended_chars+special_chars                                          # Wed Jul 25 16:47:39 BRT 2012
-			cvLattesHTML  = cvLattesHTML.decode('iso-8859-1','replace')+extended_chars+special_chars
+			# cvLattesHTML  = cvLattesHTML.decode('ascii','replace')+extended_chars+special_chars                                          # Wed Jul 25 16:47:39 BRT 2012
+			cvLattesHTML  = cvLattesHTML.decode('cp1252','replace') + extended_chars + special_chars
+			# cvLattesHTML  = cvLattesHTML.decode('iso-8859-1','replace') + extended_chars + special_chars
 			parser        = ParserLattes(self.idMembro, cvLattesHTML)
 			
 			p = re.compile('[a-zA-Z]+');
