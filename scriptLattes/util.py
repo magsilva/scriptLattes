@@ -73,12 +73,12 @@ def copiarArquivos(dir):
     # shutil.copy2(os.path.join(base, 'css', 'scriptLattes.css'), dir)
     # shutil.copy2(os.path.join(base, 'css', 'jquery.dataTables.css'), dir)
 
-    shutil.copy2(os.path.join(base, 'imagens', 'lattesPoint0.png'), dir)
-    shutil.copy2(os.path.join(base, 'imagens', 'lattesPoint1.png'), dir)
-    shutil.copy2(os.path.join(base, 'imagens', 'lattesPoint2.png'), dir)
-    shutil.copy2(os.path.join(base, 'imagens', 'lattesPoint3.png'), dir)
-    shutil.copy2(os.path.join(base, 'imagens', 'lattesPoint_shadow.png'), dir)
-    shutil.copy2(os.path.join(base, 'imagens', 'doi.png'), dir)
+    shutil.copy2(os.path.join(base, 'images', 'lattesPoint0.png'), dir)
+    shutil.copy2(os.path.join(base, 'images', 'lattesPoint1.png'), dir)
+    shutil.copy2(os.path.join(base, 'images', 'lattesPoint2.png'), dir)
+    shutil.copy2(os.path.join(base, 'images', 'lattesPoint3.png'), dir)
+    shutil.copy2(os.path.join(base, 'images', 'lattesPoint_shadow.png'), dir)
+    shutil.copy2(os.path.join(base, 'images', 'doi.png'), dir)
 
     try:
         dst = os.path.join(dir, 'images')
