@@ -311,7 +311,15 @@ class ParserLattes(HTMLParser):
 		cvLattesHTML = cvLattesHTML.replace("<X<","&lt;X&lt;")
 
 		# feed it!
-		cvLattesHTML, errors = tidy_document(cvLattesHTML, options={'numeric-entities':1})
+		try:
+			cvLattesHTML, errors = tidy_document(cvLattesHTML, options={'numeric-entities':1})
+		except UnicodeDecodeError, e:
+			# For some reason, pytidylib fails to decode, whereas the
+			# original html content converts perfectly manually.
+			print e
+			cvLattesHTML, errors = tidy_document(cvLattesHTML.encode('utf-8'), options={'numeric-entities':1})
+			document = document.decode('utf-8')
+
 		#print errors
 		#print cvLattesHTML.encode("utf8")
 
